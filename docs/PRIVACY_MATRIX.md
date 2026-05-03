@@ -19,3 +19,17 @@
 | Damage logs | No | Related only | Yes | Sensitive moderation/evidence data. |
 | Ban list | Public-safe | Yes | Yes | Reasons should be sanitized. |
 | Warnings/mutes | No | Future owner view | Yes | Avoid public shaming unless policy explicitly says otherwise. |
+
+## v2.4 profile showcase update
+
+Website profiles and Tweeter profiles now share the same community profile record. The profile can be public or private, and the following gameplay modules are individually opt-in:
+
+| Module | Public default | Owner dashboard | Public when enabled | Notes |
+| --- | --- | --- | --- | --- |
+| Economy | Hidden | Visible | Cash, bank, and total visible funds | High metagame risk; opt-in only. |
+| Inventory | Hidden | Visible | Occupied slot count and top item stacks | Does not expose phone messages or logs. |
+| Stats | Hidden | Visible | Level, XP, and top tracked stats | Opt-in for achievement/showcase use. |
+| Properties | Hidden | Visible | Layout names, property names, prop counts | Avoids ownership/control actions. |
+| Activity | Hidden | Visible | Playtime, joined date, basic needs | Useful for public identity but opt-in only. |
+
+Phone messages, staff logs, damage evidence, moderation notes, and private communications remain excluded from public profile rendering.

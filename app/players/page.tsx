@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
-import { getAllGuideProgress, getAllPropertyLayouts, getCitizenName, getLevel, getPlayers, getRoleAssignments, getRoleDefinitions } from '@/lib/ape-data';
+import { getAllGuideProgress, getAllPropertyLayouts, getCitizenName, getPlayers, getRoleAssignments, getRoleDefinitions } from '@/lib/ape-data';
 import { getCommunityProfiles } from '@/lib/community-data';
-import { duration } from '@/lib/format';
+import { buildPublicProfileView } from '@/lib/profile-view';
 import { getSteamProfiles } from '@/lib/steam-openid';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +41,8 @@ export default async function PlayersPage() {
 
       <section className="player-grid">
         {publicPlayers.length ? publicPlayers.map(({ player, steamId, community, steam }) => {
+          const role = rolesBySteam.get(steamId) ?? defaultRole;
+          const profile = buildPublicProfileView({ steamId, player, role, layouts: layouts.filter((layout) => String(layout.OwnerSteamId) === steamId), communityProfile: community, fallbackName: steam?.personaName || steamId });
           const name = getCitizenName(player, steam?.personaName || steamId);
           return (
             <article className="card player-card" key={steamId}>
@@ -49,11 +51,11 @@ export default async function PlayersPage() {
                 <div><h2>{name}</h2><p>{community?.bio || player.DisplayTitle || 'Northline citizen'}</p></div>
               </div>
               <dl className="metric-grid compact">
-                <div><dt>Role</dt><dd>{rolesBySteam.get(steamId) ?? defaultRole}</dd></div>
-                <div><dt>Level</dt><dd>{getLevel(player)}</dd></div>
-                <div><dt>Playtime</dt><dd>{duration(player.TotalPlaytimeSeconds)}</dd></div>
-                <div><dt>Layouts</dt><dd>{layoutCounts.get(steamId) ?? 0}</dd></div>
-                <div><dt>Guides</dt><dd>{guideProgress.get(steamId)?.percent ?? 0}%</dd></div>
+                <div><dt>Role</dt><dd>{role}</dd></div>
+                <div><dt>Level</dt><dd>{profile.stats ? profile.stats.level : 'Hidden'}</dd></div>
+                <div><dt>Playtime</dt><dd>{profile.activity ? profile.activity.playtime : 'Hidden'}</dd></div>
+                <div><dt>Layouts</dt><dd>{profile.properties ? (layoutCounts.get(steamId) ?? 0) : 'Hidden'}</dd></div>
+                <div><dt>Guides</dt><dd>{profile.activity ? `${guideProgress.get(steamId)?.percent ?? 0}%` : 'Hidden'}</dd></div>
                 <div><dt>Joined</dt><dd>{player.FirstJoinedUtc ? new Date(player.FirstJoinedUtc).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'Unknown'}</dd></div>
               </dl>
               <Link className="button button-soft" href={`/u/${steamId}`}>View profile</Link>

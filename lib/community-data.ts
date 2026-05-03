@@ -5,13 +5,31 @@ import os from 'os';
 
 export type ProfilePrivacy = 'public' | 'private';
 
+export type ProfileShowcaseSettings = {
+  economy: boolean;
+  inventory: boolean;
+  stats: boolean;
+  properties: boolean;
+  activity: boolean;
+};
+
+export const DEFAULT_PROFILE_SHOWCASE: ProfileShowcaseSettings = {
+  economy: false,
+  inventory: false,
+  stats: false,
+  properties: false,
+  activity: false,
+};
+
 export type CommunityProfile = {
   steamId: string;
   privacy: ProfilePrivacy;
   bio?: string;
   location?: string;
+  websiteUrl?: string;
   customAvatarUrl?: string;
   bannerColor?: string;
+  showcase?: ProfileShowcaseSettings;
   updatedAt: string;
 };
 
@@ -150,8 +168,26 @@ function currentCpuPercent(): number | null {
   return Math.max(0, Math.min(100, Math.round((1 - idleDelta / totalDelta) * 100)));
 }
 
+function normalizeShowcase(value: Partial<ProfileShowcaseSettings> | undefined | null): ProfileShowcaseSettings {
+  return {
+    economy: Boolean(value?.economy),
+    inventory: Boolean(value?.inventory),
+    stats: Boolean(value?.stats),
+    properties: Boolean(value?.properties),
+    activity: Boolean(value?.activity),
+  };
+}
+
+function normalizeProfile(profile: CommunityProfile): CommunityProfile {
+  return {
+    ...profile,
+    showcase: normalizeShowcase(profile.showcase),
+  };
+}
+
 export async function getCommunityProfiles(): Promise<Record<string, CommunityProfile>> {
-  return (await readStore()).profiles;
+  const profiles = (await readStore()).profiles;
+  return Object.fromEntries(Object.entries(profiles).map(([steamId, profile]) => [steamId, normalizeProfile(profile)]));
 }
 
 export async function getCommunityProfile(steamId: string): Promise<CommunityProfile | null> {
@@ -167,8 +203,10 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
       privacy: patch.privacy ?? existing?.privacy ?? 'public',
       bio: patch.bio ?? existing?.bio ?? '',
       location: patch.location ?? existing?.location ?? '',
+      websiteUrl: patch.websiteUrl ?? existing?.websiteUrl ?? '',
       customAvatarUrl: patch.customAvatarUrl ?? existing?.customAvatarUrl ?? '',
       bannerColor: patch.bannerColor ?? existing?.bannerColor ?? '#1194f0',
+      showcase: normalizeShowcase(patch.showcase ?? existing?.showcase ?? DEFAULT_PROFILE_SHOWCASE),
       updatedAt: new Date().toISOString(),
     };
     return {

@@ -198,7 +198,7 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     handle: makeTweeterHandle(displayName, steamId),
     avatarUrl: communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium || null,
     verifiedKind: role !== 'User' ? role : 'None',
-    bio: communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? String(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0)),
+    bio: communityProfile?.privacy === 'private' ? 'This citizen keeps their profile private.' : (communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? String(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0))),
     bannerColor: communityProfile?.bannerColor || '#1d9bf0',
     joinedAt: player?.FirstJoinedUtc ?? null,
     playtimeHours: Math.round(Number(player?.TotalPlaytimeSeconds ?? 0) / 3600),

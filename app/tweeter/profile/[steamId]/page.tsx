@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ProfileShowcasePanels } from '@/components/ProfileShowcasePanels';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
+import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
+import { getCommunityProfile } from '@/lib/community-data';
+import { buildPublicProfileView } from '@/lib/profile-view';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
 
@@ -61,7 +65,13 @@ function ProfileTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean
 export default async function TweeterProfilePage({ params }: Params) {
   const [{ steamId }, sessionSteamId] = await Promise.all([params, getSessionSteamId()]);
   const payload = await buildTweeterPayload(sessionSteamId);
-  const user = await buildTweeterUser(steamId, payload.tweets);
+  const [user, player, role, layouts, communityProfile] = await Promise.all([
+    buildTweeterUser(steamId, payload.tweets),
+    getPlayer(steamId),
+    getRoleForSteamId(steamId),
+    getPropertyLayoutsForSteamId(steamId),
+    getCommunityProfile(steamId),
+  ]);
   const userTweets = payload.tweets
     .filter((tweet) => tweet.authorSteamId === steamId)
     .sort((a, b) => b.postedAtTimeSeconds - a.postedAtTimeSeconds);
@@ -70,6 +80,9 @@ export default async function TweeterProfilePage({ params }: Params) {
 
   const replies = userTweets.filter((tweet) => tweet.isReply).length;
   const originalPosts = userTweets.length - replies;
+  const isOwner = sessionSteamId === steamId;
+  const publicProfile = buildPublicProfileView({ steamId, player, role, layouts, communityProfile, fallbackName: user.displayName });
+  const privateForViewer = publicProfile.privacy === 'private' && !isOwner;
 
   return (
     <main className="tweeter-shell">
@@ -86,16 +99,18 @@ export default async function TweeterProfilePage({ params }: Params) {
             <div className="tweeter-profile-banner" style={{ background: `linear-gradient(135deg, ${user.bannerColor || '#1d9bf0'}, #15202b)` }} />
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
-              <button type="button">Follow</button>
+              {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button">Follow</button>}
             </div>
             <div className="tweeter-profile-copy">
               <h1>{user.displayName} {verifiedBadge(user.verifiedKind)}</h1>
               <span>{user.handle}</span>
-              <p>{user.bio}</p>
+              <p>{publicProfile.bio || user.bio}</p>
               <div className="tweeter-profile-meta">
                 <span>📅 Joined {formatShortDate(user.joinedAt)}</span>
                 {user.playtimeHours ? <span>🕒 {user.playtimeHours.toLocaleString()}h in city</span> : null}
                 {user.title ? <span>🏷 {user.title}</span> : null}
+                {publicProfile.location ? <span>📍 {publicProfile.location}</span> : null}
+                {publicProfile.websiteUrl ? <a href={publicProfile.websiteUrl} rel="noreferrer" target="_blank">🔗 Website</a> : null}
               </div>
               <div className="tweeter-profile-stats">
                 <span><strong>{userTweets.length.toLocaleString()}</strong> Posts</span>
@@ -106,10 +121,18 @@ export default async function TweeterProfilePage({ params }: Params) {
             </div>
           </section>
 
+          <section className="tweeter-profile-showcase-block">
+            <div className="tweeter-profile-section-title">
+              <strong>Profile showcases</strong>
+              <span>{privateForViewer ? 'Private profile' : `Hidden: ${publicProfile.hiddenSections.length ? publicProfile.hiddenSections.join(', ') : 'None'}`}</span>
+            </div>
+            <ProfileShowcasePanels profile={privateForViewer ? { ...publicProfile, privacy: 'private' } : publicProfile} compact />
+          </section>
+
           <nav className="tweeter-profile-tabs" aria-label="Profile timeline tabs">
             <button className="active" type="button">Posts</button>
             <button type="button">Replies</button>
-            <button type="button">Media</button>
+            <button type="button">Showcases</button>
             <button type="button">Likes</button>
           </nav>
 
@@ -128,6 +151,7 @@ export default async function TweeterProfilePage({ params }: Params) {
               <div><dt>Handle</dt><dd>{user.handle}</dd></div>
               <div><dt>Posts</dt><dd>{userTweets.length}</dd></div>
               <div><dt>Role</dt><dd>{user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : 'Citizen'}</dd></div>
+              <div><dt>Public modules</dt><dd>{privateForViewer ? 'Private' : 5 - publicProfile.hiddenSections.length}</dd></div>
             </dl>
           </section>
           <section className="tweeter-panel">
