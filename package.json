@@ -1,0 +1,27 @@
+{
+  "name": "northline-rp-community-portal",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1 -p 3000",
+    "start:lan": "next start -H 0.0.0.0 -p 3000",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "next": "15.5.15",
+    "react": "19.1.4",
+    "react-dom": "19.1.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}
