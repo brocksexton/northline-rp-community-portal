@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
+import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 
 type TweetRow = {
   id: string;
@@ -21,6 +22,8 @@ type TweetRow = {
   retweetOfAuthorDisplayName?: string | null;
   replyCount: number;
   retweetCount: number;
+  replyToId?: string | null;
+  retweetOfId?: string | null;
 };
 
 type Suggestion = {
@@ -139,7 +142,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <button type="button"><span>🔔</span>Notifications</button>
             <button type="button"><span>✉</span>Messages</button>
             <button type="button"><span>🔖</span>Bookmarks</button>
-            <button type="button"><span>👤</span>Profile</button>
+            {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><span>👤</span>Profile</Link> : <button type="button"><span>👤</span>Profile</button>}
             <Link href="/"><span>↩</span>Back to Northline</Link>
           </nav>
 
@@ -216,7 +219,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   ) : null}
                   <div className="tweet-card-header">
                     <div className="tweet-card-authorline">
-                      <Link href={`/u/${tweet.authorSteamId}`} className="tweet-author-link">
+                      <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link">
                         <strong>{tweet.authorDisplayName}</strong>
                         {verifiedBadge(tweet.verifiedKind)}
                       </Link>
@@ -231,14 +234,15 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                     <blockquote className="tweet-quoted-card">{tweet.retweetOfAuthorDisplayName}: {tweet.retweetOfBody}</blockquote>
                   ) : null}
 
-                  <div className="tweet-card-text">{highlightHashtags(tweet.body)}</div>
+                  <Link href={`/tweeter/tweet/${tweet.id}`} className="tweet-card-text">{highlightHashtags(tweet.body)}</Link>
 
                   <footer className="tweet-actions-row">
-                    <button type="button"><span>💬</span><small>{actionCount(tweet.replyCount)}</small></button>
+                    <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{actionCount(tweet.replyCount)}</small></Link>
                     <button type="button"><span>↻</span><small>{actionCount(tweet.retweetCount)}</small></button>
-                    <button type="button" className={tweet.likedByMe ? 'liked' : ''}><span>♡</span><small>{actionCount(tweet.likeCount)}</small></button>
+                    <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!data.sessionSteamId} />
                     <button type="button"><span>↗</span></button>
                   </footer>
+                  {(tweet.replyCount > 0 || tweet.isReply) ? <Link className="tweet-thread-link" href={`/tweeter/tweet/${tweet.id}`}>View thread</Link> : null}
                 </div>
               </article>
             )) : (
@@ -285,7 +289,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <div className="tweeter-suggestion-list">
               {data.suggestions.map((suggestion) => (
                 <div className="tweeter-suggestion" key={suggestion.steamId}>
-                  <Link href={`/u/${suggestion.steamId}`} className="tweeter-suggestion-main">
+                  <Link href={`/tweeter/profile/${suggestion.steamId}`} className="tweeter-suggestion-main">
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
                     <div>
                       <strong>{suggestion.displayName} {verifiedBadge(suggestion.verifiedKind ?? 'None')}</strong>

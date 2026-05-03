@@ -1035,3 +1035,281 @@ body:has(.tweeter-mode) #main-content {
     justify-content: space-between;
   }
 }
+
+/* Tweeter interaction/detail/profile expansion */
+.tweeter-detail-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+}
+
+.tweeter-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tweeter-title-row > a {
+  color: #e7eef5;
+  text-decoration: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 1.4rem;
+}
+
+.tweeter-title-row > a:hover { background: rgba(255,255,255,0.08); }
+.tweeter-title-row small { color: #8b98a5; }
+
+.tweet-card-text {
+  display: block;
+  text-decoration: none;
+  color: #e7eef5;
+}
+
+.tweet-thread-link {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: #1d9bf0;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.tweet-thread-link:hover,
+.tweet-card-text:hover,
+.tweet-author-link:hover { text-decoration: underline; }
+
+.tweet-actions-row a,
+.tweet-actions-row button,
+.tweeter-like-button {
+  border: 0;
+  background: transparent;
+  color: #8b98a5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0;
+  text-decoration: none;
+  font: inherit;
+}
+
+.tweet-actions-row a:hover,
+.tweet-actions-row button:hover,
+.tweeter-like-button:hover { color: #1d9bf0; }
+.tweeter-like-button.liked { color: #f91880; }
+.tweeter-like-button.liked:hover { color: #f91880; }
+.tweeter-like-button:disabled { opacity: 0.7; cursor: wait; }
+.tweeter-like-button.large {
+  justify-content: center;
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+.thread-ancestor-list { border-bottom: 1px solid rgba(255,255,255,0.08); }
+.thread-mini-card { background: rgba(255,255,255,0.01); }
+
+.tweet-detail-card {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tweet-detail-author {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.tweet-detail-author a {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: #e7eef5;
+  text-decoration: none;
+}
+
+.tweet-detail-author span { display: block; color: #8b98a5; margin-top: 0.15rem; }
+.tweet-detail-text {
+  font-size: 1.45rem;
+  line-height: 1.45;
+  margin: 1.25rem 0;
+  white-space: pre-wrap;
+}
+
+.tweet-detail-time {
+  color: #8b98a5;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 1rem;
+}
+
+.tweet-detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #8b98a5;
+}
+
+.tweet-detail-stats strong { color: #e7eef5; }
+.tweet-detail-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding-top: 0.75rem;
+}
+
+.tweet-detail-actions button {
+  border: 0;
+  background: transparent;
+  color: #8b98a5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.1rem;
+  padding: 0.55rem;
+  border-radius: 999px;
+}
+
+.tweet-detail-actions button:hover { background: rgba(29,155,240,0.12); color: #1d9bf0; }
+.thread-replies h2 {
+  font-size: 1.05rem;
+  padding: 1rem;
+  margin: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tweet-context-list {
+  margin: 0;
+  padding: 0 1rem 1rem;
+}
+
+.tweet-context-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.tweet-context-list dt { color: #8b98a5; }
+.tweet-context-list dd { margin: 0; color: #e7eef5; text-align: right; word-break: break-word; }
+
+.tweeter-trend-list a {
+  display: block;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  text-decoration: none;
+}
+
+.tweeter-trend-list a:hover { background: rgba(255,255,255,0.03); }
+.tweeter-trend-list a small,
+.tweeter-trend-list a span { color: #8b98a5; }
+.tweeter-trend-list a strong { display: block; margin: 0.2rem 0; }
+
+.tweeter-profile-hero {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tweeter-profile-banner {
+  height: 210px;
+  background: linear-gradient(135deg, #1d9bf0, #15202b);
+}
+
+.tweeter-profile-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 1rem;
+  min-height: 4.2rem;
+}
+
+.tweeter-profile-avatar {
+  margin-top: -4.4rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: #15202b;
+}
+
+.tweeter-profile-main > button,
+.tweeter-profile-stats button {
+  border: 1px solid rgba(255,255,255,0.22);
+  background: transparent;
+  color: #e7eef5;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  font-weight: 800;
+  margin-top: 0.75rem;
+  cursor: pointer;
+}
+
+.tweeter-profile-main > button:hover { background: rgba(255,255,255,0.08); }
+.tweeter-profile-copy { padding: 0 1rem 1.2rem; }
+.tweeter-profile-copy h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.tweeter-profile-copy > span,
+.tweeter-profile-meta,
+.tweeter-profile-stats { color: #8b98a5; }
+.tweeter-profile-copy p {
+  margin: 0.85rem 0;
+  line-height: 1.5;
+}
+
+.tweeter-profile-meta,
+.tweeter-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.tweeter-profile-stats strong { color: #e7eef5; }
+
+.tweeter-profile-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tweeter-profile-tabs button {
+  border: 0;
+  background: transparent;
+  color: #8b98a5;
+  padding: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  position: relative;
+}
+
+.tweeter-profile-tabs .active { color: #e7eef5; }
+.tweeter-profile-tabs .active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 56px;
+  height: 4px;
+  margin-left: -28px;
+  border-radius: 999px;
+  background: #1d9bf0;
+}
+
+@media (max-width: 960px) {
+  .tweeter-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .tweeter-detail-rail { display: none; }
+  .tweeter-profile-banner { height: 160px; }
+  .tweet-detail-text { font-size: 1.25rem; }
+}

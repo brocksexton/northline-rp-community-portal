@@ -51,6 +51,7 @@ type CommunityStore = {
   statusUpdates: StatusUpdate[];
   metricSamples: MetricSample[];
   requestCount: number;
+  tweeterLikes: Record<string, string[]>;
 };
 
 const DEFAULT_STORE: CommunityStore = {
@@ -58,6 +59,7 @@ const DEFAULT_STORE: CommunityStore = {
   statusUpdates: [],
   metricSamples: [],
   requestCount: 0,
+  tweeterLikes: {},
 };
 
 type CpuSnapshot = { idle: number; total: number };
@@ -85,6 +87,7 @@ async function readStore(): Promise<CommunityStore> {
       statusUpdates: parsed.statusUpdates ?? [],
       metricSamples: parsed.metricSamples ?? [],
       requestCount: parsed.requestCount ?? 0,
+      tweeterLikes: parsed.tweeterLikes ?? {},
     };
   } catch {
     return { ...DEFAULT_STORE };
@@ -177,6 +180,47 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
     };
   });
   return store.profiles[steamId];
+}
+
+
+export async function getTweeterWebLikeState(tweetIds: string[], steamId: string | null): Promise<{ counts: Record<string, number>; likedTweetIds: Set<string> }> {
+  const store = await readStore();
+  const uniqueIds = [...new Set(tweetIds.map((id) => id.trim()).filter(Boolean))];
+  const counts: Record<string, number> = {};
+  const likedTweetIds = new Set<string>();
+
+  for (const tweetId of uniqueIds) {
+    const likers = [...new Set(store.tweeterLikes[tweetId] ?? [])];
+    counts[tweetId] = likers.length;
+    if (steamId && likers.includes(steamId)) likedTweetIds.add(tweetId);
+  }
+
+  return { counts, likedTweetIds };
+}
+
+export async function toggleTweeterWebLike(tweetId: string, steamId: string): Promise<{ liked: boolean; count: number }> {
+  const safeTweetId = tweetId.trim();
+  const safeSteamId = steamId.trim();
+  if (!safeTweetId || !safeSteamId) return { liked: false, count: 0 };
+
+  const store = await enqueueStoreWrite((current) => {
+    const existing = [...new Set(current.tweeterLikes[safeTweetId] ?? [])];
+    const alreadyLiked = existing.includes(safeSteamId);
+    const nextLikes = alreadyLiked
+      ? existing.filter((id) => id !== safeSteamId)
+      : [...existing, safeSteamId];
+
+    return {
+      ...current,
+      tweeterLikes: {
+        ...current.tweeterLikes,
+        [safeTweetId]: nextLikes,
+      },
+    };
+  });
+
+  const likers = [...new Set(store.tweeterLikes[safeTweetId] ?? [])];
+  return { liked: likers.includes(safeSteamId), count: likers.length };
 }
 
 export async function getStatusUpdates(limit = 12): Promise<StatusUpdate[]> {
