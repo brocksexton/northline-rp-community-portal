@@ -139,7 +139,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               <>
                 <Link className="button button-primary community-main-button" href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /> Open your dashboard</Link>
                 <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Browse Tweeter</Link>
-                <Link className="button button-ghost" href={`/u/${steamId}`}>Public profile</Link>
+                <Link className="button button-ghost" href={`/tweeter/profile/${steamId}`}>Public profile</Link>
               </>
             ) : (
               <>

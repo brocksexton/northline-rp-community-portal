@@ -11,6 +11,7 @@ import {
 import { getCommunityProfiles } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
 import { getSteamProfiles } from '@/lib/steam-openid';
+import { playerTitle } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Players' };
@@ -86,7 +87,7 @@ export default async function PlayersPage() {
         avatarUrl: profile.customAvatarUrl || steam?.avatarMedium || steam?.avatarFull || null,
         bannerColor: profile.bannerColor || '#38bdf8',
         role,
-        title: player?.DisplayTitle ? String(player.DisplayTitle) : 'Northline citizen',
+        title: playerTitle(player?.DisplayTitle),
         bio: profile.bio?.trim() || '',
         location: profile.location?.trim() || '',
         joinedLabel: joinedLabel(player?.FirstJoinedUtc),

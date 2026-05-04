@@ -1,6 +1,7 @@
 import { getPlayers, getPlayersBySteamId, getRoleForSteamId, getTweeterData } from '@/lib/ape-data';
 import { getCommunityProfiles, getTweeterWebLikeState } from '@/lib/community-data';
 import { getSteamProfiles } from '@/lib/steam-openid';
+import { playerTitle } from '@/lib/format';
 
 const ZERO_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -162,11 +163,11 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       handle: makeTweeterHandle(currentDisplayName, sessionSteamId),
       avatarUrl: currentCommunity?.customAvatarUrl || currentSteam?.avatarFull || currentSteam?.avatarMedium || null,
       verifiedKind: currentRole !== 'User' ? currentRole : 'None',
-      bio: formatSuggestionBio(currentRole, currentPlayer?.DisplayTitle ? String(currentPlayer.DisplayTitle) : '', Number(currentPlayer?.TotalPlaytimeSeconds ?? 0)),
+      bio: formatSuggestionBio(currentRole, currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : '', Number(currentPlayer?.TotalPlaytimeSeconds ?? 0)),
       bannerColor: currentCommunity?.bannerColor || '#1d9bf0',
       joinedAt: currentPlayer?.FirstJoinedUtc ?? null,
       playtimeHours: Math.round(Number(currentPlayer?.TotalPlaytimeSeconds ?? 0) / 3600),
-      title: currentPlayer?.DisplayTitle ? String(currentPlayer.DisplayTitle) : null,
+      title: currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : null,
       tweetCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).length,
       likeCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).reduce((sum, tweet) => sum + tweet.likeCount, 0),
     } : null,
@@ -198,11 +199,11 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     handle: makeTweeterHandle(displayName, steamId),
     avatarUrl: communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium || null,
     verifiedKind: role !== 'User' ? role : 'None',
-    bio: communityProfile?.privacy === 'private' ? 'This citizen keeps their profile private.' : (communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? String(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0))),
+    bio: communityProfile?.privacy === 'private' ? 'This citizen keeps their profile private.' : (communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? playerTitle(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0))),
     bannerColor: communityProfile?.bannerColor || '#1d9bf0',
     joinedAt: player?.FirstJoinedUtc ?? null,
     playtimeHours: Math.round(Number(player?.TotalPlaytimeSeconds ?? 0) / 3600),
-    title: player?.DisplayTitle ? String(player.DisplayTitle) : null,
+    title: player?.DisplayTitle ? playerTitle(player.DisplayTitle) : null,
     tweetCount: authoredTweets.length,
     likeCount: authoredTweets.reduce((sum, tweet) => sum + tweet.likeCount, 0),
   };

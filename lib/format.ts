@@ -75,3 +75,18 @@ export function compactNumber(value: number | null | undefined): string {
 export function statLabel(key: string): string {
   return titleCase(key.replaceAll('_', ' '));
 }
+
+
+export function resourceLabel(value: string | null | undefined, fallback = ''): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return fallback;
+  let leaf = raw.split(/[\\/]/).pop() || raw;
+  leaf = leaf.replace(/\.(prefab|resource|asset|json)$/i, '');
+  if (leaf.includes('.')) leaf = leaf.split('.').pop() || leaf;
+  const clean = leaf.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return clean ? titleCase(clean) : fallback;
+}
+
+export function playerTitle(value: string | null | undefined, fallback = 'Northline citizen'): string {
+  return resourceLabel(value, fallback) || fallback;
+}

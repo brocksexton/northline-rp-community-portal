@@ -60,7 +60,7 @@ export default async function DashboardPage() {
             <h1>{displayName}</h1>
             <p>{steamProfile?.personaName ? `Steam: ${steamProfile.personaName}` : steamId} · {role} · {permissions.length} permissions</p>
             <div className="button-row">
-              <Link className="button button-primary" href={`/u/${steamId}`}>View public profile</Link>
+              <Link className="button button-primary" href={`/tweeter/profile/${steamId}`}>View public profile</Link>
               <Link className="button button-soft" href="/guides">Continue onboarding</Link>
             </div>
           </div>

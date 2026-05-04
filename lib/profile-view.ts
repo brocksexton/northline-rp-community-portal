@@ -2,7 +2,7 @@ import type { ApeItem, PlayerSave, PropertyLayout } from '@/lib/ape-data';
 import { countItems, getCitizenName, getLevel, getXp } from '@/lib/ape-data';
 import type { CommunityProfile, ProfileShowcaseSettings } from '@/lib/community-data';
 import { DEFAULT_PROFILE_SHOWCASE } from '@/lib/community-data';
-import { duration, itemName, money, statLabel } from '@/lib/format';
+import { duration, itemName, money, playerTitle, statLabel } from '@/lib/format';
 
 type StatEntry = { key: string; label: string; value: number };
 type InventoryEntry = { label: string; count: number };
@@ -118,7 +118,7 @@ export function buildPublicProfileView(input: PublicProfileInput): PublicProfile
   const { steamId, player, communityProfile, layouts, role, fallbackName } = input;
   const showcase = normalizeProfileShowcase(communityProfile?.showcase);
   const displayName = getCitizenName(player, fallbackName || steamId);
-  const title = player?.DisplayTitle ? String(player.DisplayTitle) : 'Northline citizen';
+  const title = playerTitle(player?.DisplayTitle);
   const privacy = communityProfile?.privacy ?? 'public';
   const publicProfile = privacy !== 'private';
 

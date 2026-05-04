@@ -181,7 +181,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
               <div className="public-citizen-body">
                 <div className="public-citizen-avatar-row">
                   <UserAvatar src={entry.avatarUrl} name={entry.displayName} size="lg" />
-                  <Link className="public-citizen-open" href={`/u/${entry.steamId}`} aria-label={`Open ${entry.displayName}'s profile`}>
+                  <Link className="public-citizen-open" href={`/tweeter/profile/${entry.steamId}`} aria-label={`Open ${entry.displayName}'s profile`}>
                     <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
                   </Link>
                 </div>
@@ -201,7 +201,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
                 <div className="public-citizen-chips">
                   {chipsFor(entry).map((chip) => <span key={chip}>{chip}</span>)}
                 </div>
-                <Link className="button button-soft" href={`/u/${entry.steamId}`}>View profile</Link>
+                <Link className="button button-soft" href={`/tweeter/profile/${entry.steamId}`}>View profile</Link>
               </div>
             </article>
           ))}

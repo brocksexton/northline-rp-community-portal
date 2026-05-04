@@ -78,7 +78,7 @@ function BanCard({ ban, now }: { ban: BanRecord; now: number }) {
       <div className="ban-person">
         <UserAvatar src={ban.avatarUrl ?? null} name={ban.playerName} size="md" />
         <div>
-          <Link href={`/u/${ban.steamId}`}><strong>{ban.playerName}</strong></Link>
+          <Link href={`/tweeter/profile/${ban.steamId}`}><strong>{ban.playerName}</strong></Link>
           <span>{ban.steamId}</span>
           <small>{isTemporary ? 'Temporary ban' : ban.isPermanent ? 'Permanent ban' : 'Moderation action'}</small>
         </div>

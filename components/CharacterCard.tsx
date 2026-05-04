@@ -1,6 +1,6 @@
 import type { PlayerSave, PropertyLayout } from '@/lib/ape-data';
 import { countItems, getCitizenName, getLevel, getXp } from '@/lib/ape-data';
-import { duration, money, percent, statLabel } from '@/lib/format';
+import { duration, money, percent, playerTitle, statLabel } from '@/lib/format';
 
 type Props = {
   player: PlayerSave | null;
@@ -52,7 +52,7 @@ export function CharacterCard({ player, steamId, layouts = [], publicView = fals
         <div>
           <span className="kicker">Citizen record</span>
           <h2>{getCitizenName(player, steamId)}</h2>
-          <p>{player.DisplayTitle || 'Northline citizen'} · Level {level}</p>
+          <p>{playerTitle(player.DisplayTitle)} · Level {level}</p>
         </div>
         <span className="level-pill">LVL {level}</span>
       </div>
