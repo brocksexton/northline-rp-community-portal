@@ -715,6 +715,221 @@ export async function getBanSummary() {
   return { total: records.length, active: active.length, temporary: temporary.length, expired: expired.length, latestAt: records[0]?.createdAt ?? null };
 }
 
+
+export type ModerationActionType = 'ban' | 'warning' | 'kick' | 'unban' | 'mute' | 'other';
+
+export type ModerationTimelineAction = {
+  id: string;
+  type: ModerationActionType;
+  label: string;
+  steamId: string;
+  playerName: string;
+  avatarUrl?: string | null;
+  reason: string;
+  staffSteamId: string | null;
+  staffName: string;
+  staffAvatarUrl?: string | null;
+  createdAt: string;
+  source: 'ban_record' | 'admin_log' | 'warnings' | 'mutes';
+  rawAction?: string | null;
+};
+
+export type ModerationProfile = {
+  steamId: string;
+  playerName: string;
+  avatarUrl?: string | null;
+  latestAt: string | null;
+  totals: {
+    bans: number;
+    warnings: number;
+    kicks: number;
+    unbans: number;
+    mutes: number;
+    activeBans: number;
+    totalActions: number;
+  };
+  timeline: ModerationTimelineAction[];
+};
+
+function listFromLooseJson(value: unknown, preferredKeys: string[]): unknown[] {
+  if (Array.isArray(value)) return value;
+  const record = asRecord(value);
+  for (const key of preferredKeys) {
+    const nested = readValue(record, key);
+    if (Array.isArray(nested)) return nested;
+  }
+  for (const nested of Object.values(record)) {
+    if (Array.isArray(nested)) return nested;
+  }
+  return [];
+}
+
+function classifyAdminAction(log: AdminLog): ModerationActionType | null {
+  const text = `${log.ActionType ?? ''} ${log.Category ?? ''}`.toLowerCase();
+  if (/unban|pardon|removeban|remove ban|lift ban/.test(text)) return 'unban';
+  if (/ban|blacklist/.test(text)) return 'ban';
+  if (/warn|warning/.test(text)) return 'warning';
+  if (/kick/.test(text)) return 'kick';
+  if (/mute|silence/.test(text)) return 'mute';
+  return null;
+}
+
+function moderationLabel(type: ModerationActionType, raw?: string | null) {
+  const cleanRaw = raw?.trim();
+  if (cleanRaw && !/^unknown$/i.test(cleanRaw)) return cleanRaw;
+  switch (type) {
+    case 'ban': return 'Ban';
+    case 'warning': return 'Warning';
+    case 'kick': return 'Kick';
+    case 'unban': return 'Unban';
+    case 'mute': return 'Mute';
+    default: return 'Moderation action';
+  }
+}
+
+function normalizeLooseModerationAction(item: unknown, type: ModerationActionType, source: 'warnings' | 'mutes'): ModerationTimelineAction | null {
+  const record = asRecord(item);
+  const steamId = firstString(record, ['SteamId', 'steamId', 'PlayerSteamId', 'TargetSteamId', 'UserSteamId', 'Player.SteamId', 'Target.SteamId']);
+  if (!steamId) return null;
+  const createdAt = firstDate(record, ['CreatedAt', 'CreatedAtUtc', 'Timestamp', 'IssuedAt', 'IssuedAtUtc', 'Date', 'DateAdded', 'AddedAt', 'AddedAtUtc', 'StartTimeUtc']) ?? new Date().toISOString();
+  const rawAction = firstString(record, ['ActionType', 'Type', 'Category'], type);
+  return {
+    id: makeBanId(source, steamId, createdAt, rawAction || type),
+    type,
+    label: moderationLabel(type, rawAction),
+    steamId,
+    playerName: firstString(record, ['PlayerName', 'TargetName', 'Name', 'DisplayName', 'LastKnownDisplayName', 'Player.Name'], ''),
+    reason: firstString(record, ['Reason', 'Details', 'Message', 'Note', 'Description'], 'No reason provided'),
+    staffSteamId: firstString(record, ['AdminSteamId', 'StaffSteamId', 'IssuerSteamId', 'IssuedBySteamId'], '') || null,
+    staffName: firstString(record, ['AdminName', 'StaffName', 'IssuerName', 'IssuedByName'], 'Staff'),
+    createdAt,
+    source,
+    rawAction: rawAction || type,
+  };
+}
+
+function dedupeModerationTimeline(actions: ModerationTimelineAction[]) {
+  const kept: ModerationTimelineAction[] = [];
+  for (const action of actions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())) {
+    const actionTime = new Date(action.createdAt).getTime();
+    const duplicate = kept.some((existing) => {
+      if (existing.steamId !== action.steamId || existing.type !== action.type) return false;
+      const existingTime = new Date(existing.createdAt).getTime();
+      if (Math.abs(existingTime - actionTime) > 120_000) return false;
+      const sameReason = existing.reason.toLowerCase() === action.reason.toLowerCase();
+      const sameStaff = (existing.staffSteamId ?? existing.staffName).toLowerCase() === (action.staffSteamId ?? action.staffName).toLowerCase();
+      return sameReason || sameStaff;
+    });
+    if (!duplicate) kept.push(action);
+  }
+  return kept;
+}
+
+function isBanActive(record: BanRecord, now: number) {
+  return !record.revokedAt && (record.isPermanent || Boolean(record.expiresAt && new Date(record.expiresAt).getTime() > now));
+}
+
+export async function getModerationProfile(steamId: string): Promise<ModerationProfile> {
+  const [banRecords, adminLogs, players, connectionEvents, warningsRaw, mutesRaw] = await Promise.all([
+    getBanRecords(),
+    getAllAdminLogs(),
+    getPlayers(),
+    getConnectionEvents(),
+    readJson<unknown>('warnings.json', []),
+    readJson<unknown>('mutes.json', []),
+  ]);
+
+  const actions: ModerationTimelineAction[] = [];
+  for (const ban of banRecords.filter((record) => record.steamId === steamId)) {
+    actions.push({
+      id: `ban-record-${ban.id}`,
+      type: 'ban',
+      label: ban.isPermanent ? 'Permanent ban' : 'Temporary ban',
+      steamId: ban.steamId,
+      playerName: ban.playerName,
+      avatarUrl: ban.avatarUrl ?? null,
+      reason: ban.reason || 'No reason provided',
+      staffSteamId: ban.staffSteamId,
+      staffName: ban.staffName || 'Staff',
+      staffAvatarUrl: ban.staffAvatarUrl ?? null,
+      createdAt: ban.createdAt,
+      source: 'ban_record',
+      rawAction: ban.rawAction ?? null,
+    });
+  }
+
+  for (const log of adminLogs) {
+    if (String(log.TargetSteamId ?? '') !== steamId) continue;
+    const type = classifyAdminAction(log);
+    if (!type || type === 'ban') continue;
+    const createdAt = new Date(log.Timestamp).toISOString();
+    const parsed = parseBanDetails(log.Details ?? '');
+    actions.push({
+      id: makeBanId('admin-log', steamId, createdAt, log.ActionType),
+      type,
+      label: moderationLabel(type, log.ActionType),
+      steamId,
+      playerName: log.TargetName ?? '',
+      reason: parsed.reason || log.Details || 'No reason provided',
+      staffSteamId: log.AdminSteamId != null && String(log.AdminSteamId) !== '0' ? String(log.AdminSteamId) : null,
+      staffName: log.AdminName || 'Staff',
+      createdAt,
+      source: 'admin_log',
+      rawAction: log.ActionType,
+    });
+  }
+
+  for (const item of listFromLooseJson(warningsRaw, ['Warnings', 'Records', 'Items', 'Entries'])) {
+    const warning = normalizeLooseModerationAction(item, 'warning', 'warnings');
+    if (warning?.steamId === steamId) actions.push(warning);
+  }
+
+  for (const item of listFromLooseJson(mutesRaw, ['Mutes', 'Records', 'Items', 'Entries'])) {
+    const mute = normalizeLooseModerationAction(item, 'mute', 'mutes');
+    if (mute?.steamId === steamId) actions.push(mute);
+  }
+
+  const playersBySteam = new Map(players.map((player) => [String(player.SteamId), player]));
+  const steamIds = actions.flatMap((action) => [action.steamId, action.staffSteamId]).filter(Boolean) as string[];
+  steamIds.push(steamId);
+  const profiles = await getSteamProfiles(steamIds);
+  const playerProfile = profiles.get(steamId);
+  const resolvedPlayerName = savedPlayerName(playersBySteam, steamId)
+    || latestConnectionName(connectionEvents, steamId)
+    || playerProfile?.personaName
+    || actions.find((action) => action.playerName.trim())?.playerName
+    || `Steam ${steamId.slice(-8)}`;
+
+  const enriched = dedupeModerationTimeline(actions).map((action) => {
+    const staffProfile = action.staffSteamId ? profiles.get(action.staffSteamId) : null;
+    return {
+      ...action,
+      playerName: action.playerName?.trim() || resolvedPlayerName,
+      avatarUrl: action.avatarUrl ?? playerProfile?.avatarMedium ?? null,
+      staffName: action.staffName?.trim() || staffProfile?.personaName || 'Staff',
+      staffAvatarUrl: action.staffAvatarUrl ?? staffProfile?.avatarMedium ?? null,
+    };
+  });
+
+  const activeBans = banRecords.filter((ban) => ban.steamId === steamId && isBanActive(ban, Date.now())).length;
+  return {
+    steamId,
+    playerName: resolvedPlayerName,
+    avatarUrl: playerProfile?.avatarMedium ?? enriched.find((action) => action.avatarUrl)?.avatarUrl ?? null,
+    latestAt: enriched[0]?.createdAt ?? null,
+    totals: {
+      bans: enriched.filter((action) => action.type === 'ban').length,
+      warnings: enriched.filter((action) => action.type === 'warning').length,
+      kicks: enriched.filter((action) => action.type === 'kick').length,
+      unbans: enriched.filter((action) => action.type === 'unban').length,
+      mutes: enriched.filter((action) => action.type === 'mute').length,
+      activeBans,
+      totalActions: enriched.length,
+    },
+    timeline: enriched,
+  };
+}
+
 export function getCitizenName(player: PlayerSave | null | undefined, fallbackSteamId?: string): string {
   return player?.RpDisplayName?.trim() || player?.LastKnownDisplayName?.trim() || (fallbackSteamId ? `Citizen ${fallbackSteamId.slice(-8)}` : 'Unnamed citizen');
 }

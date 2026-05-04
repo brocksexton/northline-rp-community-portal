@@ -110,6 +110,7 @@ function BanCard({ ban, now }: { ban: BanRecord; now: number }) {
         <span className={`ban-state-pill ${status.tone}`}>{status.label}</span>
         <strong>{status.detail}</strong>
         {ban.expiresAt && !ban.revokedAt ? <small>Expires {new Date(ban.expiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</small> : null}
+        <Link className="ban-open-link" href={`/bans/${encodeURIComponent(ban.id)}`}>View record</Link>
       </div>
     </article>
   );
@@ -153,7 +154,6 @@ export function BanListClient({ initialData }: { initialData: BanPayload }) {
         <div>
           <span className="nl-kicker"><i /> Moderation record</span>
           <h1>Ban List</h1>
-          <p>Recent account actions from Northline RP. Temporary bans count down live; completed actions are marked expired.</p>
         </div>
         <div className="bans-summary-card">
           <span>Latest action</span>
@@ -177,7 +177,7 @@ export function BanListClient({ initialData }: { initialData: BanPayload }) {
       </section>
 
       <section className="ban-list-panel">
-        <div className="ban-list-header"><div><h2>Moderation history</h2><p>{filtered.length} {filtered.length === 1 ? 'record' : 'records'} shown</p></div><span>Auto-refreshes every 20s</span></div>
+        <div className="ban-list-header"><div><h2>Moderation records</h2><p>{filtered.length} {filtered.length === 1 ? 'record' : 'records'} shown · open a record for player context</p></div><span>Auto-refreshes every 20s</span></div>
         {filtered.length ? <div className="ban-list">{filtered.map((ban) => <BanCard key={ban.id} ban={ban} now={now} />)}</div> : <div className="ban-empty-state"><strong>No bans to show</strong><p>No matching records were found. Once staff issue account actions, they will appear here automatically.</p></div>}
       </section>
     </main>

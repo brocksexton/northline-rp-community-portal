@@ -127,11 +127,11 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
       <section className="community-hero">
         <div className="community-hero-copy">
           <span className="community-pill"><i className="fa-solid fa-house-chimney-window" aria-hidden="true" /> Northline RP community portal</span>
-          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline. Try not to die thirsty.'}</h1>
+          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline. Come hang out.'}</h1>
           <p>
             {hasSignedIn
               ? `Your ${role} profile is connected. Check your character, catch up on city nonsense, or jump into Tweeter before heading in-game.`
-              : 'A homegrown companion site for Northbound RP: city gossip, citizen stats, public profiles, guides, status, and the occasional evidence that gravity remains undefeated.'}
+              : 'A relaxed companion site for the Northline community: live city stats, public profiles, guides, status, and enough chaos to make checking in worth it.'}
           </p>
 
           <div className="community-hero-actions">
@@ -145,7 +145,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               <>
                 <a className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
                 <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link>
-                <a className="button button-ghost" href={config.server.discordUrl}>Join Discord</a>
+                <a className="button button-ghost" href={config.server.discordUrl}>Join Northline Discord</a>
               </>
             )}
           </div>
@@ -176,12 +176,37 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               </div>
             </div>
           ) : (
-            <p>Sign in to turn this card into your personal citizen snapshot.</p>
+            <div className="community-guest-start">
+              <strong>New here?</strong>
+              <span>Start with Steam if you already play here, or hop into Discord if you are still checking the place out.</span>
+              <div>
+                <a href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in</a>
+                <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Guides</Link>
+              </div>
+            </div>
           )}
         </aside>
       </section>
 
       <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} />
+
+      <section className="community-card ape-tavern-callout">
+        <div className="ape-tavern-badge" aria-hidden="true">
+          <i className="fa-solid fa-beer-mug-empty" />
+        </div>
+        <div>
+          <span className="community-kicker">Built on Northbound RP</span>
+          <h2>Shoutout to ApeTavern and the Northbound RP team.</h2>
+          <p>
+            Northline exists because ApeTavern and the Northbound RP crew keep building the gamemode this community plays on.
+            This site is just our little front porch for the server; the real magic is the game they keep making better.
+          </p>
+        </div>
+        <div className="ape-tavern-actions">
+          <a className="button button-primary" href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northbound RP Discord</a>
+          <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link>
+        </div>
+      </section>
 
       {hasSignedIn ? (
         <section className="community-card personal-board">
@@ -254,7 +279,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             </div>
             <div>
               <strong>{overview.bans.active.toLocaleString()} active public ban record{overview.bans.active === 1 ? '' : 's'}</strong>
-              <span>Public-safe moderation visibility without exposing private staff notes.</span>
+              <span>Public ban records are visible so people can see what happened without needing to ask around.</span>
               <small><Link href="/bans">View ban list</Link></small>
             </div>
           </div>
