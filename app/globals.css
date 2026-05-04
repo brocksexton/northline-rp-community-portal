@@ -4739,3 +4739,330 @@ body:has(.community-home) .desktop-nav a:hover {
   .death-grid { grid-template-columns: 1fr 1fr; }
   .personal-fact-grid { grid-template-columns: 1fr; }
 }
+
+/* v2.6.4 homepage contrast pass
+   The community homepage keeps the playful direction but defaults to a bright,
+   readable portal surface. Tweeter is intentionally untouched. */
+body:has(.community-home):not(:has(.tweeter-mode)) {
+  --community-bg: #f5fbff;
+  --community-surface: rgba(255,255,255,0.94);
+  --community-surface-strong: #ffffff;
+  --community-ink: #0f172a;
+  --community-ink-soft: #334155;
+  --community-ink-muted: #64748b;
+  --community-border: rgba(15, 23, 42, 0.12);
+  --community-blue: #0284c7;
+  --community-cyan: #0891b2;
+  --community-pink: #db2777;
+  --community-green: #16a34a;
+  --community-yellow: #b45309;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(56,189,248,0.22), transparent 24rem),
+    radial-gradient(circle at 88% 8%, rgba(244,114,182,0.16), transparent 24rem),
+    linear-gradient(180deg, #f8fdff 0%, #eaf4fb 100%);
+  color: var(--community-ink);
+}
+
+body:has(.community-home):not(:has(.tweeter-mode)) .site-header {
+  background: rgba(255,255,255,0.86);
+  border-bottom-color: rgba(15,23,42,0.1);
+  backdrop-filter: blur(18px);
+}
+
+body:has(.community-home):not(:has(.tweeter-mode)) .desktop-nav {
+  background: rgba(241,245,249,0.86);
+  border-color: rgba(15,23,42,0.1);
+  box-shadow: 0 12px 36px rgba(15,23,42,0.06);
+}
+
+body:has(.community-home):not(:has(.tweeter-mode)) .desktop-nav a,
+body:has(.community-home):not(:has(.tweeter-mode)) .mobile-nav a {
+  color: #334155;
+}
+
+body:has(.community-home):not(:has(.tweeter-mode)) .desktop-nav a:hover,
+body:has(.community-home):not(:has(.tweeter-mode)) .mobile-nav a:hover {
+  background: white;
+  color: var(--community-blue);
+}
+
+body:has(.community-home):not(:has(.tweeter-mode)) .header-user-pill,
+body:has(.community-home):not(:has(.tweeter-mode)) .button-ghost {
+  background: white;
+  color: #0f172a;
+  border-color: rgba(15,23,42,0.12);
+}
+
+.community-home {
+  color: var(--community-ink);
+}
+
+.community-home::before {
+  background:
+    radial-gradient(circle at 8% 18%, rgba(14,165,233,0.16), transparent 24rem),
+    radial-gradient(circle at 88% 12%, rgba(236,72,153,0.12), transparent 26rem),
+    radial-gradient(circle at 72% 78%, rgba(34,197,94,0.10), transparent 28rem),
+    linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px);
+  background-size: auto, auto, auto, 42px 42px, 42px 42px;
+}
+
+.community-hero-copy,
+.community-hero-card,
+.community-card,
+.community-stat-card {
+  border-color: var(--community-border);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.97), rgba(248,250,252,0.94));
+  box-shadow: 0 22px 60px rgba(15,23,42,0.10);
+}
+
+.community-hero-copy {
+  background:
+    radial-gradient(circle at 82% 20%, rgba(14,165,233,0.14), transparent 20rem),
+    radial-gradient(circle at 16% 88%, rgba(236,72,153,0.12), transparent 18rem),
+    linear-gradient(135deg, #ffffff, #eff8ff 60%, #fff7ed);
+}
+
+.community-hero-copy::after {
+  color: rgba(14, 116, 144, 0.08);
+}
+
+.community-hero h1,
+.community-section-heading h2,
+.community-mood strong,
+.community-stat-card strong,
+.death-tile strong,
+.death-tile span,
+.personal-fact strong,
+.community-action-list strong,
+.community-post strong,
+.noticeboard-list strong,
+.community-empty strong,
+.community-player-chip strong {
+  color: var(--community-ink);
+}
+
+.community-hero p,
+.community-section-heading p,
+.community-mood small,
+.community-stat-card small,
+.death-tile small,
+.community-action-list span,
+.community-post p,
+.noticeboard-list span,
+.community-empty span {
+  color: var(--community-ink-soft);
+}
+
+.community-pill,
+.community-kicker,
+.community-section-heading a,
+.personal-board > .community-section-heading a,
+.noticeboard-list a,
+.community-action-list i,
+.personal-fact i {
+  color: var(--community-blue);
+}
+
+.community-pill {
+  border-color: rgba(2,132,199,0.2);
+  background: rgba(2,132,199,0.08);
+}
+
+.community-alert {
+  background: white;
+  border-color: var(--community-border);
+}
+.community-alert.danger { color: #be123c; background: #fff1f2; }
+.community-alert.success { color: #166534; background: #f0fdf4; }
+
+.community-mood,
+.community-online-meter div,
+.community-player-chip,
+.death-tile,
+.community-mini-list div,
+.noticeboard-list div,
+.community-action-list a,
+.personal-fact,
+.community-post,
+.community-empty {
+  border-color: rgba(15,23,42,0.10);
+  background: rgba(255,255,255,0.72);
+}
+
+.community-mood > span {
+  background: rgba(2,132,199,0.10);
+  color: var(--community-blue);
+}
+.community-mood.success > span { background: rgba(22,163,74,0.10); color: var(--community-green); }
+.community-mood.warning > span { background: rgba(180,83,9,0.12); color: var(--community-yellow); }
+.community-mood.danger > span { background: rgba(219,39,119,0.10); color: var(--community-pink); }
+
+.community-online-meter span,
+.community-player-chip span,
+.community-mini-list span,
+.community-mini-list small,
+.noticeboard-list small,
+.community-post small,
+.personal-fact span,
+.personal-fact small,
+.community-stat-card span {
+  color: var(--community-ink-muted);
+}
+
+.community-meter-bar {
+  background: rgba(15,23,42,0.08);
+}
+
+.community-stat-card {
+  text-decoration: none;
+}
+.community-stat-card:hover,
+.community-action-list a:hover,
+.community-post:hover {
+  border-color: rgba(2,132,199,0.28);
+  background: #ffffff;
+  color: var(--community-ink);
+  box-shadow: 0 20px 52px rgba(2,132,199,0.13);
+}
+.community-stat-card i {
+  color: white;
+  background: linear-gradient(135deg, #0284c7, #06b6d4 55%, #db2777);
+  box-shadow: 0 12px 26px rgba(2,132,199,0.18);
+}
+
+.death-board {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(244,114,182,0.18), transparent 22rem),
+    linear-gradient(135deg, #fff7ed, #fff1f2 50%, #ffffff);
+}
+.death-tile.has-count {
+  background: linear-gradient(145deg, rgba(255,255,255,0.86), rgba(253,242,248,0.86));
+}
+.death-tile i { color: var(--community-pink); }
+
+.community-now-card {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(34,197,94,0.14), transparent 18rem),
+    linear-gradient(135deg, #ffffff, #f0fdf4);
+}
+
+.personal-board {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(56,189,248,0.14), transparent 18rem),
+    linear-gradient(135deg, #ffffff, #eef9ff);
+}
+
+.tweeter-preview-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(2,132,199,0.10), transparent 18rem),
+    linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+.neighborhood-card {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(250,204,21,0.12), transparent 18rem),
+    linear-gradient(135deg, #ffffff, #fffbeb);
+}
+
+body[data-site-style='glass']:has(.community-home):not(:has(.tweeter-mode)) {
+  --community-bg: #edf8ff;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14,165,233,0.22), transparent 24rem),
+    radial-gradient(circle at 90% 20%, rgba(99,102,241,0.13), transparent 24rem),
+    linear-gradient(180deg, #f7fcff 0%, #dff2ff 100%);
+}
+body[data-site-style='glass']:has(.community-home):not(:has(.tweeter-mode)) .community-hero-copy,
+body[data-site-style='glass']:has(.community-home):not(:has(.tweeter-mode)) .community-hero-card,
+body[data-site-style='glass']:has(.community-home):not(:has(.tweeter-mode)) .community-card,
+body[data-site-style='glass']:has(.community-home):not(:has(.tweeter-mode)) .community-stat-card {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 70px rgba(14,116,144,0.12);
+}
+
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) {
+  --community-bg: #0b1220;
+  --community-surface: rgba(15,23,42,0.94);
+  --community-surface-strong: #111827;
+  --community-ink: #f8fafc;
+  --community-ink-soft: #e2e8f0;
+  --community-ink-muted: #cbd5e1;
+  --community-border: rgba(226,232,240,0.18);
+  background:
+    radial-gradient(circle at 8% 18%, rgba(56,189,248,0.18), transparent 24rem),
+    radial-gradient(circle at 88% 12%, rgba(244,114,182,0.12), transparent 26rem),
+    linear-gradient(180deg, #0b1220 0%, #111827 100%);
+  color: var(--community-ink);
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .site-header {
+  background: rgba(2,6,23,0.84);
+  border-bottom-color: rgba(226,232,240,0.12);
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .desktop-nav {
+  background: rgba(15,23,42,0.78);
+  border-color: rgba(226,232,240,0.14);
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .desktop-nav a {
+  color: #e2e8f0;
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-hero-copy,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-hero-card,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-card,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-stat-card {
+  border-color: var(--community-border);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(56,189,248,0.16), transparent 32rem),
+    linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,0.88));
+  box-shadow: 0 24px 80px rgba(2,6,23,0.38);
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mood,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-online-meter div,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-player-chip,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .death-tile,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mini-list div,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .noticeboard-list div,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-action-list a,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .personal-fact,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-post,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-empty {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(226,232,240,0.14);
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-hero h1,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-section-heading h2,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mood strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-stat-card strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .death-tile strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .death-tile span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .personal-fact strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-action-list strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-post strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .noticeboard-list strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-empty strong,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-player-chip strong {
+  color: #f8fafc;
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-hero p,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-section-heading p,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mood small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-stat-card small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .death-tile small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-action-list span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-post p,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .noticeboard-list span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-empty span {
+  color: #e2e8f0;
+}
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-online-meter span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-player-chip span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mini-list span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-mini-list small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .noticeboard-list small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-post small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .personal-fact span,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .personal-fact small,
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-stat-card span {
+  color: #cbd5e1;
+}
