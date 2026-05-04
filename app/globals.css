@@ -5568,3 +5568,553 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
     flex-direction: column;
   }
 }
+
+/* Players directory v2.6.6 */
+.players-directory-page {
+  padding-bottom: 3rem;
+}
+
+.players-directory-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 1.1rem;
+  align-items: stretch;
+  margin: 1.25rem 0 1.1rem;
+}
+
+.players-directory-copy,
+.players-directory-scoreboard,
+.players-directory-toolbar,
+.players-directory-nudge,
+.players-directory-policy,
+.players-directory-empty {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+}
+
+.players-directory-copy {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  padding: clamp(1.35rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.28), transparent 32%),
+    radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.2), transparent 30%),
+    linear-gradient(135deg, #ffffff, #eff6ff 52%, #ecfeff);
+}
+
+.players-directory-copy::after {
+  content: '';
+  position: absolute;
+  inset: auto -7rem -7rem auto;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.players-directory-copy h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 840px;
+  margin: 0.45rem 0 0.85rem;
+  color: #0f172a;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: -0.085em;
+}
+
+.players-directory-copy p {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0;
+  color: #334155;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.players-hero-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.35rem;
+}
+
+.players-hero-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.players-directory-scoreboard {
+  border-radius: 2rem;
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+  background: linear-gradient(180deg, #0f172a, #164e63);
+  color: white;
+}
+
+.scoreboard-main {
+  min-height: 13rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.15rem;
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(135deg, rgba(14,165,233,0.36), rgba(255,255,255,0.05)),
+    rgba(255,255,255,0.08);
+}
+
+.scoreboard-main span,
+.scoreboard-grid span {
+  color: rgba(255,255,255,0.72);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.scoreboard-main strong {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 0.85;
+  letter-spacing: -0.08em;
+}
+
+.scoreboard-main p {
+  margin: 0.65rem 0 0;
+  color: rgba(255,255,255,0.82);
+}
+
+.scoreboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.scoreboard-grid div {
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.08);
+}
+
+.scoreboard-grid strong,
+.scoreboard-grid span {
+  display: block;
+}
+
+.scoreboard-grid strong {
+  color: white;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.players-directory-nudge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  background: #f0f9ff;
+}
+
+.players-directory-nudge.private {
+  background: #fff7ed;
+}
+
+.players-directory-nudge strong {
+  display: block;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.players-directory-nudge p {
+  margin: 0.3rem 0 0;
+  color: #475569;
+}
+
+.players-directory-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(170px, 0.25fr) minmax(180px, 0.25fr);
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+  padding: 0.75rem;
+  border-radius: 1.4rem;
+  background: rgba(255,255,255,0.9);
+}
+
+.players-search-field,
+.players-select-field {
+  min-height: 3.4rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+.players-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+.players-search-field i {
+  color: #0ea5e9;
+}
+
+.players-search-field input,
+.players-select-field select {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font: inherit;
+}
+
+.players-search-field input::placeholder {
+  color: #64748b;
+}
+
+.players-select-field {
+  display: grid;
+  align-content: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.players-select-field span {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.players-directory-results-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.35rem 0 0.85rem;
+}
+
+.players-directory-results-head h2 {
+  margin: 0.2rem 0 0;
+  color: #0f172a;
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  letter-spacing: -0.06em;
+}
+
+.players-directory-results-head p {
+  max-width: 320px;
+  margin: 0;
+  color: #64748b;
+  text-align: right;
+}
+
+.players-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.public-citizen-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 1.5rem;
+  background: rgba(255,255,255,0.94);
+  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.public-citizen-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 165, 233, 0.35);
+  box-shadow: 0 26px 70px rgba(14, 165, 233, 0.16);
+}
+
+.public-citizen-card.is-you {
+  border-color: rgba(14, 165, 233, 0.45);
+  box-shadow: 0 22px 65px rgba(14, 165, 233, 0.18);
+}
+
+.public-citizen-banner {
+  height: 6.25rem;
+  opacity: 0.96;
+}
+
+.public-citizen-body {
+  padding: 0 1rem 1rem;
+}
+
+.public-citizen-avatar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-top: -2.1rem;
+}
+
+.public-citizen-avatar-row .avatar {
+  border: 4px solid white;
+  box-shadow: 0 10px 26px rgba(15,23,42,0.2);
+}
+
+.public-citizen-open {
+  width: 2.45rem;
+  height: 2.45rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(15,23,42,0.1);
+  border-radius: 999px;
+  background: white;
+  color: #0f172a;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.public-citizen-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.public-citizen-title-row h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+}
+
+.public-citizen-title-row span {
+  display: block;
+  margin-top: 0.1rem;
+  color: #64748b;
+}
+
+.public-citizen-title-row em {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.public-citizen-bio {
+  min-height: 4.5rem;
+  margin: 0.8rem 0 0;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.public-citizen-meta {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.9rem 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.public-citizen-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.public-citizen-meta i {
+  width: 1rem;
+  color: #0ea5e9;
+}
+
+.public-citizen-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 2rem;
+  margin-bottom: 1rem;
+}
+
+.public-citizen-chips span {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.public-citizen-body .button {
+  width: 100%;
+}
+
+.players-directory-empty {
+  display: grid;
+  place-items: center;
+  gap: 0.65rem;
+  padding: 3rem 1rem;
+  border-radius: 1.5rem;
+  text-align: center;
+}
+
+.empty-city-icon {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 1.5rem;
+}
+
+.players-directory-empty h2,
+.players-directory-empty p {
+  margin: 0;
+}
+
+.players-directory-empty h2 {
+  color: #0f172a;
+  letter-spacing: -0.05em;
+}
+
+.players-directory-empty p {
+  max-width: 540px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.players-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 1.2rem 0;
+}
+
+.players-directory-policy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin: 1.4rem 0 0;
+  padding: 1rem 1.15rem;
+  border-radius: 1.25rem;
+  background: #f8fafc;
+}
+
+.players-directory-policy div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #0f172a;
+}
+
+.players-directory-policy i {
+  color: #0ea5e9;
+}
+
+.players-directory-policy p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-copy,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-toolbar,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-card,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-policy,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-empty {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-copy h1,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-results-head h2,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-title-row h3,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-policy div,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-empty h2 {
+  color: #f8fafc;
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-copy p,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-results-head p,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-bio,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-meta,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-policy p,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-directory-empty p {
+  color: #cbd5e1;
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-search-field,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-select-field,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-open,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-chips span {
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #f8fafc;
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-search-field input,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-select-field select,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .public-citizen-title-row span {
+  color: #e2e8f0;
+}
+
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-select-field span,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .players-search-field input::placeholder {
+  color: #94a3b8;
+}
+
+@media (max-width: 1080px) {
+  .players-directory-hero,
+  .players-directory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .players-directory-copy {
+    grid-column: 1 / -1;
+  }
+
+  .players-directory-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .players-search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .players-directory-hero,
+  .players-directory-grid,
+  .players-directory-toolbar,
+  .players-directory-policy,
+  .scoreboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .players-directory-results-head,
+  .players-directory-nudge {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .players-directory-results-head p {
+    text-align: left;
+  }
+}
