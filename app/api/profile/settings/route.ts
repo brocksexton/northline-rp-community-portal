@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { upsertCommunityProfile } from '@/lib/community-data';
+import {
+  normalizeTweeterColorMode,
+  normalizeTweeterThemeEra,
+  upsertCommunityProfile,
+} from '@/lib/community-data';
 import { getSessionSteamId, getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +33,9 @@ function cleanShowcase(value: unknown) {
 
 export async function POST(request: NextRequest) {
   const steamId = getSessionSteamIdFromRequest(request) ?? await getSessionSteamId();
-  if (!steamId) return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
+  if (!steamId) {
+    return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
+  }
 
   const body = await request.json().catch(() => ({}));
   const privacy = body.privacy === 'private' ? 'private' : 'public';
@@ -39,8 +45,10 @@ export async function POST(request: NextRequest) {
     location: String(body.location ?? '').trim().slice(0, 80),
     websiteUrl: cleanUrl(body.websiteUrl),
     customAvatarUrl: cleanUrl(body.customAvatarUrl),
-    bannerColor: /^#[0-9a-f]{6}$/i.test(String(body.bannerColor ?? '')) ? String(body.bannerColor) : '#1194f0',
+    bannerColor: /^#[0-9a-f]{6}$/i.test(String(body.bannerColor ?? '')) ? String(body.bannerColor) : '#1d9bf0',
     showcase: cleanShowcase(body.showcase),
+    tweeterTheme: normalizeTweeterThemeEra(body.tweeterTheme),
+    tweeterMode: normalizeTweeterColorMode(body.tweeterMode),
   });
 
   return NextResponse.json({ profile }, { headers: noStoreHeaders() });

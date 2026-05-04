@@ -60,7 +60,7 @@ export function TweeterLikeButton({ tweetId, initialLiked, initialCount, signedI
       aria-pressed={liked}
       title={signedIn ? (liked ? 'Unlike' : 'Like') : 'Sign in with Steam to like'}
     >
-      <span>{liked ? '♥' : '♡'}</span>
+      <span><i className={`${liked ? 'fa-solid' : 'fa-regular'} fa-heart`} aria-hidden="true" /></span>
       <small>{actionCount(count)}</small>
     </button>
   );

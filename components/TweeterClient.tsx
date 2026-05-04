@@ -54,6 +54,10 @@ type TweeterPayload = {
   };
 };
 
+function Icon({ className }: { className: string }) {
+  return <i className={className} aria-hidden="true" />;
+}
+
 function formatTweetTime(seconds: number, nowMs: number) {
   if (!seconds) return 'Just now';
   const date = new Date(seconds * 1000);
@@ -73,12 +77,8 @@ function renderTweetText(body: string) {
     if (/^https?:\/\//i.test(part)) {
       return <a className="tweeter-link" href={part} key={`${part}-${index}`} rel="noreferrer" target="_blank">{part}</a>;
     }
-    if (part.startsWith('#')) {
-      return <span className="tweeter-hashtag" key={`${part}-${index}`}>{part}</span>;
-    }
-    if (part.startsWith('@')) {
-      return <span className="tweeter-mention" key={`${part}-${index}`}>{part}</span>;
-    }
+    if (part.startsWith('#')) return <span className="tweeter-hashtag" key={`${part}-${index}`}>{part}</span>;
+    if (part.startsWith('@')) return <span className="tweeter-mention" key={`${part}-${index}`}>{part}</span>;
     return <span key={`${part}-${index}`}>{part}</span>;
   });
 }
@@ -87,7 +87,7 @@ function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
   return (
     <span className="tweeter-verified" title={kind} aria-label={kind}>
-      ✓
+      <Icon className="fa-solid fa-circle-check" />
     </span>
   );
 }
@@ -126,7 +126,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
         setLastRefreshed(new Date(nextMs));
       }
     } catch {
-      // Keep the existing timeline visible if the live read fails.
+      // leave last good timeline intact
     } finally {
       setRefreshing(false);
     }
@@ -136,7 +136,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
     const poll = window.setInterval(() => { void refreshFeed(); }, 15000);
     return () => window.clearInterval(poll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshing]);
+  }, []);
 
   const filtered = useMemo(() => {
     const clean = query.trim().toLowerCase();
@@ -162,24 +162,55 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
 
   return (
     <main className="tweeter-shell">
+      <header className="tweeter-legacy-topnav">
+        <div className="tweeter-legacy-left">
+          <Link href="/tweeter"><Icon className="fa-solid fa-house" /> <span>Home</span></Link>
+          <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /> <span>Explore</span></button>
+          <button type="button" disabled><Icon className="fa-solid fa-bell" /> <span>Notifications</span></button>
+          <button type="button" disabled><Icon className="fa-regular fa-envelope" /> <span>Messages</span></button>
+        </div>
+        <Link href="/tweeter" className="tweeter-legacy-logo"><Icon className="fa-brands fa-twitter" /></Link>
+        <div className="tweeter-legacy-right">
+          <label className="tweeter-legacy-search">
+            <Icon className="fa-solid fa-magnifying-glass" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search Twitter" />
+          </label>
+          {data.currentUser ? <Link className="legacy-mini-avatar" href={`/tweeter/profile/${data.currentUser.steamId}`}><UserAvatar src={data.currentUser.avatarUrl ?? null} name={data.currentUser.displayName} size="sm" /></Link> : null}
+          <button type="button" className="legacy-tweet-button" disabled><Icon className="fa-solid fa-pen-to-square" /> Tweet</button>
+        </div>
+      </header>
+
       <div className="tweeter-grid">
         <aside className="tweeter-left-rail">
           <div className="tweeter-brand">
-            <span className="tweeter-bird" aria-hidden="true">✦</span>
+            <span className="tweeter-bird" aria-hidden="true"><Icon className="fa-brands fa-twitter" /></span>
             <div>
               <strong>Tweeter</strong>
               <small>Northline Social</small>
             </div>
           </div>
 
+          <div className="tweeter-legacy-profile-card">
+            <div className="tweeter-legacy-cover" />
+            <div className="tweeter-legacy-profile-body">
+              <UserAvatar src={data.currentUser?.avatarUrl ?? null} name={data.currentUser?.displayName ?? 'Northline'} size="lg" />
+              <strong>{data.currentUser?.displayName ?? 'Guest'}</strong>
+              <span>{data.currentUser?.handle ?? '@guest'}</span>
+              <div className="tweeter-legacy-stats">
+                <div><strong>{data.stats.tweetCount.toLocaleString()}</strong><span>Tweets</span></div>
+                <div><strong>{data.stats.authorCount.toLocaleString()}</strong><span>Authors</span></div>
+              </div>
+            </div>
+          </div>
+
           <nav className="tweeter-nav" aria-label="Tweeter navigation">
-            <button className="active" type="button"><span>⌂</span>Home</button>
-            <button type="button" onClick={() => setQuery('#')}><span>#</span>Explore</button>
-            <button disabled title="Notifications require the future game bridge." type="button"><span>🔔</span>Notifications</button>
-            <button disabled title="Messages are intentionally not mirrored from game data." type="button"><span>✉</span>Messages</button>
-            <button disabled title="Bookmarks are planned for a later website-only pass." type="button"><span>🔖</span>Bookmarks</button>
-            {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><span>👤</span>Profile</Link> : <button disabled title="Sign in with Steam to open your profile." type="button"><span>👤</span>Profile</button>}
-            <Link href="/"><span>↩</span>Back to Northline</Link>
+            <button className="active" type="button"><Icon className="fa-solid fa-house" /><span>Home</span></button>
+            <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /><span>Explore</span></button>
+            <button disabled title="Notifications require the future game bridge." type="button"><Icon className="fa-solid fa-bell" /><span>Notifications</span></button>
+            <button disabled title="Messages are intentionally not mirrored from game data." type="button"><Icon className="fa-regular fa-envelope" /><span>Messages</span></button>
+            <button disabled title="Bookmarks are planned for a later website-only pass." type="button"><Icon className="fa-regular fa-bookmark" /><span>Bookmarks</span></button>
+            {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <button disabled title="Sign in with Steam to open your profile." type="button"><Icon className="fa-regular fa-user" /><span>Profile</span></button>}
+            <Link href="/"><Icon className="fa-solid fa-arrow-left" /><span>Back to Northline</span></Link>
           </nav>
 
           <button className="tweeter-post-button" type="button" disabled title="Web posting will stay locked until a secure S&box bridge exists.">
@@ -193,6 +224,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                 <strong>{data.currentUser.displayName}</strong>
                 <span>{data.currentUser.handle}</span>
               </div>
+              <Icon className="fa-solid fa-ellipsis" />
             </Link>
           ) : (
             <div className="tweeter-login-card">
@@ -210,7 +242,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
               <small>Live city chatter from Northbound RP</small>
             </div>
             <button className="tweeter-live-pill" type="button" onClick={() => void refreshFeed()} aria-label="Refresh Tweeter timeline">
-              <span className={refreshing ? 'spinning' : ''}>✦</span>
+              <Icon className={refreshing ? 'fa-solid fa-rotate spinning' : 'fa-solid fa-wand-sparkles'} />
               {refreshing ? 'Syncing' : 'Live'}
             </button>
           </header>
@@ -225,15 +257,15 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <div className="tweeter-compose-body">
               <div className="tweeter-compose-lockline">
                 <span className="tweeter-badge">Read-only bridge</span>
-                <span>Web posting is intentionally locked.</span>
+                <span>Web posting is intentionally locked while the signed game bridge is built.</span>
               </div>
-              <textarea placeholder="What's happening in Northline?" disabled rows={3} />
+              <textarea placeholder="What's happening?" disabled rows={3} />
               <div className="tweeter-compose-footer">
                 <div className="tweeter-compose-tools" aria-hidden="true">
-                  <span>🖼</span>
-                  <span>🎥</span>
-                  <span>📊</span>
-                  <span>😊</span>
+                  <Icon className="fa-regular fa-image" />
+                  <Icon className="fa-solid fa-film" />
+                  <Icon className="fa-solid fa-chart-column" />
+                  <Icon className="fa-regular fa-face-smile" />
                 </div>
                 <button className="tweeter-inline-post" type="button" disabled>Post</button>
               </div>
@@ -266,10 +298,10 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                 </div>
                 <div className="tweet-card-body">
                   {tweet.isRetweet && tweet.retweetOfAuthorDisplayName ? (
-                    <div className="tweet-meta-note">↻ Retweeted from {tweet.retweetOfAuthorDisplayName}</div>
+                    <div className="tweet-meta-note"><Icon className="fa-solid fa-retweet" /> Retweeted from {tweet.retweetOfAuthorDisplayName}</div>
                   ) : null}
                   {tweet.isReply && tweet.replyToId ? (
-                    <Link className="tweet-meta-note tweet-reply-note" href={`/tweeter/tweet/${tweet.replyToId}`}>Replying in a thread</Link>
+                    <Link className="tweet-meta-note tweet-reply-note" href={`/tweeter/tweet/${tweet.replyToId}`}><Icon className="fa-solid fa-reply" /> Replying in a thread</Link>
                   ) : null}
                   <div className="tweet-card-header">
                     <div className="tweet-card-authorline">
@@ -281,7 +313,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                       <span>·</span>
                       <span>{formatTweetTime(tweet.postedAtTimeSeconds, clockMs)}</span>
                     </div>
-                    <Link className="tweet-more" href={`/tweeter/tweet/${tweet.id}`} aria-label="Open post">···</Link>
+                    <Link className="tweet-more" href={`/tweeter/tweet/${tweet.id}`} aria-label="Open post"><Icon className="fa-solid fa-ellipsis" /></Link>
                   </div>
 
                   {tweet.isRetweet && tweet.retweetOfBody ? (
@@ -291,10 +323,10 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   <div className="tweet-card-text">{renderTweetText(tweet.body)}</div>
 
                   <footer className="tweet-actions-row">
-                    <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Open replies"><span>💬</span><small>{actionCount(tweet.replyCount)}</small></Link>
-                    <button disabled title="Reposts require the future game bridge." type="button"><span>↻</span><small>{actionCount(tweet.retweetCount)}</small></button>
+                    <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Open replies"><Icon className="fa-regular fa-comment" /><small>{actionCount(tweet.replyCount)}</small></Link>
+                    <button disabled title="Reposts require the future game bridge." type="button"><Icon className="fa-solid fa-retweet" /><small>{actionCount(tweet.retweetCount)}</small></button>
                     <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!data.sessionSteamId} />
-                    <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Share or open post"><span>↗</span></Link>
+                    <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Share or open post"><Icon className="fa-solid fa-arrow-up-from-bracket" /></Link>
                   </footer>
                   <Link className="tweet-thread-link" href={`/tweeter/tweet/${tweet.id}`}>{tweet.replyCount > 0 || tweet.isReply ? 'View thread' : 'Open post'}</Link>
                 </div>
@@ -311,18 +343,12 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
         <aside className="tweeter-right-rail">
           <label className="tweeter-search-box">
             <span className="sr-only">Search Tweeter</span>
-            <span className="tweeter-search-icon">⌕</span>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search Tweeter"
-            />
+            <span className="tweeter-search-icon"><Icon className="fa-solid fa-magnifying-glass" /></span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search Tweeter" />
           </label>
 
           <section className="tweeter-panel tweeter-system-panel">
-            <div className="tweeter-panel-header">
-              <strong>City pulse</strong>
-            </div>
+            <div className="tweeter-panel-header"><strong>City pulse</strong></div>
             <p>Tweeter mirrors server-side Northbound RP data and keeps unsafe write actions disabled until the bridge is ready.</p>
             <div className="tweeter-system-grid">
               <span>Read-only feed</span>
@@ -332,10 +358,14 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             </div>
           </section>
 
+          <section className="tweeter-panel tweeter-theme-studio-panel">
+            <div className="tweeter-panel-header"><strong>Theme studio</strong></div>
+            <p>Choose between Modern, Mid-2010s, and Classic Tweeter styles from your dashboard, plus Dark, Light, or Twitter Blue color modes.</p>
+            <Link className="button button-soft tweeter-theme-studio-link" href="/dashboard">Open theme settings</Link>
+          </section>
+
           <section className="tweeter-panel">
-            <div className="tweeter-panel-header">
-              <strong>Northline trends</strong>
-            </div>
+            <div className="tweeter-panel-header"><strong>Northline trends</strong></div>
             <div className="tweeter-trend-list">
               {data.trends.length ? data.trends.map((trend, index) => (
                 <button className={tag === trend.tag ? 'active' : ''} key={trend.tag} onClick={() => setTag(trend.tag)} type="button">
@@ -343,16 +373,12 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   <strong>{trend.tag}</strong>
                   <span>{trend.count} posts</span>
                 </button>
-              )) : (
-                <div className="tweeter-panel-empty">No trending hashtags yet.</div>
-              )}
+              )) : <div className="tweeter-panel-empty">No trending hashtags yet.</div>}
             </div>
           </section>
 
           <section className="tweeter-panel">
-            <div className="tweeter-panel-header">
-              <strong>Who to follow</strong>
-            </div>
+            <div className="tweeter-panel-header"><strong>Who to follow</strong></div>
             <div className="tweeter-suggestion-list">
               {data.suggestions.map((suggestion) => (
                 <div className="tweeter-suggestion" key={suggestion.steamId}>
@@ -371,9 +397,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
           </section>
 
           <section className="tweeter-panel tweeter-mini-stats">
-            <div className="tweeter-panel-header">
-              <strong>About this feed</strong>
-            </div>
+            <div className="tweeter-panel-header"><strong>About this feed</strong></div>
             <dl>
               <div><dt>Posts</dt><dd>{data.stats.tweetCount.toLocaleString()}</dd></div>
               <div><dt>Authors</dt><dd>{data.stats.authorCount.toLocaleString()}</dd></div>
@@ -385,10 +409,10 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
       </div>
 
       <nav className="tweeter-mobile-actions" aria-label="Mobile Tweeter navigation">
-        <Link href="/tweeter">⌂<span>Home</span></Link>
-        <button type="button" onClick={() => setQuery('#')}>#<span>Explore</span></button>
-        {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}>👤<span>Profile</span></Link> : <Link href="/api/auth/steam?returnTo=/tweeter">🔐<span>Sign in</span></Link>}
-        <Link href="/">↩<span>Northline</span></Link>
+        <Link href="/tweeter"><Icon className="fa-solid fa-house" /><span>Home</span></Link>
+        <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /><span>Explore</span></button>
+        {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <Link href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-solid fa-user-lock" /><span>Sign in</span></Link>}
+        <Link href="/"><Icon className="fa-solid fa-arrow-left" /><span>Northline</span></Link>
       </nav>
     </main>
   );

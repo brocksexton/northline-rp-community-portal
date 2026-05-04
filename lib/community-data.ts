@@ -13,12 +13,20 @@ export type ProfileShowcaseSettings = {
   activity: boolean;
 };
 
+export type TweeterThemeEra = 'modern' | 'retro' | 'classic';
+export type TweeterColorMode = 'dark' | 'light' | 'blue';
+
 export const DEFAULT_PROFILE_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
   inventory: false,
   stats: false,
   properties: false,
   activity: false,
+};
+
+export const DEFAULT_TWEETER_THEME = {
+  era: 'modern' as TweeterThemeEra,
+  mode: 'dark' as TweeterColorMode,
 };
 
 export type CommunityProfile = {
@@ -30,6 +38,8 @@ export type CommunityProfile = {
   customAvatarUrl?: string;
   bannerColor?: string;
   showcase?: ProfileShowcaseSettings;
+  tweeterTheme?: TweeterThemeEra;
+  tweeterMode?: TweeterColorMode;
   updatedAt: string;
 };
 
@@ -178,10 +188,20 @@ function normalizeShowcase(value: Partial<ProfileShowcaseSettings> | undefined |
   };
 }
 
+export function normalizeTweeterThemeEra(value: unknown): TweeterThemeEra {
+  return value === 'retro' || value === 'classic' ? value : 'modern';
+}
+
+export function normalizeTweeterColorMode(value: unknown): TweeterColorMode {
+  return value === 'light' || value === 'blue' ? value : 'dark';
+}
+
 function normalizeProfile(profile: CommunityProfile): CommunityProfile {
   return {
     ...profile,
     showcase: normalizeShowcase(profile.showcase),
+    tweeterTheme: normalizeTweeterThemeEra(profile.tweeterTheme),
+    tweeterMode: normalizeTweeterColorMode(profile.tweeterMode),
   };
 }
 
@@ -207,6 +227,8 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
       customAvatarUrl: patch.customAvatarUrl ?? existing?.customAvatarUrl ?? '',
       bannerColor: patch.bannerColor ?? existing?.bannerColor ?? '#1194f0',
       showcase: normalizeShowcase(patch.showcase ?? existing?.showcase ?? DEFAULT_PROFILE_SHOWCASE),
+      tweeterTheme: normalizeTweeterThemeEra(patch.tweeterTheme ?? existing?.tweeterTheme ?? DEFAULT_TWEETER_THEME.era),
+      tweeterMode: normalizeTweeterColorMode(patch.tweeterMode ?? existing?.tweeterMode ?? DEFAULT_TWEETER_THEME.mode),
       updatedAt: new Date().toISOString(),
     };
     return {
@@ -217,7 +239,7 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
       },
     };
   });
-  return store.profiles[steamId];
+  return normalizeProfile(store.profiles[steamId]);
 }
 
 

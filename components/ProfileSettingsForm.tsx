@@ -1,7 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import type { CommunityProfile, ProfileShowcaseSettings } from '@/lib/community-data';
+import { useMemo, useState, type FormEvent } from 'react';
+import type {
+  CommunityProfile,
+  ProfileShowcaseSettings,
+  TweeterColorMode,
+  TweeterThemeEra,
+} from '@/lib/community-data';
 
 const DEFAULT_CLIENT_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
@@ -43,21 +48,67 @@ function ShowcaseToggle({
   );
 }
 
+function ThemeChoiceCard({
+  active,
+  title,
+  body,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  body: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={`theme-choice-card ${active ? 'active' : ''}`} onClick={onClick}>
+      <strong>{title}</strong>
+      <small>{body}</small>
+    </button>
+  );
+}
+
+function ModeChoiceCard({
+  active,
+  title,
+  body,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  body: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={`theme-mode-card ${active ? 'active' : ''}`} onClick={onClick}>
+      <strong>{title}</strong>
+      <small>{body}</small>
+    </button>
+  );
+}
+
 export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | null }) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(profile?.websiteUrl ?? '');
   const [customAvatarUrl, setCustomAvatarUrl] = useState(profile?.customAvatarUrl ?? '');
-  const [bannerColor, setBannerColor] = useState(profile?.bannerColor ?? '#38bdf8');
+  const [bannerColor, setBannerColor] = useState(profile?.bannerColor ?? '#1d9bf0');
   const [showcase, setShowcase] = useState<ProfileShowcaseSettings>(normalizeShowcase(profile));
+  const [tweeterTheme, setTweeterTheme] = useState<TweeterThemeEra>(profile?.tweeterTheme ?? 'modern');
+  const [tweeterMode, setTweeterMode] = useState<TweeterColorMode>(profile?.tweeterMode ?? 'dark');
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const previewLabel = useMemo(() => {
+    const era = tweeterTheme === 'modern' ? 'Modern' : tweeterTheme === 'retro' ? 'Mid-2010s' : 'Classic';
+    const mode = tweeterMode === 'dark' ? 'Dark' : tweeterMode === 'light' ? 'Light' : 'Twitter Blue';
+    return `${era} · ${mode}`;
+  }, [tweeterMode, tweeterTheme]);
 
   function updateShowcase(id: keyof ProfileShowcaseSettings, value: boolean) {
     setShowcase((current) => ({ ...current, [id]: value }));
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState('saving');
     try {
@@ -66,7 +117,17 @@ export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | n
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
         cache: 'no-store',
-        body: JSON.stringify({ privacy, bio, location, websiteUrl, customAvatarUrl, bannerColor, showcase }),
+        body: JSON.stringify({
+          privacy,
+          bio,
+          location,
+          websiteUrl,
+          customAvatarUrl,
+          bannerColor,
+          showcase,
+          tweeterTheme,
+          tweeterMode,
+        }),
       });
       setState(response.ok ? 'saved' : 'error');
     } catch {
@@ -81,7 +142,7 @@ export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | n
       <div className="section-heading">
         <span className="kicker">Profile settings</span>
         <h2>Control your public identity</h2>
-        <p>One profile now powers both the Northline website and Tweeter. Gameplay details are hidden unless you explicitly publish each section.</p>
+        <p>One profile powers both the Northline website and Tweeter. Publish only what you want the community to see.</p>
       </div>
 
       <label className="field">
@@ -122,11 +183,39 @@ export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | n
         </label>
       </div>
 
+      <div className="profile-theme-builder">
+        <div className="section-heading compact-heading">
+          <span className="kicker">Tweeter themes</span>
+          <h3>Choose your personal Tweeter experience</h3>
+          <p>Your Tweeter theme follows your account. Pick a layout era and then choose how bright or blue it feels.</p>
+        </div>
+
+        <div className="theme-preview-banner">
+          <div>
+            <strong>{previewLabel}</strong>
+            <small>Applied whenever you browse Tweeter while signed in.</small>
+          </div>
+          <span className="theme-preview-pill">Per-account preference</span>
+        </div>
+
+        <div className="theme-choice-grid">
+          <ThemeChoiceCard active={tweeterTheme === 'modern'} title="Modern" body="The current Twitter-inspired experience with roomy rails and the latest feed feel." onClick={() => setTweeterTheme('modern')} />
+          <ThemeChoiceCard active={tweeterTheme === 'retro'} title="Mid-2010s" body="A slightly older Twitter look with card-heavy panels, lighter structure, and compact rails." onClick={() => setTweeterTheme('retro')} />
+          <ThemeChoiceCard active={tweeterTheme === 'classic'} title="Classic" body="A nostalgic old-school Twitter experience with simpler framing and older-era profile energy." onClick={() => setTweeterTheme('classic')} />
+        </div>
+
+        <div className="theme-mode-grid">
+          <ModeChoiceCard active={tweeterMode === 'dark'} title="Dark" body="Deep night UI similar to modern dark Twitter." onClick={() => setTweeterMode('dark')} />
+          <ModeChoiceCard active={tweeterMode === 'light'} title="Light" body="Bright classic white panels and lighter feed chrome." onClick={() => setTweeterMode('light')} />
+          <ModeChoiceCard active={tweeterMode === 'blue'} title="Twitter Blue" body="A soft blue-tinted take that feels playful and distinct." onClick={() => setTweeterMode('blue')} />
+        </div>
+      </div>
+
       <div className="profile-privacy-builder">
         <div className="section-heading compact-heading">
           <span className="kicker">Public showcases</span>
           <h3>Choose which game details appear publicly</h3>
-          <p>These modules appear on `/u/[steamId]` and `/tweeter/profile/[steamId]`. Exact phone messages, staff logs, damage evidence, and moderation notes are never published here.</p>
+          <p>These modules appear on your public profile and Tweeter profile. Phone messages, staff logs, evidence, and moderation notes are never published.</p>
         </div>
 
         {profileDisabled ? <div className="profile-warning-strip">Your profile is private, so all showcase modules are hidden until you switch back to public.</div> : null}
