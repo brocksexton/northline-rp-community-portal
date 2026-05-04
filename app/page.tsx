@@ -191,20 +191,32 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
       <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} />
 
       <section className="community-card ape-tavern-callout">
-        <div className="ape-tavern-badge" aria-hidden="true">
-          <i className="fa-solid fa-beer-mug-empty" />
-        </div>
-        <div>
-          <span className="community-kicker">Built on Northbound RP</span>
-          <h2>Shoutout to ApeTavern and the Northbound RP team.</h2>
-          <p>
-            Northline exists because ApeTavern and the Northbound RP crew keep building the gamemode this community plays on.
-            This site is just our little front porch for the server; the real magic is the game they keep making better.
-          </p>
-        </div>
-        <div className="ape-tavern-actions">
-          <a className="button button-primary" href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northbound RP Discord</a>
-          <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link>
+        <div className="ape-tavern-callout-inner">
+          <div className="ape-tavern-brand-block">
+            <img className="ape-tavern-logo" src="/apetavern-logo.png" alt="Ape Tavern" />
+            <div className="ape-tavern-brand-meta">
+              <span className="ape-tavern-overline">A little love to the team behind the gamemode</span>
+              <h2>Northbound RP is built by Ape Tavern.</h2>
+            </div>
+          </div>
+
+          <div className="ape-tavern-copy">
+            <p>
+              Northline is a community-run companion for a gamemode we genuinely enjoy. Huge respect to Ape Tavern for the work they keep putting into
+              Northbound RP and the wider S&box scene.
+            </p>
+            <div className="ape-tavern-pills" aria-label="Ape Tavern highlights">
+              <span>Northbound RP</span>
+              <span>S&box creators</span>
+              <span>Community-driven</span>
+            </div>
+          </div>
+
+          <div className="ape-tavern-actions">
+            <a className="button button-primary" href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northbound RP Discord</a>
+            <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link>
+            <small>Made with appreciation for the team building the game we all goof around in.</small>
+          </div>
         </div>
       </section>
 

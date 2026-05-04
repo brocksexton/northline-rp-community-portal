@@ -7583,119 +7583,176 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .ban-timeline-row { backgro
 
 .ape-tavern-callout {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1.1rem;
-  margin: 1.25rem 0;
+  overflow: hidden;
+  margin: 1.35rem 0;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, .16);
   background:
-    radial-gradient(circle at 8% 15%, rgba(245, 158, 11, .14), transparent 18rem),
-    radial-gradient(circle at 92% 12%, rgba(14, 165, 233, .11), transparent 18rem),
-    linear-gradient(135deg, #ffffff, #fff7ed 52%, #eff6ff);
+    radial-gradient(circle at 88% 16%, rgba(249, 115, 22, .18), transparent 18rem),
+    linear-gradient(180deg, rgba(8, 18, 49, .98), rgba(9, 24, 66, .98));
+  box-shadow: 0 24px 50px rgba(15, 23, 42, .16);
+}
+
+.ape-tavern-callout::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, .08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, .08) 1px, transparent 1px);
+  background-size: 2.6rem 2.6rem;
+  opacity: .32;
+  pointer-events: none;
+}
+
+.ape-tavern-callout-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, .95fr) auto;
+  gap: 1.35rem;
+  align-items: center;
+  padding: 1.5rem 1.6rem;
+}
+
+.ape-tavern-brand-block {
+  display: grid;
+  gap: 1rem;
+}
+
+.ape-tavern-logo {
+  display: block;
+  width: min(100%, 25rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.ape-tavern-brand-meta {
+  display: grid;
+  gap: .5rem;
+}
+
+.ape-tavern-overline {
+  color: #fb923c;
+  font-size: .82rem;
+  font-weight: 900;
+  text-transform: lowercase;
+  letter-spacing: .03em;
 }
 
 .ape-tavern-callout h2 {
-  margin: .35rem 0 .35rem;
-  color: var(--community-ink, #0f172a);
-  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+  line-height: 1.04;
   letter-spacing: -0.055em;
 }
 
-.ape-tavern-callout p {
-  max-width: 760px;
-  margin: 0;
-  color: var(--community-ink-soft, #334155);
-  line-height: 1.65;
+.ape-tavern-copy {
+  display: grid;
+  gap: .95rem;
 }
 
-.ape-tavern-badge {
-  width: 4.25rem;
-  height: 4.25rem;
-  display: grid;
-  place-items: center;
-  border-radius: 1.4rem;
-  color: white;
-  background: linear-gradient(135deg, #0ea5e9, #f59e0b);
-  box-shadow: 0 18px 42px rgba(14, 165, 233, .18);
-  font-size: 1.55rem;
-  transform: rotate(-2deg);
+.ape-tavern-callout p {
+  margin: 0;
+  color: #dbeafe;
+  line-height: 1.72;
+  font-size: 1rem;
+}
+
+.ape-tavern-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.ape-tavern-pills span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: .42rem .8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  background: rgba(255,255,255,.04);
+  color: #e2e8f0;
+  font-size: .88rem;
+  font-weight: 700;
 }
 
 .ape-tavern-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: .6rem;
+  display: grid;
+  gap: .75rem;
+  justify-items: start;
 }
 
 .ape-tavern-actions .button {
+  min-width: 15.5rem;
+  justify-content: center;
   white-space: nowrap;
+  box-shadow: none;
 }
 
-.ape-tavern-callout:hover .ape-tavern-badge {
-  animation: ape-tavern-badge-wiggle .55s ease both;
+.ape-tavern-actions .button.button-primary {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  border-color: rgba(251, 146, 60, .45);
+  color: white;
 }
 
-@keyframes ape-tavern-badge-wiggle {
-  0%, 100% { transform: rotate(-2deg) translateY(0); }
-  35% { transform: rotate(3deg) translateY(-4px); }
-  65% { transform: rotate(-4deg) translateY(-1px); }
+.ape-tavern-actions .button.button-primary:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316);
 }
 
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-home-guest .community-hero-copy,
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .ape-tavern-callout {
-  background:
-    radial-gradient(circle at 12% 12%, rgba(14, 165, 233, .16), transparent 22rem),
-    radial-gradient(circle at 90% 18%, rgba(245, 158, 11, .12), transparent 20rem),
-    linear-gradient(135deg, rgba(15, 23, 42, .98), rgba(15, 23, 42, .90));
-}
-
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-guest-start {
-  background: rgba(255,255,255,.06);
-  border-color: rgba(226,232,240,.14);
-}
-
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-guest-start strong,
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .ape-tavern-callout h2 {
+.ape-tavern-actions .button.button-soft {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(148, 163, 184, .18);
   color: #f8fafc;
 }
 
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-guest-start span,
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .ape-tavern-callout p {
-  color: #e2e8f0;
+.ape-tavern-actions .button.button-soft:hover {
+  background: rgba(255,255,255,.14);
 }
 
-body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .community-guest-start a {
-  color: #bae6fd;
-  background: rgba(14,165,233,.10);
-  border-color: rgba(125,211,252,.18);
+.ape-tavern-actions small {
+  display: block;
+  max-width: 18rem;
+  color: #cbd5e1;
+  line-height: 1.55;
 }
 
-@media (max-width: 980px) {
-  .ape-tavern-callout {
+body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .ape-tavern-callout {
+  border-color: rgba(148, 163, 184, .20);
+  background:
+    radial-gradient(circle at 88% 16%, rgba(249, 115, 22, .22), transparent 18rem),
+    linear-gradient(180deg, rgba(8, 18, 49, .99), rgba(9, 24, 66, .99));
+}
+
+@media (max-width: 1080px) {
+  .ape-tavern-callout-inner {
     grid-template-columns: 1fr;
     align-items: start;
   }
 
   .ape-tavern-actions {
-    justify-content: flex-start;
+    justify-items: start;
   }
 }
 
 @media (max-width: 640px) {
-  .community-home-guest .community-hero-copy {
-    min-height: auto;
+  .ape-tavern-callout-inner {
+    padding: 1.15rem;
   }
 
-  .ape-tavern-badge {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 1.1rem;
+  .ape-tavern-logo {
+    width: min(100%, 18rem);
   }
 
   .ape-tavern-actions .button {
     width: 100%;
-    justify-content: center;
+    min-width: 0;
+  }
+
+  .ape-tavern-actions small {
+    max-width: none;
   }
 }
 
