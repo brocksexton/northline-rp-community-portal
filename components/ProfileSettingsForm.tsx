@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type CSSProperties, type FormEvent } from 'react';
 import type {
   CommunityProfile,
   ProfileShowcaseSettings,
@@ -8,6 +8,7 @@ import type {
   TweeterThemeEra,
   WebsiteStyle,
 } from '@/lib/community-data';
+import { canUseCustomProfileCover, getProfileCoverPreset, PROFILE_COVER_PRESETS, PROFILE_THEMES, type ProfileTheme } from '@/lib/profile-customization';
 
 const DEFAULT_CLIENT_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
@@ -88,6 +89,51 @@ function ModeChoiceCard({
 }
 
 
+function CoverChoiceCard({
+  active,
+  preset,
+  onClick,
+}: {
+  active: boolean;
+  preset: (typeof PROFILE_COVER_PRESETS)[number];
+  onClick: () => void;
+}) {
+  const style = {
+    '--cover-preview-gradient': preset.gradient,
+    '--cover-preview-image': preset.imageUrl ? `url("${preset.imageUrl}")` : 'none',
+  } as unknown as CSSProperties;
+
+  return (
+    <button type="button" className={`cover-choice-card ${active ? 'active' : ''} cover-kind-${preset.kind}`} style={style} onClick={onClick}>
+      <span className="cover-choice-preview" aria-hidden="true" />
+      <strong>{preset.label}</strong>
+      <small>{preset.description}</small>
+    </button>
+  );
+}
+
+function ProfileThemeCard({
+  active,
+  id,
+  title,
+  body,
+  onClick,
+}: {
+  active: boolean;
+  id: ProfileTheme;
+  title: string;
+  body: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={`profile-theme-card ${active ? 'active' : ''} profile-theme-card-${id}`} onClick={onClick}>
+      <span aria-hidden="true" />
+      <strong>{title}</strong>
+      <small>{body}</small>
+    </button>
+  );
+}
+
 function WebsiteChoiceCard({
   active,
   title,
@@ -107,18 +153,23 @@ function WebsiteChoiceCard({
   );
 }
 
-export function ProfileSettingsForm({ profile, profileEditToken }: { profile: CommunityProfile | null; profileEditToken?: string }) {
+export function ProfileSettingsForm({ profile, profileEditToken, role }: { profile: CommunityProfile | null; profileEditToken?: string; role?: string | null }) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(profile?.websiteUrl ?? '');
   const [customAvatarUrl, setCustomAvatarUrl] = useState(profile?.customAvatarUrl ?? '');
   const [bannerColor, setBannerColor] = useState(profile?.bannerColor ?? '#1d9bf0');
+  const [coverPreset, setCoverPreset] = useState(profile?.coverPreset ?? 'northline-night');
+  const [customCoverUrl, setCustomCoverUrl] = useState(profile?.customCoverUrl ?? '');
+  const [profileTheme, setProfileTheme] = useState<ProfileTheme>(profile?.profileTheme ?? 'clean');
   const [showcase, setShowcase] = useState<ProfileShowcaseSettings>(normalizeShowcase(profile));
   const [tweeterTheme, setTweeterTheme] = useState<TweeterThemeEra>(profile?.tweeterTheme ?? 'modern');
   const [tweeterMode, setTweeterMode] = useState<TweeterColorMode>(profile?.tweeterMode ?? 'dark');
   const [websiteStyle, setWebsiteStyle] = useState<WebsiteStyle>(profile?.websiteStyle ?? 'civic');
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const customCoverAllowed = canUseCustomProfileCover(role);
+  const activeCover = getProfileCoverPreset(coverPreset);
 
   const previewLabel = useMemo(() => {
     const era = tweeterTheme === 'modern' ? 'Modern' : tweeterTheme === 'retro' ? 'Mid-2010s' : 'Classic';
@@ -146,6 +197,9 @@ export function ProfileSettingsForm({ profile, profileEditToken }: { profile: Co
           websiteUrl,
           customAvatarUrl,
           bannerColor,
+          coverPreset,
+          customCoverUrl: customCoverAllowed ? customCoverUrl : '',
+          profileTheme,
           showcase,
           tweeterTheme,
           tweeterMode,
@@ -205,6 +259,46 @@ export function ProfileSettingsForm({ profile, profileEditToken }: { profile: Co
           <span>Profile accent</span>
           <input type="color" value={bannerColor} onChange={(event) => setBannerColor(event.target.value)} />
         </label>
+      </div>
+
+      <div className="profile-cover-builder">
+        <div className="section-heading compact-heading">
+          <span className="kicker">Profile cover</span>
+          <h3>Pick a banner for your Tweeter profile</h3>
+          <p>Everyone can choose one of the safe presets. Trusted and staff accounts can use a custom image URL.</p>
+        </div>
+
+        <div className="cover-choice-grid">
+          {PROFILE_COVER_PRESETS.map((preset) => (
+            <CoverChoiceCard key={preset.id} preset={preset} active={coverPreset === preset.id} onClick={() => setCoverPreset(preset.id)} />
+          ))}
+        </div>
+
+        <div className="custom-cover-panel">
+          <div>
+            <strong>Custom cover image</strong>
+            <small>{customCoverAllowed ? 'Available for this account. Use a direct image URL ending in .png, .jpg, .webp, .gif, .avif, or .svg.' : 'Available once your account has Trusted or staff access.'}</small>
+          </div>
+          <input value={customCoverUrl} onChange={(event) => setCustomCoverUrl(event.target.value)} placeholder="https://example.com/cover.webp" disabled={!customCoverAllowed} />
+        </div>
+
+        <div className={`cover-live-preview cover-kind-${activeCover.kind}`} style={{ '--cover-preview-gradient': activeCover.gradient, '--cover-preview-image': activeCover.imageUrl ? `url("${activeCover.imageUrl}")` : 'none' } as unknown as CSSProperties}>
+          <span>{customCoverAllowed && customCoverUrl ? 'Custom cover will be used after saving.' : activeCover.label}</span>
+        </div>
+      </div>
+
+      <div className="profile-theme-builder profile-skin-builder">
+        <div className="section-heading compact-heading">
+          <span className="kicker">Profile look</span>
+          <h3>Choose how your profile feels to visitors</h3>
+          <p>This only affects your own Tweeter profile page when other people open it.</p>
+        </div>
+
+        <div className="profile-theme-grid">
+          {PROFILE_THEMES.map((theme) => (
+            <ProfileThemeCard key={theme.id} id={theme.id} active={profileTheme === theme.id} title={theme.label} body={theme.description} onClick={() => setProfileTheme(theme.id)} />
+          ))}
+        </div>
       </div>
 
       <div className="profile-theme-builder">

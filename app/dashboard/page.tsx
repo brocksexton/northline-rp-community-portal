@@ -74,7 +74,7 @@ export default async function DashboardPage() {
 
       <section className="layout-two dashboard-layout">
         <CharacterCard player={player} steamId={steamId} layouts={layouts} />
-        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} />
+        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} role={role} />
       </section>
 
       <section className="layout-three">

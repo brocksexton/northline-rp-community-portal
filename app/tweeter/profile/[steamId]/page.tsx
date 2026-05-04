@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProfileShowcasePanels } from '@/components/ProfileShowcasePanels';
@@ -8,6 +9,7 @@ import { getCommunityProfile } from '@/lib/community-data';
 import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-view';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
+import { getProfileCoverPreset, PROFILE_THEMES } from '@/lib/profile-customization';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +53,26 @@ function splitHashtags(body: string) {
 function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
   return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
+}
+
+
+function profileCoverStyle(user: Awaited<ReturnType<typeof buildTweeterUser>>): CSSProperties {
+  const preset = getProfileCoverPreset(user.coverPreset);
+  const imageUrl = user.customCoverUrl || preset.imageUrl || '';
+  return {
+    '--profile-cover-gradient': preset.gradient,
+    '--profile-cover-image': imageUrl ? `url("${imageUrl}")` : 'none',
+    '--profile-cover-accent': user.bannerColor || '#1d9bf0',
+  } as unknown as CSSProperties;
+}
+
+function profileCoverKind(user: Awaited<ReturnType<typeof buildTweeterUser>>) {
+  if (user.customCoverUrl) return 'image';
+  return getProfileCoverPreset(user.coverPreset).kind;
+}
+
+function profileThemeLabel(value?: string | null) {
+  return PROFILE_THEMES.find((theme) => theme.id === value)?.label ?? 'Clean';
 }
 
 function ProfileTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean }) {
@@ -210,8 +232,8 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </div>
           </header>
 
-          <section className="tweeter-profile-hero">
-            <div className="tweeter-profile-banner" style={{ background: `linear-gradient(135deg, ${user.bannerColor || publicProfile.bannerColor || '#1d9bf0'}, #15202b)` }} />
+          <section className={`tweeter-profile-hero tweeter-profile-skin-${user.profileTheme ?? 'clean'}`}>
+            <div className={`tweeter-profile-banner cover-kind-${profileCoverKind(user)}`} style={profileCoverStyle(user)} />
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
@@ -263,6 +285,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
               <div><dt>Posts</dt><dd>{userTweets.length}</dd></div>
               <div><dt>Role</dt><dd>{user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : 'Citizen'}</dd></div>
               <div><dt>Public modules</dt><dd>{5 - publicProfile.hiddenSections.length}</dd></div>
+              <div><dt>Profile look</dt><dd>{profileThemeLabel(user.profileTheme)}</dd></div>
             </dl>
           </section>
           <section className="tweeter-panel">

@@ -16,6 +16,7 @@ export type ProfileShowcaseSettings = {
 export type TweeterThemeEra = 'modern' | 'retro' | 'classic';
 export type TweeterColorMode = 'dark' | 'light' | 'blue';
 export type WebsiteStyle = 'civic' | 'ops' | 'glass';
+export type ProfileTheme = 'clean' | 'arcade' | 'sunset' | 'noir';
 
 export const DEFAULT_PROFILE_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
@@ -31,6 +32,8 @@ export const DEFAULT_TWEETER_THEME = {
 };
 
 export const DEFAULT_WEBSITE_STYLE: WebsiteStyle = 'civic';
+export const DEFAULT_PROFILE_COVER_PRESET = 'northline-night';
+export const DEFAULT_PROFILE_THEME: ProfileTheme = 'clean';
 
 export type CommunityProfile = {
   steamId: string;
@@ -40,6 +43,9 @@ export type CommunityProfile = {
   websiteUrl?: string;
   customAvatarUrl?: string;
   bannerColor?: string;
+  coverPreset?: string;
+  customCoverUrl?: string;
+  profileTheme?: ProfileTheme;
   showcase?: ProfileShowcaseSettings;
   tweeterTheme?: TweeterThemeEra;
   tweeterMode?: TweeterColorMode;
@@ -204,6 +210,16 @@ export function normalizeWebsiteStyle(value: unknown): WebsiteStyle {
   return value === 'ops' || value === 'glass' ? value : 'civic';
 }
 
+export function normalizeProfileTheme(value: unknown): ProfileTheme {
+  return value === 'arcade' || value === 'sunset' || value === 'noir' ? value : DEFAULT_PROFILE_THEME;
+}
+
+export function normalizeProfileCoverPreset(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  const allowed = new Set(['northline-night', 'northline-sunset', 'sbox-play', 'sbox-create', 'sbox-share', 'sbox-release']);
+  return allowed.has(raw) ? raw : DEFAULT_PROFILE_COVER_PRESET;
+}
+
 function normalizeProfile(profile: CommunityProfile): CommunityProfile {
   return {
     ...profile,
@@ -211,6 +227,9 @@ function normalizeProfile(profile: CommunityProfile): CommunityProfile {
     tweeterTheme: normalizeTweeterThemeEra(profile.tweeterTheme),
     tweeterMode: normalizeTweeterColorMode(profile.tweeterMode),
     websiteStyle: normalizeWebsiteStyle(profile.websiteStyle),
+    coverPreset: normalizeProfileCoverPreset(profile.coverPreset),
+    customCoverUrl: profile.customCoverUrl ?? '',
+    profileTheme: normalizeProfileTheme(profile.profileTheme),
   };
 }
 
@@ -235,6 +254,9 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
       websiteUrl: patch.websiteUrl ?? existing?.websiteUrl ?? '',
       customAvatarUrl: patch.customAvatarUrl ?? existing?.customAvatarUrl ?? '',
       bannerColor: patch.bannerColor ?? existing?.bannerColor ?? '#1194f0',
+      coverPreset: normalizeProfileCoverPreset(patch.coverPreset ?? existing?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),
+      customCoverUrl: patch.customCoverUrl ?? existing?.customCoverUrl ?? '',
+      profileTheme: normalizeProfileTheme(patch.profileTheme ?? existing?.profileTheme ?? DEFAULT_PROFILE_THEME),
       showcase: normalizeShowcase(patch.showcase ?? existing?.showcase ?? DEFAULT_PROFILE_SHOWCASE),
       tweeterTheme: normalizeTweeterThemeEra(patch.tweeterTheme ?? existing?.tweeterTheme ?? DEFAULT_TWEETER_THEME.era),
       tweeterMode: normalizeTweeterColorMode(patch.tweeterMode ?? existing?.tweeterMode ?? DEFAULT_TWEETER_THEME.mode),

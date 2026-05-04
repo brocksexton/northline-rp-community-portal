@@ -3,6 +3,7 @@ import { countItems, getCitizenName, getLevel, getXp } from '@/lib/ape-data';
 import type { CommunityProfile, ProfileShowcaseSettings } from '@/lib/community-data';
 import { DEFAULT_PROFILE_SHOWCASE } from '@/lib/community-data';
 import { duration, itemName, money, playerTitle, statLabel } from '@/lib/format';
+import { DEFAULT_PROFILE_COVER_PRESET, DEFAULT_PROFILE_THEME, normalizeProfileCoverPreset, normalizeProfileTheme, type ProfileTheme } from '@/lib/profile-customization';
 
 type StatEntry = { key: string; label: string; value: number };
 type InventoryEntry = { label: string; count: number };
@@ -24,6 +25,9 @@ export type PublicProfileView = {
   location: string;
   websiteUrl: string;
   bannerColor: string;
+  coverPreset: string;
+  customCoverUrl: string;
+  profileTheme: ProfileTheme;
   showcase: ProfileShowcaseSettings;
   role: string;
   title: string;
@@ -130,6 +134,9 @@ export function buildPublicProfileView(input: PublicProfileInput): PublicProfile
     location: communityProfile?.location?.trim() || '',
     websiteUrl: communityProfile?.websiteUrl?.trim() || '',
     bannerColor: communityProfile?.bannerColor || '#38bdf8',
+    coverPreset: normalizeProfileCoverPreset(communityProfile?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),
+    customCoverUrl: communityProfile?.customCoverUrl?.trim() || '',
+    profileTheme: normalizeProfileTheme(communityProfile?.profileTheme ?? DEFAULT_PROFILE_THEME),
     showcase,
     role,
     title,

@@ -2,6 +2,7 @@ import { getPlayers, getPlayersBySteamId, getRoleForSteamId, getTweeterData } fr
 import { getCommunityProfiles, getTweeterWebLikeState } from '@/lib/community-data';
 import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
+import { canUseCustomProfileCover, DEFAULT_PROFILE_COVER_PRESET, DEFAULT_PROFILE_THEME, normalizeProfileCoverPreset, normalizeProfileTheme, type ProfileTheme } from '@/lib/profile-customization';
 
 const ZERO_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -34,6 +35,9 @@ export type TweeterUserView = {
   verifiedKind?: string;
   bio?: string;
   bannerColor?: string;
+  coverPreset?: string;
+  customCoverUrl?: string | null;
+  profileTheme?: ProfileTheme;
   joinedAt?: string | null;
   playtimeHours?: number;
   title?: string | null;
@@ -165,6 +169,9 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       verifiedKind: currentRole !== 'User' ? currentRole : 'None',
       bio: formatSuggestionBio(currentRole, currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : '', Number(currentPlayer?.TotalPlaytimeSeconds ?? 0)),
       bannerColor: currentCommunity?.bannerColor || '#1d9bf0',
+      coverPreset: normalizeProfileCoverPreset(currentCommunity?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),
+      customCoverUrl: canUseCustomProfileCover(currentRole) ? (currentCommunity?.customCoverUrl || null) : null,
+      profileTheme: normalizeProfileTheme(currentCommunity?.profileTheme ?? DEFAULT_PROFILE_THEME),
       joinedAt: currentPlayer?.FirstJoinedUtc ?? null,
       playtimeHours: Math.round(Number(currentPlayer?.TotalPlaytimeSeconds ?? 0) / 3600),
       title: currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : null,
@@ -201,6 +208,9 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     verifiedKind: role !== 'User' ? role : 'None',
     bio: communityProfile?.privacy === 'private' ? 'This citizen keeps their profile private.' : (communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? playerTitle(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0))),
     bannerColor: communityProfile?.bannerColor || '#1d9bf0',
+    coverPreset: normalizeProfileCoverPreset(communityProfile?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),
+    customCoverUrl: canUseCustomProfileCover(role) ? (communityProfile?.customCoverUrl || null) : null,
+    profileTheme: normalizeProfileTheme(communityProfile?.profileTheme ?? DEFAULT_PROFILE_THEME),
     joinedAt: player?.FirstJoinedUtc ?? null,
     playtimeHours: Math.round(Number(player?.TotalPlaytimeSeconds ?? 0) / 3600),
     title: player?.DisplayTitle ? playerTitle(player.DisplayTitle) : null,
