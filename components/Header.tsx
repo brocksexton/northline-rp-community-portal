@@ -1,11 +1,14 @@
 import Link from 'next/link';
+import { UserAvatar } from '@/components/UserAvatar';
+import { getCitizenName, getPermissionsForSteamId, getPlayer, getRoleForSteamId } from '@/lib/ape-data';
+import { getCommunityProfile } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
-import { getPermissionsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getSiteConfig } from '@/lib/site-config';
+import { getSteamProfile } from '@/lib/steam-openid';
 
 const nav = [
   { href: '/status', label: 'Status' },
-  { href: '/tweeter', label: 'Feed' },
+  { href: '/tweeter', label: 'Tweeter' },
   { href: '/players', label: 'Players' },
   { href: '/guides', label: 'Guides' },
   { href: '/rules', label: 'Rules' },
@@ -18,8 +21,18 @@ function canSeeStaff(role: string, permissions: string[]) {
 
 export async function Header() {
   const [config, steamId] = await Promise.all([getSiteConfig(), getSessionSteamId()]);
-  const [role, permissions] = steamId ? await Promise.all([getRoleForSteamId(steamId), getPermissionsForSteamId(steamId)]) : ['Guest', [] as string[]];
+  const [role, permissions, player, communityProfile, steamProfile] = steamId
+    ? await Promise.all([
+      getRoleForSteamId(steamId),
+      getPermissionsForSteamId(steamId),
+      getPlayer(steamId),
+      getCommunityProfile(steamId),
+      getSteamProfile(steamId),
+    ])
+    : ['Guest', [] as string[], null, null, null] as const;
   const staff = steamId ? canSeeStaff(role, permissions) : false;
+  const displayName = steamId ? getCitizenName(player, steamId) : 'Guest';
+  const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null;
 
   return (
     <header className="site-header">
@@ -38,7 +51,10 @@ export async function Header() {
         <div className="header-actions">
           {steamId ? (
             <>
-              <Link className="button button-soft" href="/dashboard">Dashboard</Link>
+              <Link className="header-user-pill" href="/dashboard" title="Open dashboard">
+                <UserAvatar src={avatar} name={displayName} size="sm" />
+                <span><strong>{displayName}</strong><small>{role}</small></span>
+              </Link>
               <Link className="button button-ghost compact" href="/api/auth/logout">Log out</Link>
             </>
           ) : (
@@ -49,7 +65,7 @@ export async function Header() {
       <nav className="mobile-nav" aria-label="Mobile navigation">
         <Link href="/">Home</Link>
         <Link href="/status">Status</Link>
-        <Link href="/tweeter">Feed</Link>
+        <Link href="/tweeter">Tweeter</Link>
         <Link href="/players">Players</Link>
         <Link href="/dashboard">Me</Link>
       </nav>
