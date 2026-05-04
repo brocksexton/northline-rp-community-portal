@@ -10,143 +10,151 @@ const paths = [
     id: 'first-night',
     icon: '🌙',
     title: 'I just spawned in',
-    summary: 'A calm route through your first session without accidentally becoming city folklore.',
-    bullets: ['Read the five-minute rules pass', 'Learn where to get food and water', 'Talk before you swing'],
+    summary: 'A simple route through your first session without overthinking everything.',
+    bullets: ['Skim the quick rules', 'Find food and water', 'Say hi and see what people are doing'],
   },
   {
     id: 'money',
     icon: '💸',
-    title: 'I need money',
-    summary: 'Find a legal-ish path, a social path, or a “please do not rob everyone immediately” path.',
-    bullets: ['Use jobs to meet people', 'Ask about player businesses', 'Spend like rent is real'],
+    title: 'I need cash',
+    summary: 'A few ways to get started without turning every night into a grind.',
+    bullets: ['Try basic jobs', 'Ask about player businesses', 'Save a bit before buying toys'],
   },
   {
     id: 'roleplay',
     icon: '🎭',
-    title: 'I want better RP',
-    summary: 'Small choices that make scenes more fun for everyone involved.',
-    bullets: ['Leave room for replies', 'Lose gracefully sometimes', 'Build motives, not just wins'],
+    title: 'I want better scenes',
+    summary: 'Small habits that make hanging out, arguing, working, and getting into trouble more fun.',
+    bullets: ['Give people something to reply to', 'Play along when it feels right', 'Have a reason for what you do'],
   },
   {
     id: 'property',
     icon: '🏠',
     title: 'I want a place',
     summary: 'Turn a blank room into a hangout, shop, office, hideout, or questionable garage.',
-    bullets: ['Start small', 'Make it useful to others', 'Save layouts carefully'],
+    bullets: ['Start small', 'Make it easy to use', 'Save layouts carefully'],
   },
   {
     id: 'trouble',
     icon: '🚨',
-    title: 'I got into trouble',
-    summary: 'What to do when a scene goes sideways, staff gets involved, or somebody is very loud.',
-    bullets: ['Stay calm', 'Keep evidence', 'Use reports for real issues'],
+    title: 'Something went wrong',
+    summary: 'What to do if there is a bug, a rule issue, or a scene stops being fun.',
+    bullets: ['Take a breath', 'Keep useful details', 'Ask staff when it actually needs a hand'],
   },
   {
     id: 'identity',
     icon: '🪪',
-    title: 'I want to be known',
-    summary: 'Use Tweeter, profiles, and in-game reputation to become a familiar citizen.',
-    bullets: ['Claim your profile', 'Post from in-game Tweeter', 'Make your character memorable'],
+    title: 'I want people to know my character',
+    summary: 'Use Tweeter, profiles, and regular in-game moments to become a familiar face.',
+    bullets: ['Claim your profile', 'Post from in-game Tweeter', 'Give people something to remember'],
   },
 ];
 
 const quickAnswers = [
-  { q: 'Where do I start?', a: 'Join the server, stay alive, introduce yourself, and avoid making your first sentence a felony.' },
-  { q: 'Do I need a public profile?', a: 'No. Profiles are opt-in. If you want to appear in the citizen directory, make your profile public from the dashboard.' },
-  { q: 'Can I post to Tweeter from the website?', a: 'Not yet. Post from inside the game for now so the website does not fight the live server data.' },
-  { q: 'What should I do when RP feels bad?', a: 'Step back, gather context, and use reports only when something actually needs staff attention.' },
+  { q: 'Where do I start?', a: 'Hop in, get food and water, say hi to someone, and find out what people are already doing.' },
+  { q: 'Do I need a public profile?', a: 'No. Profiles are opt-in. If you want to appear in the player directory, make your profile public from the dashboard.' },
+  { q: 'Can I post to Tweeter from the website?', a: 'Not yet. Post from inside the game for now so it stays tied to the live server.' },
+  { q: 'What should I do when a scene feels off?', a: 'Take a breath, step back if you need to, and only use reports when something actually needs staff attention.' },
 ];
 
 const guideSections = [
   {
     id: 'first-night',
-    title: 'First 15 minutes in Northline',
+    title: 'Your first 15 minutes',
     tag: 'Start here',
-    summary: 'You do not need to master the whole city on day one. You need food, water, a reason to talk, and enough patience not to sprint into chaos.',
+    summary: 'You do not need to know everything on day one. Get settled, find a reason to talk to someone, and let the night go from there.',
     steps: [
-      'Check the rules page before your first serious scene.',
-      'Find basic food and water so survival systems do not become your first antagonist.',
-      'Introduce yourself to another player with a small goal: work, directions, gossip, or a favor.',
-      'Avoid major crime until you understand how conflict, police, staff, and consequences work here.',
-      'Open Tweeter in-game and see what the city is talking about.',
+      'Skim the rules page before jumping into anything messy.',
+      'Find food and water so the basics are handled early.',
+      'Talk to another player with a small reason: work, directions, gossip, a favor, or just curiosity.',
+      'Hold off on huge crime or huge drama until you understand the server a little better.',
+      'Open Tweeter in-game and see what people are talking about.',
     ],
   },
   {
     id: 'roleplay',
-    title: 'Better scenes, fewer headaches',
-    tag: 'Roleplay',
-    summary: 'Good RP is not about always winning. It is about giving the other person something worth responding to.',
+    title: 'Making scenes fun',
+    tag: 'Playing your character',
+    summary: 'You do not need a huge backstory. Give people something to respond to and let things happen naturally.',
     steps: [
-      'Make your character want something specific before starting a scene.',
-      'Use dialogue, threats, bargaining, mistakes, fear, and pride before jumping to violence.',
+      'Give your character a simple reason to talk before starting a scene.',
+      'Use talking, jokes, deals, mistakes, pride, or bad ideas before jumping straight to violence.',
       'Let scenes breathe. A pause can be more interesting than a sprint to the next mechanic.',
-      'Take losses when they make sense. People remember fair players more than unstoppable ones.',
-      'Keep out-of-character frustration out of in-character choices.',
+      'Take small losses when they make sense. People remember players who are fun to deal with.',
+      'Try to keep out-of-character frustration from steering every in-character choice.',
     ],
   },
   {
     id: 'money',
-    title: 'Making money without becoming a spreadsheet goblin',
+    title: 'Making money without turning it into homework',
     tag: 'Economy',
-    summary: 'Money is useful, but money that creates stories is better. The best income routes usually involve other citizens.',
+    summary: 'Money is useful, but it is more fun when it gives you reasons to meet people, make plans, and get into situations.',
     steps: [
-      'Start with safe work until you understand the city rhythm.',
-      'Ask around for player-run jobs, shops, delivery work, protection, repairs, or odd favors.',
-      'Treat criminal money as a story choice, not just a faster wallet number.',
-      'Do not dump every dollar into one plan unless you are prepared for that plan to become content.',
-      'Use your profile showcase only if you actually want people seeing your public economy stats.',
+      'Start with simple work until you understand the server rhythm.',
+      'Ask around for player-run jobs, shops, delivery work, repairs, events, or odd favors.',
+      'Treat criminal money as a choice that can create trouble, not just a faster wallet number.',
+      'Do not dump every dollar into one plan unless you are ready for that plan to go sideways.',
+      'Only show profile stats you are comfortable with other players seeing.',
     ],
   },
   {
     id: 'property',
     title: 'Properties, builds, and hangouts',
     tag: 'World building',
-    summary: 'A useful space gives people a reason to visit. A perfect space nobody uses is just expensive wallpaper.',
+    summary: 'A good space gives people a reason to stop by. It does not need to be perfect; it just needs to feel useful or fun.',
     steps: [
       'Pick a simple purpose: store, apartment, club, clinic, office, workshop, or meeting spot.',
       'Make the entrance and interaction points obvious so people know how to use the space.',
-      'Use props to support RP, not bury it under clutter.',
+      'Use props to support the scene, not bury it under clutter.',
       'Save layouts when you are happy with them and avoid relying on unsaved changes.',
-      'Invite people in. A business without customers is just a locked room with confidence.',
+      'Invite people in. A business, club, or hangout only works when people know it exists.',
     ],
   },
   {
     id: 'trouble',
-    title: 'Reports, staff, and when things get weird',
-    tag: 'Safety',
-    summary: 'Most problems are solved by slowing down. Real rule issues need clear context, not a dramatic novel in all caps.',
+    title: 'When something goes sideways',
+    tag: 'Help',
+    summary: 'Most problems get easier when everyone slows down. If something really needs staff, clear details help more than heat.',
     steps: [
-      'Separate “I lost” from “a rule was broken.” They are not always the same thing.',
-      'Collect names, time, clips, screenshots, and a short explanation.',
-      'Do not harass the other player while waiting for staff.',
-      'Use appeals and tickets with calm details. Staff can work faster when the report is readable.',
-      'If staff makes a call, move forward unless there is a real reason to escalate.',
+      'Separate “I did not like that” from “a rule was broken.” They are not always the same thing.',
+      'Keep names, time, clips, screenshots, and a short explanation if you have them.',
+      'Do not chase or harass the other player while waiting for staff.',
+      'Use reports, appeals, or tickets with calm details. Staff can work faster when the message is readable.',
+      'If staff makes a call, try to move on unless there is a real reason to follow up.',
     ],
   },
   {
     id: 'identity',
-    title: 'Profiles, Tweeter, and being part of the city',
+    title: 'Profiles, Tweeter, and local reputation',
     tag: 'Community',
-    summary: 'The website works best when it extends your in-game identity instead of replacing it.',
+    summary: 'The website is here to back up what happens in-game, not replace it.',
     steps: [
       'Claim your profile from the dashboard if you want to appear publicly.',
       'Choose what gameplay details, if any, you want to show publicly.',
-      'Use Tweeter for rumors, jokes, business posts, beef, apologies, and terrible decisions.',
-      'Keep private profiles private. Not every save file needs to become a billboard.',
-      'Make a character people can describe in one sentence. That is when the city starts remembering you.',
+      'Use Tweeter for rumors, jokes, business posts, beef, apologies, events, and terrible decisions.',
+      'Keep private profiles private if that suits you. Not every character needs a public page.',
+      'Give people an easy way to describe your character. That is how regulars start remembering you.',
     ],
   },
 ];
 
 const doDont = [
-  { do: 'Give people a clear hook.', dont: 'Walk up silently, demand a perfect scene, then leave.' },
-  { do: 'Let consequences create new stories.', dont: 'Treat every setback like a support ticket.' },
-  { do: 'Ask questions in character when possible.', dont: 'Turn every mystery into Discord detective work.' },
-  { do: 'Use the website to plan your next move.', dont: 'Expect the website to replace playing the game.' },
+  { do: 'Give people an easy way into the scene.', dont: 'Expect everyone to read your mind.' },
+  { do: 'Play along when it makes sense.', dont: 'Treat every setback like an admin problem.' },
+  { do: 'Ask simple questions in character when possible.', dont: 'Drag every small thing out of character.' },
+  { do: 'Use the website to catch up and plan.', dont: 'Forget that the fun is still in-game.' },
 ];
 
 function slugFromTitle(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+const coreOnboardingIds = ['first_join', 'shop', 'properties'];
+const roleGuideIds = ['police_officer', 'chief_of_police', 'mayor'];
+
+function stepStatus(done: boolean, previousDone: boolean) {
+  if (done) return 'done';
+  return previousDone ? 'next' : 'todo';
 }
 
 export default async function GuidesPage() {
@@ -155,20 +163,81 @@ export default async function GuidesPage() {
   const completed = progress?.completed ?? 0;
   const total = progress?.total ?? GUIDE_CATALOG.length;
   const percent = progress?.percent ?? 0;
+  const seenIds = new Set(progress?.seen ?? []);
+  const coreGuides = GUIDE_CATALOG.filter((guide) => coreOnboardingIds.includes(guide.id));
+  const roleGuides = GUIDE_CATALOG.filter((guide) => roleGuideIds.includes(guide.id));
+  const coreSeen = coreGuides.filter((guide) => seenIds.has(guide.id));
+  const nextCoreGuide = coreGuides.find((guide) => !seenIds.has(guide.id));
+  const nextMissingGuide = GUIDE_CATALOG.find((guide) => !seenIds.has(guide.id));
+  const signedIn = Boolean(steamId);
+  const hasFirstSteps = seenIds.has('first_join');
+  const hasEconomy = seenIds.has('shop');
+  const hasProperties = seenIds.has('properties');
+  const hasAnyRoleGuide = roleGuides.some((guide) => seenIds.has(guide.id));
+  const corePercent = coreGuides.length ? Math.round((coreSeen.length / coreGuides.length) * 100) : 0;
+  const nextStep = !signedIn
+    ? { title: 'Sign in with Steam', body: 'Connect your account so this page can show your own progress instead of the general guide.', href: '/api/auth/steam?returnTo=/guides', label: 'Sign in with Steam' }
+    : nextCoreGuide
+      ? { title: `Open “${nextCoreGuide.title}”`, body: 'This is the next basics card to check off. You can read the short version below, then look for it in-game when you hop on.', href: `#${slugFromTitle(nextCoreGuide.title)}`, label: 'Jump to the guide card' }
+      : nextMissingGuide
+        ? { title: 'You are through the basics', body: 'The remaining cards are extra or role-specific. Open them when they match what you are doing in-game.', href: `#${slugFromTitle(nextMissingGuide.title)}`, label: 'See the next extra card' }
+        : { title: 'You are caught up', body: 'You have seen every guide card currently mirrored here. Go make a mess, open a shop, or see what people are doing.', href: '/tweeter', label: 'Check Tweeter' };
+  const journeySteps = [
+    {
+      id: 'sign-in',
+      title: 'Connect your account',
+      body: signedIn ? 'You are signed in, so the guide can track your own progress.' : 'Sign in with Steam to see what you have already finished.',
+      status: signedIn ? 'done' : 'next',
+      href: signedIn ? '/dashboard' : '/api/auth/steam?returnTo=/guides',
+      action: signedIn ? 'Open dashboard' : 'Sign in',
+    },
+    {
+      id: 'first-steps',
+      title: 'Get the first steps out of the way',
+      body: hasFirstSteps ? 'You have seen the first steps card.' : 'Start here if you are new, returning, or just trying to remember what matters first.',
+      status: stepStatus(hasFirstSteps, signedIn),
+      href: '#first-steps',
+      action: 'Read first steps',
+    },
+    {
+      id: 'economy',
+      title: 'Learn how money and shops work',
+      body: hasEconomy ? 'You have seen the economy card.' : 'Good before you start buying, selling, running a shop, or chasing money.',
+      status: stepStatus(hasEconomy, signedIn && hasFirstSteps),
+      href: '#shops-and-economy',
+      action: 'Read economy basics',
+    },
+    {
+      id: 'properties',
+      title: 'Figure out properties and saved layouts',
+      body: hasProperties ? 'You have seen the property card.' : 'Useful before decorating, saving a layout, or turning a space into a hangout.',
+      status: stepStatus(hasProperties, signedIn && hasFirstSteps && hasEconomy),
+      href: '#properties-and-layouts',
+      action: 'Read property basics',
+    },
+    {
+      id: 'extra',
+      title: 'Save role guides for when they matter',
+      body: hasAnyRoleGuide ? 'You have opened at least one role-specific card.' : 'Police, mayor, and leadership cards are there when you actually need them.',
+      status: corePercent === 100 ? (hasAnyRoleGuide ? 'done' : 'next') : 'todo',
+      href: roleGuides[0] ? `#${slugFromTitle(roleGuides[0].title)}` : '#guide-catalog',
+      action: 'Browse role cards',
+    },
+  ];
 
   return (
     <main className="page-shell guides-hub-page">
       <section className="guides-hero">
         <div className="guides-hero-copy">
-          <span className="guides-kicker">Northline Field Guide</span>
-          <h1>Learn the city without reading a government pamphlet.</h1>
+          <span className="guides-kicker">Northline Player Guide</span>
+          <h1>Get settled, find something to do, and have a good time.</h1>
           <p>
-            A practical handbook for surviving your first night, finding things to do, making better scenes,
-            and becoming somebody people actually recognize around Northline.
+            A relaxed guide for new and returning players. Play a character, make some friends, run a shop,
+            cause a little trouble, or just hang around and see where the night goes.
           </p>
           <div className="guides-hero-actions">
-            <a className="button button-primary" href="#first-night">Start with first night</a>
-            <Link className="button button-soft" href="/rules">Five-minute rules pass</Link>
+            <a className="button button-primary" href="#first-night">Start with your first night</a>
+            <Link className="button button-soft" href="/rules">Quick rules pass</Link>
             <Link className="button button-ghost" href="/tweeter">Open Tweeter</Link>
           </div>
         </div>
@@ -182,15 +251,46 @@ export default async function GuidesPage() {
 
       <section className="guides-quickbar" aria-label="Useful links">
         <Link href="/dashboard"><strong>Dashboard</strong><span>Your character, settings, and profile.</span></Link>
-        <Link href="/players"><strong>Citizens</strong><span>Public profiles from people who opted in.</span></Link>
-        <Link href="/status"><strong>Status</strong><span>Check the city before blaming your router.</span></Link>
-        <Link href="/support"><strong>Support</strong><span>When the weird thing is actually a problem.</span></Link>
+        <Link href="/players"><strong>Players</strong><span>Public profiles from people who opted in.</span></Link>
+        <Link href="/status"><strong>Status</strong><span>Check the server before blaming your router.</span></Link>
+        <Link href="/support"><strong>Support</strong><span>When something actually needs a hand.</span></Link>
+      </section>
+
+      <section className="guide-journey-panel" aria-label="Your onboarding progress">
+        <div className="guide-journey-header">
+          <div>
+            <span className="guides-kicker">Your next step</span>
+            <h2>{nextStep.title}</h2>
+            <p>{nextStep.body}</p>
+          </div>
+          <a className="button button-primary" href={nextStep.href}>{nextStep.label}</a>
+        </div>
+        <div className="guide-journey-meter">
+          <div>
+            <strong>{signedIn ? `${corePercent}%` : 'Sign in'}</strong>
+            <span>{signedIn ? `${coreSeen.length}/${coreGuides.length} starter cards seen` : 'Track your own starter progress'}</span>
+          </div>
+          <div className="guides-progress-bar" aria-hidden="true"><i style={{ width: `${signedIn ? Math.max(corePercent, 8) : 12}%` }} /></div>
+        </div>
+        <div className="guide-journey-steps">
+          {journeySteps.map((step, index) => (
+            <article className={`guide-journey-step ${step.status}`} key={step.id}>
+              <span className="guide-step-number">{step.status === 'done' ? '✓' : index + 1}</span>
+              <div>
+                <small>{step.status === 'done' ? 'Done' : step.status === 'next' ? 'Next up' : 'Later'}</small>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+                {step.status !== 'todo' ? <a href={step.href}>{step.action}</a> : null}
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="guides-section-heading">
-        <span className="guides-kicker">Pick your problem</span>
+        <span className="guides-kicker">Start here</span>
         <h2>What are you trying to do?</h2>
-        <p>Choose the card that sounds closest to your current situation. No judgment, unless you clicked “I need money” after buying three cars.</p>
+        <p>Choose the card that sounds closest to your night. No pressure, no homework, just a few pointers.</p>
       </section>
 
       <section className="guide-path-grid">
@@ -207,8 +307,8 @@ export default async function GuidesPage() {
       <section className="guides-layout">
         <div className="guides-main-column">
           <section className="guides-section-heading compact">
-            <span className="guides-kicker">Handbook</span>
-            <h2>City systems, explained like a human wrote them</h2>
+            <span className="guides-kicker">Guidebook</span>
+            <h2>A few things worth knowing</h2>
           </section>
 
           {guideSections.map((section, index) => (
@@ -239,16 +339,16 @@ export default async function GuidesPage() {
           </article>
 
           <article className="guides-card guides-tip-card">
-            <span className="guides-kicker">Tiny wisdom</span>
-            <h3>Be interesting before being dangerous.</h3>
-            <p>People remember the messy regulars, the funny shop owners, the reliable doctors, and the suspicious guy with a plan. “Guy who shoots instantly” has a shorter shelf life.</p>
+            <span className="guides-kicker">Community note</span>
+            <h3>Make something people can join in on.</h3>
+            <p>People remember the regulars, the shop owners, the odd jobs, the weird rumors, and the small moments that turn into a whole night of fun.</p>
           </article>
         </aside>
       </section>
 
       <section className="guides-section-heading">
         <span className="guides-kicker">Do / Don’t</span>
-        <h2>Small choices that make the whole city better</h2>
+        <h2>Small choices that make the server better</h2>
       </section>
 
       <section className="guide-do-dont-grid">
@@ -262,13 +362,13 @@ export default async function GuidesPage() {
 
       {GUIDE_CATALOG.length ? (
         <section className="guides-section-heading">
-          <span className="guides-kicker">In-game guide cards</span>
-          <h2>What the server can already teach you</h2>
-          <p>These are mirrored from the game-side guide catalog. Sign in to see which ones your account has already encountered.</p>
+          <span className="guides-kicker">Server guide cards</span>
+          <h2>Extra notes from the server</h2>
+          <p>These are mirrored from the in-game guide catalog. Sign in to see which ones your account has already come across.</p>
         </section>
       ) : null}
 
-      <section className="guide-catalog-grid">
+      <section className="guide-catalog-grid" id="guide-catalog">
         {GUIDE_CATALOG.map((guide) => {
           const seen = progress?.seen.includes(guide.id) ?? false;
           const anchor = slugFromTitle(guide.title);
@@ -285,11 +385,11 @@ export default async function GuidesPage() {
       <section className="guides-final-card">
         <div>
           <span className="guides-kicker">Still lost?</span>
-          <h2>Good. That means the city has room for you.</h2>
-          <p>Ask around in-character, check Tweeter, read the rules, or open support if something is actually broken. The best guide is usually another player with a questionable amount of free time.</p>
+          <h2>That is normal. Ask around.</h2>
+          <p>Check Tweeter, read the quick rules, ask someone in-game, or open support if something is actually broken. Most of the fun comes from figuring things out with other people.</p>
         </div>
         <div className="guides-hero-actions">
-          <Link className="button button-primary" href="/tweeter">See city chatter</Link>
+          <Link className="button button-primary" href="/tweeter">See what people are saying</Link>
           <Link className="button button-soft" href="/support">Get support</Link>
         </div>
       </section>
