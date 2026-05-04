@@ -6,6 +6,7 @@ import type {
   ProfileShowcaseSettings,
   TweeterColorMode,
   TweeterThemeEra,
+  WebsiteStyle,
 } from '@/lib/community-data';
 
 const DEFAULT_CLIENT_SHOWCASE: ProfileShowcaseSettings = {
@@ -86,6 +87,26 @@ function ModeChoiceCard({
   );
 }
 
+
+function WebsiteChoiceCard({
+  active,
+  title,
+  body,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  body: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={`website-style-card ${active ? 'active' : ''}`} onClick={onClick}>
+      <strong>{title}</strong>
+      <small>{body}</small>
+    </button>
+  );
+}
+
 export function ProfileSettingsForm({ profile, profileEditToken }: { profile: CommunityProfile | null; profileEditToken?: string }) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
@@ -96,6 +117,7 @@ export function ProfileSettingsForm({ profile, profileEditToken }: { profile: Co
   const [showcase, setShowcase] = useState<ProfileShowcaseSettings>(normalizeShowcase(profile));
   const [tweeterTheme, setTweeterTheme] = useState<TweeterThemeEra>(profile?.tweeterTheme ?? 'modern');
   const [tweeterMode, setTweeterMode] = useState<TweeterColorMode>(profile?.tweeterMode ?? 'dark');
+  const [websiteStyle, setWebsiteStyle] = useState<WebsiteStyle>(profile?.websiteStyle ?? 'civic');
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const previewLabel = useMemo(() => {
@@ -127,6 +149,7 @@ export function ProfileSettingsForm({ profile, profileEditToken }: { profile: Co
           showcase,
           tweeterTheme,
           tweeterMode,
+          websiteStyle,
           profileEditToken,
         }),
       });
@@ -209,6 +232,20 @@ export function ProfileSettingsForm({ profile, profileEditToken }: { profile: Co
           <ModeChoiceCard active={tweeterMode === 'dark'} title="Dark" body="Deep night UI similar to modern dark Twitter." onClick={() => setTweeterMode('dark')} />
           <ModeChoiceCard active={tweeterMode === 'light'} title="Light" body="Bright classic white panels and lighter feed chrome." onClick={() => setTweeterMode('light')} />
           <ModeChoiceCard active={tweeterMode === 'blue'} title="Twitter Blue" body="A soft blue-tinted take that feels playful and distinct." onClick={() => setTweeterMode('blue')} />
+        </div>
+      </div>
+
+      <div className="profile-theme-builder website-theme-builder">
+        <div className="section-heading compact-heading">
+          <span className="kicker">Website style</span>
+          <h3>Choose your Northline website look</h3>
+          <p>This changes the main website surfaces such as Home, Dashboard, Status, Staff, Bans, and public profiles. Tweeter keeps its own separate theme.</p>
+        </div>
+
+        <div className="website-style-grid">
+          <WebsiteChoiceCard active={websiteStyle === 'civic'} title="Civic Clean" body="A bright, readable community portal style for everyday browsing." onClick={() => setWebsiteStyle('civic')} />
+          <WebsiteChoiceCard active={websiteStyle === 'ops'} title="Control Center" body="A darker command-room look for dashboards, staff tools, and server operations." onClick={() => setWebsiteStyle('ops')} />
+          <WebsiteChoiceCard active={websiteStyle === 'glass'} title="Northline Glass" body="Soft blue glass panels inspired by the older website build." onClick={() => setWebsiteStyle('glass')} />
         </div>
       </div>
 

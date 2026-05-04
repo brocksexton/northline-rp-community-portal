@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   normalizeTweeterColorMode,
   normalizeTweeterThemeEra,
+  normalizeWebsiteStyle,
   upsertCommunityProfile,
 } from '@/lib/community-data';
 import { getSessionSteamId, getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders, verifyProfileEditToken } from '@/lib/session';
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     showcase: cleanShowcase(body.showcase),
     tweeterTheme: normalizeTweeterThemeEra(body.tweeterTheme),
     tweeterMode: normalizeTweeterColorMode(body.tweeterMode),
+    websiteStyle: normalizeWebsiteStyle(body.websiteStyle),
   });
 
   return jsonWithSession({ profile }, undefined, steamId, request);

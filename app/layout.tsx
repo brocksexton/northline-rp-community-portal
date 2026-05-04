@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
+import { getCommunityProfile } from '@/lib/community-data';
+import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
 import './globals.css';
 
@@ -21,14 +23,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const config = await getSiteConfig();
+  const [config, steamId] = await Promise.all([getSiteConfig(), getSessionSteamId()]);
+  const profile = steamId ? await getCommunityProfile(steamId) : null;
+  const websiteStyle = profile?.websiteStyle ?? 'civic';
   return (
     <html lang="en" style={{ ['--accent' as string]: config.brand.accentColor }}>
       <head>
         <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       </head>
-      <body>
+      <body data-site-style={websiteStyle}>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <Header />
         <div id="main-content" tabIndex={-1}>

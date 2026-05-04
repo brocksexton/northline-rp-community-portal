@@ -15,6 +15,7 @@ export type ProfileShowcaseSettings = {
 
 export type TweeterThemeEra = 'modern' | 'retro' | 'classic';
 export type TweeterColorMode = 'dark' | 'light' | 'blue';
+export type WebsiteStyle = 'civic' | 'ops' | 'glass';
 
 export const DEFAULT_PROFILE_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
@@ -29,6 +30,8 @@ export const DEFAULT_TWEETER_THEME = {
   mode: 'dark' as TweeterColorMode,
 };
 
+export const DEFAULT_WEBSITE_STYLE: WebsiteStyle = 'civic';
+
 export type CommunityProfile = {
   steamId: string;
   privacy: ProfilePrivacy;
@@ -40,6 +43,7 @@ export type CommunityProfile = {
   showcase?: ProfileShowcaseSettings;
   tweeterTheme?: TweeterThemeEra;
   tweeterMode?: TweeterColorMode;
+  websiteStyle?: WebsiteStyle;
   updatedAt: string;
 };
 
@@ -196,12 +200,17 @@ export function normalizeTweeterColorMode(value: unknown): TweeterColorMode {
   return value === 'light' || value === 'blue' ? value : 'dark';
 }
 
+export function normalizeWebsiteStyle(value: unknown): WebsiteStyle {
+  return value === 'ops' || value === 'glass' ? value : 'civic';
+}
+
 function normalizeProfile(profile: CommunityProfile): CommunityProfile {
   return {
     ...profile,
     showcase: normalizeShowcase(profile.showcase),
     tweeterTheme: normalizeTweeterThemeEra(profile.tweeterTheme),
     tweeterMode: normalizeTweeterColorMode(profile.tweeterMode),
+    websiteStyle: normalizeWebsiteStyle(profile.websiteStyle),
   };
 }
 
@@ -229,6 +238,7 @@ export async function upsertCommunityProfile(steamId: string, patch: Partial<Com
       showcase: normalizeShowcase(patch.showcase ?? existing?.showcase ?? DEFAULT_PROFILE_SHOWCASE),
       tweeterTheme: normalizeTweeterThemeEra(patch.tweeterTheme ?? existing?.tweeterTheme ?? DEFAULT_TWEETER_THEME.era),
       tweeterMode: normalizeTweeterColorMode(patch.tweeterMode ?? existing?.tweeterMode ?? DEFAULT_TWEETER_THEME.mode),
+      websiteStyle: normalizeWebsiteStyle(patch.websiteStyle ?? existing?.websiteStyle ?? DEFAULT_WEBSITE_STYLE),
       updatedAt: new Date().toISOString(),
     };
     return {
