@@ -21,8 +21,8 @@ export default async function DashboardPage() {
           <h1>Steam sign-in required</h1>
           <p>Northline links your SteamID64 to your Northbound RP character save, role permissions, guide progress, property layouts, and public profile settings.</p>
           <div className="button-row">
-            <Link className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</Link>
-            {process.env.ENABLE_DEV_STEAM_LOGIN === 'true' ? <Link className="button button-ghost" href="/api/auth/steam?dev=1&returnTo=/dashboard">Dev login</Link> : null}
+            <a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
+            {process.env.ENABLE_DEV_STEAM_LOGIN === 'true' ? <a className="button button-ghost" href="/api/auth/steam?dev=1&returnTo=/dashboard">Dev login</a> : null}
           </div>
         </section>
       </main>

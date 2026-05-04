@@ -100,9 +100,15 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
             Everyone else gets to stay off the board unless they opt in.
           </p>
           <div className="players-hero-actions">
-            <Link className="button button-primary" href={signedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}>
-              <i className="fa-solid fa-id-card" aria-hidden="true" /> {signedIn ? 'Edit my profile' : 'Claim my profile'}
-            </Link>
+            {signedIn ? (
+              <Link className="button button-primary" href="/dashboard">
+                <i className="fa-solid fa-id-card" aria-hidden="true" /> Edit my profile
+              </Link>
+            ) : (
+              <a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard">
+                <i className="fa-solid fa-id-card" aria-hidden="true" /> Claim my profile
+              </a>
+            )}
             <Link className="button button-soft" href="/tweeter">
               <i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter
             </Link>
@@ -205,9 +211,11 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
           <div className="empty-city-icon"><i className="fa-solid fa-people-arrows" aria-hidden="true" /></div>
           <h2>No public citizens found</h2>
           <p>Try clearing your search, or claim your own profile and be the first face on this part of the board.</p>
-          <Link className="button button-primary" href={signedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}>
-            {signedIn ? 'Open profile settings' : 'Sign in with Steam'}
-          </Link>
+          {signedIn ? (
+            <Link className="button button-primary" href="/dashboard">Open profile settings</Link>
+          ) : (
+            <a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard">Sign in with Steam</a>
+          )}
         </section>
       )}
 

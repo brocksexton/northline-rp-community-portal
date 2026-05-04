@@ -5,9 +5,11 @@ export function middleware(request: NextRequest) {
 
   // Cloudflare / browser caches should never reuse logged-out HTML for a signed-in user,
   // or vice versa. Most pages render from live server files and signed cookies.
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate');
   response.headers.set('CDN-Cache-Control', 'no-store');
   response.headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
+  response.headers.set('Surrogate-Control', 'no-store');
+  response.headers.set('Vary', 'Cookie, Authorization');
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Expires', '0');
 

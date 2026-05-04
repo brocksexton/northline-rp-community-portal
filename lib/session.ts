@@ -118,9 +118,11 @@ export function clearAuthCookies(response: NextResponse, request?: NextRequest):
 
 export function noStoreHeaders(): Record<string, string> {
   return {
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Cache-Control': 'private, no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate',
     'CDN-Cache-Control': 'no-store',
     'Cloudflare-CDN-Cache-Control': 'no-store',
+    'Surrogate-Control': 'no-store',
+    Vary: 'Cookie, Authorization',
     Pragma: 'no-cache',
     Expires: '0',
   };

@@ -143,7 +143,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               </>
             ) : (
               <>
-                <Link className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</Link>
+                <a className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
                 <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link>
                 <a className="button button-ghost" href={config.server.discordUrl}>Join Discord</a>
               </>

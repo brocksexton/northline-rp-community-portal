@@ -282,7 +282,7 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
             <h2>Pick your next stop</h2>
           </div>
           <div className="community-action-list playful-action-list">
-            <Link href={signedIn ? "/dashboard" : "/api/auth/steam?returnTo=/dashboard"}><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>{signedIn ? "Open dashboard" : "Link Steam"}</strong><span>{signedIn ? "Privacy, character, profile, and theme controls." : "Unlock your character dashboard and profile settings."}</span></Link>
+            {signedIn ? (<Link href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>Open dashboard</strong><span>Privacy, character, profile, and theme controls.</span></Link>) : (<a href="/api/auth/steam?returnTo=/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>Link Steam</strong><span>Unlock your character dashboard and profile settings.</span></a>)}
             <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /><strong>Read the starter guides</strong><span>Rules, economy, properties, and the basics.</span></Link>
             <Link href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /><strong>Check city status</strong><span>Server availability without server-room nonsense.</span></Link>
             <Link href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /><strong>Open Tweeter</strong><span>Posts, threads, profiles, and website-safe likes.</span></Link>

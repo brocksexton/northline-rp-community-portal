@@ -1,44 +1,61 @@
-# Auth troubleshooting for northline.lol
+# Northline auth troubleshooting
 
-Steam sign-in uses a signed HTTP-only cookie. If the site looks like it signs in and then immediately drops the session, check these first.
+## What v2.6.9 fixed
 
-## Required environment values
+A logout link was previously implemented as a `GET` URL. Because the app uses Next navigation, that URL could be requested by link prefetching, previews, crawlers, browser helpers, or CDN probes. That could clear the Steam session without the user intentionally pressing Log out.
 
-```powershell
+The fix is:
+
+- login links to `/api/auth/steam` are now normal `<a>` links instead of Next `<Link>` navigation links;
+- logout is now a `POST` form action;
+- `GET /api/auth/logout` no longer clears cookies;
+- auth-sensitive responses send stronger `private/no-store` and `Vary: Cookie` headers.
+
+## Verify after deployment
+
+1. Sign in with Steam.
+2. Open:
+
+```txt
+https://northline.lol/api/auth/session
+```
+
+Expected:
+
+```json
+{
+  "authenticated": true,
+  "cookies": {
+    "secureSessionPresent": true,
+    "legacySessionPresent": true
+  }
+}
+```
+
+3. Refresh the endpoint several times. It should stay authenticated.
+4. Navigate around the site. It should stay authenticated.
+5. Press Log out. It should become unauthenticated only after the explicit logout form is submitted.
+
+## Cloudflare settings to check
+
+For `northline.lol`, do not cache:
+
+- `/api/*`
+- `/dashboard*`
+- `/staff*`
+- `/u/*`
+- `/players*`
+- `/tweeter*` if signed-in state matters
+
+Create a Cache Rule or Page Rule that bypasses cache for `/api/*` at minimum.
+
+## Environment stability
+
+Keep the same `SESSION_SECRET` across deploys. Changing it invalidates existing cookies. Also confirm:
+
+```env
 SITE_URL=https://northline.lol
 NEXT_PUBLIC_SITE_URL=https://northline.lol
-SESSION_SECRET=<one long stable random value>
 ```
 
-Do not regenerate `SESSION_SECRET` during deploys. Changing it invalidates every existing session cookie.
-
-## Cloudflare
-
-Recommended Cloudflare settings:
-
-- SSL/TLS mode: **Full (strict)** where possible.
-- Do not create a Cache Rule that caches HTML pages for `northline.lol/*`.
-- Bypass cache for `/api/*`.
-- Bypass cache when the request has a `Cookie` header.
-
-The app sends `Cache-Control`, `CDN-Cache-Control`, and `Cloudflare-CDN-Cache-Control` headers to discourage stale signed-out HTML, but an aggressive Cache Rule can still override expected behavior.
-
-## Caddy reverse proxy
-
-The included Caddy example forwards the important headers:
-
-```caddy
-header_up Host {host}
-header_up X-Forwarded-Host {host}
-header_up X-Forwarded-Proto {scheme}
-```
-
-Those headers let the app know the external site is `https://northline.lol`, even though Next is listening on `127.0.0.1:3000`.
-
-## What changed in v2.6.8
-
-- Added a `__Host-` secure session cookie alongside the legacy session cookie when served over HTTPS.
-- Session reads now prefer the secure cookie but still fall back to the legacy cookie.
-- Added global no-store headers through middleware.
-- Added no-store Cloudflare/CDN headers to JSON API responses.
-- Trimmed accidental whitespace from `SESSION_SECRET`.
+Do not set either value to `http://127.0.0.1:3000` in production.

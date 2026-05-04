@@ -6652,3 +6652,14 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .report-checklist li {
     margin-top: -2.2rem;
   }
 }
+
+/* Auth hotfix: logout is a POST form, but should look like the old header button. */
+.logout-form {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+}
+
+.logout-form .button {
+  font: inherit;
+}

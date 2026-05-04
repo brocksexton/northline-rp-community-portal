@@ -234,7 +234,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <div className="tweeter-login-card">
               <strong>Join the conversation</strong>
               <p>Sign in with Steam to like posts and connect your citizen identity.</p>
-              <Link className="button button-primary steam-button" href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-brands fa-steam" /> Steam sign-in</Link>
+              <a className="button button-primary steam-button" href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-brands fa-steam" /> Steam sign-in</a>
             </div>
           )}
         </aside>
@@ -391,7 +391,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
       <nav className="tweeter-mobile-actions" aria-label="Mobile Tweeter navigation">
         <Link href="/tweeter"><Icon className="fa-solid fa-house" /><span>Home</span></Link>
         <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /><span>Explore</span></button>
-        {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <Link href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-solid fa-user-lock" /><span>Sign in</span></Link>}
+        {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <a href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-solid fa-user-lock" /><span>Sign in</span></a>}
         <Link href="/"><Icon className="fa-solid fa-arrow-left" /><span>Northline</span></Link>
       </nav>
     </main>

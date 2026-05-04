@@ -55,10 +55,12 @@ export async function Header() {
                 <UserAvatar src={avatar} name={displayName} size="sm" />
                 <span><strong>{displayName}</strong><small>{role}</small></span>
               </Link>
-              <Link className="button button-ghost compact" href="/api/auth/logout">Log out</Link>
+              <form action="/api/auth/logout" method="post" className="logout-form">
+                <button className="button button-ghost compact" type="submit">Log out</button>
+              </form>
             </>
           ) : (
-            <Link className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam sign-in</Link>
+            <a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam sign-in</a>
           )}
         </div>
       </div>
