@@ -4,7 +4,7 @@ import {
   normalizeTweeterThemeEra,
   upsertCommunityProfile,
 } from '@/lib/community-data';
-import { getSessionSteamId, getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
+import { getSessionSteamId, getSessionSteamIdFromRequest, noStoreHeaders, verifyProfileEditToken } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,12 +32,13 @@ function cleanShowcase(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
-  const steamId = getSessionSteamIdFromRequest(request) ?? await getSessionSteamId();
+  const body = await request.json().catch(() => ({}));
+  const steamId = getSessionSteamIdFromRequest(request) ?? await getSessionSteamId() ?? verifyProfileEditToken(body.profileEditToken);
+
   if (!steamId) {
     return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
   }
 
-  const body = await request.json().catch(() => ({}));
   const privacy = body.privacy === 'private' ? 'private' : 'public';
   const profile = await upsertCommunityProfile(steamId, {
     privacy,

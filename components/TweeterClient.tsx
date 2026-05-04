@@ -109,6 +109,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
   const [tag, setTag] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'for-you' | 'latest'>('latest');
   const [refreshing, setRefreshing] = useState(false);
+  const [composerMessage, setComposerMessage] = useState('');
   const initialGeneratedMs = Number.isFinite(Date.parse(initialData.generatedAt)) ? Date.parse(initialData.generatedAt) : Date.now();
   const [clockMs, setClockMs] = useState(initialGeneratedMs);
   const [lastRefreshed, setLastRefreshed] = useState(new Date(initialGeneratedMs));
@@ -116,8 +117,10 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
   async function refreshFeed() {
     if (refreshing) return;
     setRefreshing(true);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 6000);
     try {
-      const response = await fetch('/api/tweeter', { cache: 'no-store', credentials: 'same-origin' });
+      const response = await fetch('/api/tweeter', { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
       if (response.ok) {
         const next = await response.json() as TweeterPayload;
         setData(next);
@@ -128,6 +131,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
     } catch {
       // leave last good timeline intact
     } finally {
+      window.clearTimeout(timeout);
       setRefreshing(false);
     }
   }
@@ -243,7 +247,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             </div>
             <button className="tweeter-live-pill" type="button" onClick={() => void refreshFeed()} aria-label="Refresh Tweeter timeline">
               <Icon className={refreshing ? 'fa-solid fa-rotate spinning' : 'fa-solid fa-wand-sparkles'} />
-              {refreshing ? 'Syncing' : 'Live'}
+              {refreshing ? 'Refreshing' : 'Live'}
             </button>
           </header>
 
@@ -255,11 +259,14 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
           <section className="tweeter-compose-card">
             <UserAvatar src={data.currentUser?.avatarUrl ?? null} name={data.currentUser?.displayName ?? 'Northline'} size="md" />
             <div className="tweeter-compose-body">
-              <div className="tweeter-compose-lockline">
-                <span className="tweeter-badge">Read-only bridge</span>
-                <span>Web posting is intentionally locked while the signed game bridge is built.</span>
-              </div>
-              <textarea placeholder="What's happening?" disabled rows={3} />
+              <textarea
+                placeholder="What's happening?"
+                readOnly
+                rows={3}
+                value={composerMessage}
+                onFocus={() => setComposerMessage("Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
+                onClick={() => setComposerMessage("Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
+              />
               <div className="tweeter-compose-footer">
                 <div className="tweeter-compose-tools" aria-hidden="true">
                   <Icon className="fa-regular fa-image" />
@@ -269,7 +276,6 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                 </div>
                 <button className="tweeter-inline-post" type="button" disabled>Post</button>
               </div>
-              <small>Likes are website-safe. Posting, replies, reposts, and follows should wait for a signed game bridge.</small>
             </div>
           </section>
 
@@ -346,23 +352,6 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <span className="tweeter-search-icon"><Icon className="fa-solid fa-magnifying-glass" /></span>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search Tweeter" />
           </label>
-
-          <section className="tweeter-panel tweeter-system-panel">
-            <div className="tweeter-panel-header"><strong>City pulse</strong></div>
-            <p>Tweeter mirrors server-side Northbound RP data and keeps unsafe write actions disabled until the bridge is ready.</p>
-            <div className="tweeter-system-grid">
-              <span>Read-only feed</span>
-              <span>Safe web likes</span>
-              <span>Steam identity</span>
-              <span>Live refresh</span>
-            </div>
-          </section>
-
-          <section className="tweeter-panel tweeter-theme-studio-panel">
-            <div className="tweeter-panel-header"><strong>Theme studio</strong></div>
-            <p>Choose between Modern, Mid-2010s, and Classic Tweeter styles from your dashboard, plus Dark, Light, or Twitter Blue color modes.</p>
-            <Link className="button button-soft tweeter-theme-studio-link" href="/dashboard">Open theme settings</Link>
-          </section>
 
           <section className="tweeter-panel">
             <div className="tweeter-panel-header"><strong>Northline trends</strong></div>

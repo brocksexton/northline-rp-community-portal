@@ -17,6 +17,31 @@ export function createSessionCookieValue(steamId: string): string {
   return `${steamId}.${sign(steamId)}`;
 }
 
+const PROFILE_EDIT_TOKEN_TTL_SECONDS = 60 * 30;
+
+export function createProfileEditToken(steamId: string): string {
+  const safeSteamId = String(steamId || '').trim();
+  const expiresAt = Math.floor(Date.now() / 1000) + PROFILE_EDIT_TOKEN_TTL_SECONDS;
+  const payload = `${safeSteamId}.${expiresAt}`;
+  return `${payload}.${sign(`profile-edit.${payload}`)}`;
+}
+
+export function verifyProfileEditToken(value: unknown): string | null {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const [steamId, expiresAtRaw, signature] = raw.split('.');
+  if (!steamId || !expiresAtRaw || !signature || !/^\d{15,20}$/.test(steamId)) return null;
+  const expiresAt = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) return null;
+  const payload = `${steamId}.${expiresAtRaw}`;
+  const expected = sign(`profile-edit.${payload}`);
+  const supplied = Buffer.from(signature);
+  const generated = Buffer.from(expected);
+  if (supplied.length !== generated.length) return null;
+  return crypto.timingSafeEqual(supplied, generated) ? steamId : null;
+}
+
+
 export function verifySessionCookieValue(value: string | undefined): string | null {
   if (!value) return null;
   const [steamId, signature] = value.split('.');

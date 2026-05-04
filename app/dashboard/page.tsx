@@ -5,7 +5,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { getAllGuideProgress, getCitizenName, getGuideProgress, getPermissionsForSteamId, getPhoneMessageSummary, getPlayer, getPropertyLayoutsForSteamId, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId, GUIDE_CATALOG } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
-import { getSessionSteamId } from '@/lib/session';
+import { createProfileEditToken, getSessionSteamId } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
 
 export const dynamic = 'force-dynamic';
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
 
       <section className="layout-two dashboard-layout">
         <CharacterCard player={player} steamId={steamId} layouts={layouts} />
-        <ProfileSettingsForm profile={communityProfile} />
+        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} />
       </section>
 
       <section className="layout-three">

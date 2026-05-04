@@ -86,7 +86,7 @@ function ModeChoiceCard({
   );
 }
 
-export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | null }) {
+export function ProfileSettingsForm({ profile, profileEditToken }: { profile: CommunityProfile | null; profileEditToken?: string }) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
@@ -127,6 +127,7 @@ export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | n
           showcase,
           tweeterTheme,
           tweeterMode,
+          profileEditToken,
         }),
       });
       setState(response.ok ? 'saved' : 'error');
