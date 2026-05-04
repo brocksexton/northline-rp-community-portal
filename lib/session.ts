@@ -4,12 +4,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getExternalOrigin, isSecureOrigin } from '@/lib/steam-openid';
 
 const COOKIE_NAME = 'northline_steam_session';
+const SECURE_COOKIE_NAME = '__Host-northline_steam_session';
 const RETURN_TO_COOKIE = 'northline_auth_return_to';
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 const PROFILE_EDIT_TOKEN_TTL_SECONDS = 60 * 30;
 
 function getSecret(): string {
-  return process.env.SESSION_SECRET || 'dev-secret-change-me';
+  return (process.env.SESSION_SECRET || '').trim() || 'dev-secret-change-me';
 }
 
 function sign(value: string): string {
@@ -55,11 +56,13 @@ export function verifySessionCookieValue(value: string | undefined): string | nu
 
 export async function getSessionSteamId(): Promise<string | null> {
   const jar = await cookies();
-  return verifySessionCookieValue(jar.get(COOKIE_NAME)?.value);
+  return verifySessionCookieValue(jar.get(SECURE_COOKIE_NAME)?.value)
+    ?? verifySessionCookieValue(jar.get(COOKIE_NAME)?.value);
 }
 
 export function getSessionSteamIdFromRequest(request: NextRequest): string | null {
-  return verifySessionCookieValue(request.cookies.get(COOKIE_NAME)?.value);
+  return verifySessionCookieValue(request.cookies.get(SECURE_COOKIE_NAME)?.value)
+    ?? verifySessionCookieValue(request.cookies.get(COOKIE_NAME)?.value);
 }
 
 function cookieSecureForRequest(request?: NextRequest): boolean {
@@ -73,14 +76,20 @@ function baseCookieOptions(request?: NextRequest) {
     sameSite: 'lax' as const,
     secure: cookieSecureForRequest(request),
     path: '/',
+    priority: 'high' as const,
   };
 }
 
 export function setSessionCookie(response: NextResponse, steamId: string, request?: NextRequest): NextResponse {
-  response.cookies.set(COOKIE_NAME, createSessionCookieValue(steamId), {
+  const value = createSessionCookieValue(steamId);
+  const options = {
     ...baseCookieOptions(request),
     maxAge: SESSION_MAX_AGE_SECONDS,
-  });
+  };
+  response.cookies.set(COOKIE_NAME, value, options);
+  if (options.secure) {
+    response.cookies.set(SECURE_COOKIE_NAME, value, options);
+  }
   return response;
 }
 
@@ -98,7 +107,7 @@ export function setAuthReturnToCookie(response: NextResponse, returnTo: string, 
 }
 
 export function clearAuthCookies(response: NextResponse, request?: NextRequest): NextResponse {
-  for (const name of [COOKIE_NAME, RETURN_TO_COOKIE]) {
+  for (const name of [COOKIE_NAME, SECURE_COOKIE_NAME, RETURN_TO_COOKIE]) {
     response.cookies.set(name, '', {
       ...baseCookieOptions(request),
       maxAge: 0,
@@ -110,6 +119,8 @@ export function clearAuthCookies(response: NextResponse, request?: NextRequest):
 export function noStoreHeaders(): Record<string, string> {
   return {
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'CDN-Cache-Control': 'no-store',
+    'Cloudflare-CDN-Cache-Control': 'no-store',
     Pragma: 'no-cache',
     Expires: '0',
   };
@@ -127,4 +138,5 @@ export function jsonWithSession(body: unknown, init: ResponseInit | undefined, s
 }
 
 export const sessionCookieName = COOKIE_NAME;
+export const secureSessionCookieName = SECURE_COOKIE_NAME;
 export const authReturnToCookieName = RETURN_TO_COOKIE;

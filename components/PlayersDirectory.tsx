@@ -59,8 +59,8 @@ function chipsFor(entry: PlayerDirectoryEntry) {
   const chips = [roleLabel(entry.role)];
   if (entry.isCurrentUser) chips.push('You');
   if (entry.activityBucket === 'recent') chips.push('Recently around');
-  if (entry.publicModules) chips.push(`${entry.publicModules} showcase${entry.publicModules === 1 ? '' : 's'}`);
-  if (entry.tweetCount) chips.push(`${entry.tweetCount} post${entry.tweetCount === 1 ? '' : 's'}`);
+  if (entry.publicModules) chips.push(`${entry.publicModules} public section${entry.publicModules === 1 ? '' : 's'}`);
+  if (entry.tweetCount) chips.push(`${entry.tweetCount} Tweeter post${entry.tweetCount === 1 ? '' : 's'}`);
   return chips.slice(0, 5);
 }
 
@@ -94,10 +94,10 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       <section className="players-directory-hero">
         <div className="players-directory-copy">
           <span className="kicker">Citizen board</span>
-          <h1>Find the people who chose to be found.</h1>
+          <h1>Meet the locals who put their name on the door.</h1>
           <p>
-            The directory is now opt-in and profile-first. It highlights citizens who have claimed a public web profile,
-            so this page stays useful as the city grows instead of becoming a giant save-file dump.
+            This is Northline’s public roll call: citizens who signed in, claimed a profile, and chose to be discoverable.
+            Everyone else gets to stay off the board unless they opt in.
           </p>
           <div className="players-hero-actions">
             <Link className="button button-primary" href={signedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}>
@@ -110,14 +110,14 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
         </div>
         <aside className="players-directory-scoreboard" aria-label="Directory summary">
           <div className="scoreboard-main">
-            <span>Listed citizens</span>
+            <span>On the board</span>
             <strong>{stats.listedProfiles.toLocaleString()}</strong>
-            <p>{stats.onlineNow.toLocaleString()} online right now</p>
+            <p>{stats.onlineNow.toLocaleString()} online in the city</p>
           </div>
           <div className="scoreboard-grid">
-            <div><strong>{stats.totalSaves.toLocaleString()}</strong><span>unique saves</span></div>
-            <div><strong>{stats.privateProfiles.toLocaleString()}</strong><span>private</span></div>
-            <div><strong>{stats.unclaimedSaves.toLocaleString()}</strong><span>unclaimed</span></div>
+            <div><strong>{stats.totalSaves.toLocaleString()}</strong><span>known citizens</span></div>
+            <div><strong>{stats.privateProfiles.toLocaleString()}</strong><span>staying private</span></div>
+            <div><strong>{stats.unclaimedSaves.toLocaleString()}</strong><span>not claimed yet</span></div>
           </div>
         </aside>
       </section>
@@ -125,11 +125,11 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       {signedIn && !currentUserListed ? (
         <section className={`players-directory-nudge ${currentUserPrivate ? 'private' : ''}`}>
           <div>
-            <strong>{currentUserPrivate ? 'Your profile is private.' : 'You are not listed yet.'}</strong>
+            <strong>{currentUserPrivate ? 'You are hidden from the board.' : 'You are not on the board yet.'}</strong>
             <p>
               {currentUserPrivate
-                ? 'Private profiles are intentionally hidden from this page. Switch to public in your dashboard if you want to be discoverable.'
-                : 'Open your dashboard, set your profile public, and add a short bio to join the citizen board.'}
+                ? 'Your profile is private, so nobody browsing this page can find you. Switch to public whenever you want to be listed.'
+                : 'Open your dashboard, publish your profile, and add a short bio if you want other citizens to find you here.'}
             </p>
           </div>
           <Link className="button button-soft" href="/dashboard">Profile settings</Link>
@@ -139,7 +139,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       <section className="players-directory-toolbar" aria-label="Filter public citizens">
         <label className="players-search-field">
           <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
-          <input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(18); }} placeholder="Search names, bios, roles..." />
+          <input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(18); }} placeholder="Search citizens, bios, roles..." />
         </label>
         <label className="players-select-field">
           <span>Role</span>
@@ -161,10 +161,10 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
 
       <section className="players-directory-results-head">
         <div>
-          <span className="kicker">Public profiles</span>
+          <span className="kicker">Public citizens</span>
           <h2>{filteredEntries.length.toLocaleString()} citizen{filteredEntries.length === 1 ? '' : 's'} found</h2>
         </div>
-        <p>Private profiles and unclaimed saves are not shown.</p>
+        <p>Only public profiles appear here.</p>
       </section>
 
       {shown.length ? (
@@ -186,7 +186,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
                   </div>
                   <em>{roleLabel(entry.role)}</em>
                 </div>
-                <p className="public-citizen-bio">{entry.bio || 'This citizen is public, but still keeping the mysterious stranger energy.'}</p>
+                {entry.bio ? <p className="public-citizen-bio">{entry.bio}</p> : <p className="public-citizen-bio empty">No bio yet — just vibes and a public profile.</p>}
                 <div className="public-citizen-meta">
                   {entry.location ? <span><i className="fa-solid fa-location-dot" aria-hidden="true" /> {entry.location}</span> : null}
                   <span><i className="fa-regular fa-calendar" aria-hidden="true" /> {entry.joinedLabel}</span>
@@ -203,8 +203,8 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       ) : (
         <section className="players-directory-empty">
           <div className="empty-city-icon"><i className="fa-solid fa-people-arrows" aria-hidden="true" /></div>
-          <h2>No matching public profiles</h2>
-          <p>Try clearing your search, or become one of the first citizens to claim and publish a Northline profile.</p>
+          <h2>No public citizens found</h2>
+          <p>Try clearing your search, or claim your own profile and be the first face on this part of the board.</p>
           <Link className="button button-primary" href={signedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}>
             {signedIn ? 'Open profile settings' : 'Sign in with Steam'}
           </Link>
@@ -222,11 +222,10 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       <section className="players-directory-policy">
         <div>
           <i className="fa-solid fa-user-shield" aria-hidden="true" />
-          <strong>Privacy-first directory</strong>
+          <strong>You control whether you appear here</strong>
         </div>
         <p>
-          This page only lists public, claimed profiles. It does not expose every saved character, private profile, inventory,
-          economy, phone data, logs, or moderation details.
+          The board only shows public, claimed profiles. Private citizens stay hidden, and sensitive gameplay details never appear unless the player explicitly publishes that section.
         </p>
       </section>
     </>
