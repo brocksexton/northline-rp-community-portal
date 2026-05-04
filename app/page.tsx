@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CommunityHomeLiveStats } from '@/components/CommunityHomeLiveStats';
 import { UserAvatar } from '@/components/UserAvatar';
 import {
   getAllDamageLogs,
@@ -15,7 +16,7 @@ import {
   getTweets,
 } from '@/lib/ape-data';
 import { getCommunityProfile, getStatusUpdates } from '@/lib/community-data';
-import { duration, fullDate, money, relativeFromDate } from '@/lib/format';
+import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
 import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
@@ -36,12 +37,6 @@ function cityMood(online: number, latestEventAt: string | null, dataConnected: b
   if (online > 0) return { label: 'People are outside', body: `${online} ${online === 1 ? 'citizen is' : 'citizens are'} online right now.`, icon: 'fa-solid fa-person-walking', tone: 'success' };
   if (latestEventAt) return { label: 'The city is catching its breath', body: `Last activity was ${relativeFromDate(latestEventAt)}.`, icon: 'fa-solid fa-moon', tone: 'warning' };
   return { label: 'Fresh city, fresh chaos', body: 'The portal is ready and waiting for the first new story.', icon: 'fa-solid fa-sparkles', tone: 'neutral' };
-}
-
-function topDeathLabel(total: number) {
-  if (total <= 0) return 'Nobody has died yet. Suspiciously peaceful.';
-  if (total === 1) return 'Only one documented death so far. The city remembers.';
-  return `${total.toLocaleString()} documented ways Northline citizens learned consequences.`;
 }
 
 function compactPercent(value: number) {
@@ -105,18 +100,25 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const level = Number(player?.Level ?? player?.TrackedStats?.level ?? 1);
   const hasSignedIn = Boolean(steamId);
   const mood = cityMood(population.onlineCount, population.latestEventAt, health.exists);
-  const topDeath = deathSummary.categories.find((category) => category.count > 0) ?? deathSummary.categories[0];
-  const topVictim = deathSummary.topVictims[0];
   const recentFatal = damageLogs.find((log) => Boolean(log.IsFatal));
-
-  const cityFacts: MiniFact[] = [
-    { icon: 'fa-solid fa-users', label: 'Unique citizens', value: overview.players.toLocaleString(), body: 'Saved characters known by the city.', href: '/players' },
-    { icon: 'fa-solid fa-skull-crossbones', label: 'Total deaths', value: deathSummary.total.toLocaleString(), body: topDeathLabel(deathSummary.total) },
-    { icon: 'fa-solid fa-heart-crack', label: 'Damage events', value: deathSummary.damageEvents.toLocaleString(), body: 'Every bonk, fall, shot, and bad life choice we could read.' },
-    { icon: 'fa-brands fa-twitter', label: 'Tweeter posts', value: overview.tweets.toLocaleString(), body: 'The in-city social feed, mirrored to the web.', href: '/tweeter' },
-    { icon: 'fa-solid fa-couch', label: 'Saved layouts', value: overview.propertyLayouts.toLocaleString(), body: `${overview.propertyProps.toLocaleString()} props placed across saved homes and businesses.` },
-    { icon: 'fa-solid fa-wallet', label: 'City funds', value: money(overview.totalCash + overview.totalBank), body: 'Aggregate cash and bank value from saved characters.' },
-  ];
+  const initialLiveSnapshot = {
+    generatedAt: new Date().toISOString(),
+    overview: {
+      players: overview.players,
+      tweets: overview.tweets,
+      propertyLayouts: overview.propertyLayouts,
+      propertyProps: overview.propertyProps,
+      totalCash: overview.totalCash,
+      totalBank: overview.totalBank,
+    },
+    deathSummary,
+    recentFatal: recentFatal ? {
+      id: `${recentFatal.Timestamp}-${recentFatal.VictimSteamId}-${recentFatal.Cause ?? 'unknown'}-${recentFatal.HealthAfter ?? 'na'}`,
+      victimName: recentFatal.VictimName || 'Someone',
+      cause: recentFatal.Cause || 'Unknown',
+      timestamp: recentFatal.Timestamp,
+    } : null,
+  };
 
   const personalFacts = hasSignedIn ? signedInFacts({ role, playerDeaths, guidePercent, playtimeSeconds, level }) : [];
 
@@ -179,59 +181,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
         </aside>
       </section>
 
-      <section className="community-stat-strip" aria-label="Northline city stats">
-        {cityFacts.map((fact) => {
-          const content = (
-            <>
-              <i className={fact.icon} aria-hidden="true" />
-              <span>{fact.label}</span>
-              <strong>{fact.value}</strong>
-              <small>{fact.body}</small>
-            </>
-          );
-          return fact.href ? <Link className="community-stat-card" href={fact.href} key={fact.label}>{content}</Link> : <article className="community-stat-card" key={fact.label}>{content}</article>;
-        })}
-      </section>
-
-      <section className="community-main-grid">
-        <article className="community-card death-board">
-          <div className="community-section-heading">
-            <span className="community-kicker">City chaos report</span>
-            <h2>How are people dying?</h2>
-            <p>{topDeath?.count ? `${topDeath.label} is currently leading the scoreboard.` : 'No fatal damage has been recorded yet.'}</p>
-          </div>
-
-          <div className="death-grid">
-            {deathSummary.categories.slice(0, 6).map((category) => (
-              <div className={`death-tile ${category.count > 0 ? 'has-count' : ''}`} key={category.key}>
-                <i className={category.icon} aria-hidden="true" />
-                <strong>{category.count.toLocaleString()}</strong>
-                <span>{category.label}</span>
-                <small>{category.body}</small>
-              </div>
-            ))}
-          </div>
-
-          <div className="community-mini-list death-notes">
-            {topVictim ? <div><span>Most unlucky lately</span><strong>{topVictim.name}</strong><small>{topVictim.count} recorded death{topVictim.count === 1 ? '' : 's'}</small></div> : null}
-            {recentFatal ? <div><span>Latest fatal event</span><strong>{recentFatal.Cause || 'Unknown'}</strong><small>{recentFatal.VictimName || 'Someone'} · {relativeFromDate(recentFatal.Timestamp)}</small></div> : null}
-            {deathSummary.topCauses[0] ? <div><span>Top raw cause</span><strong>{deathSummary.topCauses[0].cause}</strong><small>{deathSummary.topCauses[0].count} event{deathSummary.topCauses[0].count === 1 ? '' : 's'}</small></div> : null}
-          </div>
-        </article>
-
-        <aside className="community-card community-now-card">
-          <div className="community-section-heading compact">
-            <span className="community-kicker">What to do first</span>
-            <h2>{hasSignedIn ? 'Your quick stops' : 'New here?'}</h2>
-          </div>
-          <div className="community-action-list">
-            <Link href={hasSignedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>{hasSignedIn ? 'Open dashboard' : 'Link Steam'}</strong><span>{hasSignedIn ? 'Privacy, character, profile, and theme controls.' : 'Unlock your character dashboard and public profile settings.'}</span></Link>
-            <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /><strong>Read the starter guides</strong><span>Rules, economy, properties, and the basics.</span></Link>
-            <Link href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /><strong>Check the city status</strong><span>Server availability without the scary server-room jargon.</span></Link>
-            <Link href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /><strong>Open Tweeter</strong><span>Posts, threads, profiles, and website-safe likes.</span></Link>
-          </div>
-        </aside>
-      </section>
+      <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} />
 
       {hasSignedIn ? (
         <section className="community-card personal-board">
