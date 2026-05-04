@@ -266,11 +266,81 @@ export async function getRecentAdminLogs(limit = 25): Promise<AdminLog[]> {
   return all.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()).slice(0, limit);
 }
 
-export async function getRecentDamageLogs(limit = 25): Promise<DamageLog[]> {
+export async function getAllDamageLogs(): Promise<DamageLog[]> {
   const files = await getJsonFiles('damage_logs');
   const all: DamageLog[] = [];
   for (const file of files) all.push(...(await readJson<DamageLog[]>(file, [])));
-  return all.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()).slice(0, limit);
+  return all.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
+}
+
+export async function getRecentDamageLogs(limit = 25): Promise<DamageLog[]> {
+  return (await getAllDamageLogs()).slice(0, limit);
+}
+
+export type DeathCategoryKey = 'dehydration' | 'hunger' | 'firearm' | 'fists' | 'fall' | 'self' | 'world' | 'other';
+
+export type DeathCategorySummary = { key: DeathCategoryKey; label: string; count: number; icon: string; body: string };
+
+function normalizeDeathCause(log: DamageLog): DeathCategoryKey {
+  const cause = String(log.Cause ?? '').toLowerCase();
+  const attacker = String(log.AttackerName ?? '').toLowerCase();
+  const victimId = String(log.VictimSteamId ?? '');
+  const attackerId = log.AttackerSteamId == null ? '' : String(log.AttackerSteamId);
+
+  if (cause.includes('thirst') || attacker.includes('dehydration')) return 'dehydration';
+  if (cause.includes('hunger') || attacker.includes('starvation')) return 'hunger';
+  if (cause.includes('fall') || attacker.includes('gravity')) return 'fall';
+  if (victimId && attackerId && attackerId !== '0' && attackerId === victimId) return 'self';
+  if (/shotgun|pistol|rifle|gun|revolver|smg|ammo|bullet|firearm/.test(cause)) return 'firearm';
+  if (/fist|punch|melee|bat|knife|crowbar/.test(cause)) return 'fists';
+  if (!attackerId || attackerId === '0') return 'world';
+  return 'other';
+}
+
+function deathCategoryMeta(key: DeathCategoryKey): Omit<DeathCategorySummary, 'count' | 'key'> {
+  switch (key) {
+    case 'dehydration': return { label: 'Died thirsty', icon: 'fa-solid fa-droplet-slash', body: 'Forgot to hydrate.' };
+    case 'hunger': return { label: 'Died hungry', icon: 'fa-solid fa-burger', body: 'Snacks were required.' };
+    case 'firearm': return { label: 'Shot down', icon: 'fa-solid fa-crosshairs', body: 'Player combat with guns.' };
+    case 'fists': return { label: 'Hands only', icon: 'fa-solid fa-hand-fist', body: 'Fists or melee chaos.' };
+    case 'fall': return { label: 'Gravity wins', icon: 'fa-solid fa-person-falling', body: 'Fall damage fatalities.' };
+    case 'self': return { label: 'Self-inflicted', icon: 'fa-solid fa-skull', body: 'Somehow their own fault.' };
+    case 'world': return { label: 'The city did it', icon: 'fa-solid fa-city', body: 'World or system damage.' };
+    default: return { label: 'Mystery deaths', icon: 'fa-solid fa-question', body: 'Unclassified chaos.' };
+  }
+}
+
+export async function getDeathSummary() {
+  const logs = await getAllDamageLogs();
+  const fatal = logs.filter((log) => Boolean(log.IsFatal));
+  const categories = new Map<DeathCategoryKey, number>();
+  for (const key of ['dehydration', 'hunger', 'firearm', 'fists', 'fall', 'self', 'world', 'other'] as DeathCategoryKey[]) categories.set(key, 0);
+  for (const log of fatal) {
+    const key = normalizeDeathCause(log);
+    categories.set(key, (categories.get(key) ?? 0) + 1);
+  }
+
+  const topVictims = new Map<string, { steamId: string; name: string; count: number }>();
+  const topCauses = new Map<string, number>();
+  for (const log of fatal) {
+    const steamId = String(log.VictimSteamId ?? 'unknown');
+    const existing = topVictims.get(steamId) ?? { steamId, name: log.VictimName || `Citizen ${steamId.slice(-8)}`, count: 0 };
+    existing.count += 1;
+    topVictims.set(steamId, existing);
+    const cause = String(log.Cause ?? 'Unknown').trim() || 'Unknown';
+    topCauses.set(cause, (topCauses.get(cause) ?? 0) + 1);
+  }
+
+  return {
+    total: fatal.length,
+    damageEvents: logs.length,
+    latestAt: fatal[0]?.Timestamp ?? null,
+    categories: [...categories.entries()]
+      .map(([key, count]) => ({ key, count, ...deathCategoryMeta(key) }))
+      .sort((a, b) => b.count - a.count),
+    topVictims: [...topVictims.values()].sort((a, b) => b.count - a.count).slice(0, 3),
+    topCauses: [...topCauses.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([cause, count]) => ({ cause, count })),
+  };
 }
 
 export async function getPropertyLayoutsForSteamId(steamId: string): Promise<PropertyLayout[]> {

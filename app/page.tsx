@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
 import {
-  getBanRecords,
+  getAllDamageLogs,
   getCitizenName,
   getCityOverview,
   getDataHealth,
+  getDeathSummary,
+  getGuideProgress,
   getPlayer,
   getPlayersBySteamId,
   getPopulationSummary,
@@ -12,7 +14,7 @@ import {
   getServerConfig,
   getTweets,
 } from '@/lib/ape-data';
-import { getCommunityProfile, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
+import { getCommunityProfile, getStatusUpdates } from '@/lib/community-data';
 import { duration, fullDate, money, relativeFromDate } from '@/lib/format';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
@@ -22,24 +24,55 @@ export const dynamic = 'force-dynamic';
 
 type PageSearchParams = { login?: string | string[]; loggedOut?: string | string[]; [key: string]: string | string[] | undefined };
 
+type MiniFact = { icon: string; label: string; value: string; body: string; href?: string };
+
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function stateLabel(healthExists: boolean, online: number, latestEventAt: string | null) {
-  if (!healthExists) return { label: 'Data unavailable', tone: 'danger', body: 'The website cannot read Northbound RP files right now.' };
-  if (online > 0) return { label: 'City active', tone: 'success', body: `${online} ${online === 1 ? 'player is' : 'players are'} connected right now.` };
-  if (latestEventAt) return { label: 'City quiet', tone: 'warning', body: `Last server activity was ${relativeFromDate(latestEventAt)}.` };
-  return { label: 'Awaiting activity', tone: 'neutral', body: 'Server files are connected and waiting for fresh activity.' };
+function cityMood(online: number, latestEventAt: string | null, dataConnected: boolean) {
+  if (!dataConnected) return { label: 'The wires are crossed', body: 'The portal cannot read the city files right now.', icon: 'fa-solid fa-plug-circle-xmark', tone: 'danger' };
+  if (online >= 8) return { label: 'The city is loud', body: `${online} citizens are currently making questionable decisions.`, icon: 'fa-solid fa-volume-high', tone: 'success' };
+  if (online > 0) return { label: 'People are outside', body: `${online} ${online === 1 ? 'citizen is' : 'citizens are'} online right now.`, icon: 'fa-solid fa-person-walking', tone: 'success' };
+  if (latestEventAt) return { label: 'The city is catching its breath', body: `Last activity was ${relativeFromDate(latestEventAt)}.`, icon: 'fa-solid fa-moon', tone: 'warning' };
+  return { label: 'Fresh city, fresh chaos', body: 'The portal is ready and waiting for the first new story.', icon: 'fa-solid fa-sparkles', tone: 'neutral' };
 }
 
-function dashboardBody(role: string, guidePercent: number | null) {
-  if (guidePercent !== null && guidePercent < 100) return `Your ${role} profile is ready. You still have onboarding progress to finish.`;
-  return `Your ${role} profile is connected and ready.`;
+function topDeathLabel(total: number) {
+  if (total <= 0) return 'Nobody has died yet. Suspiciously peaceful.';
+  if (total === 1) return 'Only one documented death so far. The city remembers.';
+  return `${total.toLocaleString()} documented ways Northline citizens learned consequences.`;
+}
+
+function compactPercent(value: number) {
+  if (!Number.isFinite(value)) return '0%';
+  return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
+}
+
+function signedInFacts({
+  role,
+  playerDeaths,
+  guidePercent,
+  playtimeSeconds,
+  level,
+}: {
+  role: string;
+  playerDeaths: number;
+  guidePercent: number;
+  playtimeSeconds: number;
+  level: number;
+}): MiniFact[] {
+  return [
+    { icon: 'fa-solid fa-user-shield', label: 'City role', value: role, body: 'This is how the portal currently recognizes you.' },
+    { icon: 'fa-solid fa-clock', label: 'Time in city', value: duration(playtimeSeconds), body: 'Every hour counts. Somehow.' },
+    { icon: 'fa-solid fa-star', label: 'Level', value: String(level || 1), body: 'A quick look at your character progress.' },
+    { icon: 'fa-solid fa-skull', label: 'Your deaths', value: playerDeaths.toLocaleString(), body: playerDeaths ? 'The city has receipts.' : 'You are undefeated on paper.' },
+    { icon: 'fa-solid fa-map', label: 'Guides done', value: compactPercent(guidePercent), body: 'Finish onboarding whenever you want the full tour.' },
+  ];
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: Promise<PageSearchParams> }) {
-  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, samples, bans, overview] = await Promise.all([
+  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     searchParams ?? Promise.resolve({} as PageSearchParams),
@@ -48,159 +81,233 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
     getTweets(),
     getPlayersBySteamId(),
     getServerConfig(),
-    getStatusUpdates(2),
-    getMetricSamples(24),
-    getBanRecords(),
+    getStatusUpdates(3),
     getCityOverview(),
+    getDeathSummary(),
+    getAllDamageLogs(),
   ]);
 
-  const [player, communityProfile, steamProfile, role] = steamId
-    ? await Promise.all([getPlayer(steamId), getCommunityProfile(steamId), getSteamProfile(steamId), getRoleForSteamId(steamId)])
-    : [null, null, null, 'Guest'] as const;
+  const [player, communityProfile, steamProfile, role, guideProgress] = steamId
+    ? await Promise.all([getPlayer(steamId), getCommunityProfile(steamId), getSteamProfile(steamId), getRoleForSteamId(steamId), getGuideProgress(steamId)])
+    : [null, null, null, 'Guest', null] as const;
 
-  const status = stateLabel(health.exists, population.onlineCount, population.latestEventAt);
-  const latestMetric = samples.at(-1);
-  const latestTweets = tweets.slice(0, 2);
-  const latestBans = bans.slice(0, 1);
-  const steamIds = new Set<string>();
-  for (const tweet of latestTweets) steamIds.add(String(tweet.AuthorSteamId));
-  for (const ban of latestBans) steamIds.add(ban.steamId);
-  const steamProfiles = await getSteamProfiles([...steamIds]);
+  const latestTweets = tweets.slice(0, 3);
+  const tweetSteamIds = [...new Set(latestTweets.map((tweet) => String(tweet.AuthorSteamId)))];
+  const steamProfiles = await getSteamProfiles(tweetSteamIds);
   const loginFailed = getSingleParam(params.login) === 'failed';
   const loggedOut = getSingleParam(params.loggedOut) === '1';
   const maxPlayers = serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
-  const displayName = steamId ? getCitizenName(player, steamId) : 'Guest';
+  const displayName = steamId ? getCitizenName(player, steamId) : 'future citizen';
   const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium || null;
-  const guidePercentRaw = Number((player as { GuideProgressPercent?: unknown } | null)?.GuideProgressPercent);
-  const guidePercent = Number.isFinite(guidePercentRaw) ? guidePercentRaw : null;
+  const playerDeaths = steamId ? damageLogs.filter((log) => Boolean(log.IsFatal) && String(log.VictimSteamId) === steamId).length : 0;
+  const guidePercent = guideProgress?.percent ?? 0;
+  const playtimeSeconds = Number(player?.TotalPlaytimeSeconds ?? 0);
+  const level = Number(player?.Level ?? player?.TrackedStats?.level ?? 1);
   const hasSignedIn = Boolean(steamId);
+  const mood = cityMood(population.onlineCount, population.latestEventAt, health.exists);
+  const topDeath = deathSummary.categories.find((category) => category.count > 0) ?? deathSummary.categories[0];
+  const topVictim = deathSummary.topVictims[0];
+  const recentFatal = damageLogs.find((log) => Boolean(log.IsFatal));
 
-  const featureCards = [
-    { href: hasSignedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard', icon: 'fa-solid fa-id-card', title: hasSignedIn ? 'Open dashboard' : 'Link your Steam', body: hasSignedIn ? 'Manage your profile, privacy, guides, properties, and character overview.' : 'Connect Steam to unlock your character dashboard and profile tools.' },
-    { href: '/tweeter', icon: 'fa-brands fa-twitter', title: 'Browse Tweeter', body: 'Follow city chatter, open threads, like posts, and view public citizen profiles.' },
-    { href: '/status', icon: 'fa-solid fa-signal', title: 'Check status', body: 'See server availability, staff notices, maintenance context, and data health.' },
-    { href: '/guides', icon: 'fa-solid fa-book-open', title: 'Read guides', body: 'Learn the city, economy, roleplay expectations, property flow, and new-player basics.' },
+  const cityFacts: MiniFact[] = [
+    { icon: 'fa-solid fa-users', label: 'Unique citizens', value: overview.players.toLocaleString(), body: 'Saved characters known by the city.', href: '/players' },
+    { icon: 'fa-solid fa-skull-crossbones', label: 'Total deaths', value: deathSummary.total.toLocaleString(), body: topDeathLabel(deathSummary.total) },
+    { icon: 'fa-solid fa-heart-crack', label: 'Damage events', value: deathSummary.damageEvents.toLocaleString(), body: 'Every bonk, fall, shot, and bad life choice we could read.' },
+    { icon: 'fa-brands fa-twitter', label: 'Tweeter posts', value: overview.tweets.toLocaleString(), body: 'The in-city social feed, mirrored to the web.', href: '/tweeter' },
+    { icon: 'fa-solid fa-couch', label: 'Saved layouts', value: overview.propertyLayouts.toLocaleString(), body: `${overview.propertyProps.toLocaleString()} props placed across saved homes and businesses.` },
+    { icon: 'fa-solid fa-wallet', label: 'City funds', value: money(overview.totalCash + overview.totalBank), body: 'Aggregate cash and bank value from saved characters.' },
   ];
 
+  const personalFacts = hasSignedIn ? signedInFacts({ role, playerDeaths, guidePercent, playtimeSeconds, level }) : [];
+
   return (
-    <main className={`home-page redesigned-home ${hasSignedIn ? 'home-signed-in' : 'home-guest'}`}>
-      <section className="home-hero-v2">
-        <div className="home-hero-copy-v2">
-          <span className="eyebrow"><i /> {hasSignedIn ? 'Steam connected' : `Northline RP · ${config.server.modeLabel}`}</span>
-          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : config.home.headline}</h1>
-          <p>{hasSignedIn ? dashboardBody(role, guidePercent) : config.home.intro}</p>
-          <div className="button-row home-hero-actions">
+    <main className={`community-home ${hasSignedIn ? 'community-home-signed-in' : 'community-home-guest'}`}>
+      <section className="community-hero">
+        <div className="community-hero-copy">
+          <span className="community-pill"><i className="fa-solid fa-house-chimney-window" aria-hidden="true" /> Northline RP community portal</span>
+          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline. Try not to die thirsty.'}</h1>
+          <p>
+            {hasSignedIn
+              ? `Your ${role} profile is connected. Check your character, catch up on city nonsense, or jump into Tweeter before heading in-game.`
+              : 'A homegrown companion site for Northbound RP: city gossip, citizen stats, public profiles, guides, status, and the occasional evidence that gravity remains undefeated.'}
+          </p>
+
+          <div className="community-hero-actions">
             {hasSignedIn ? (
               <>
-                <Link className="button button-primary" href="/dashboard">Open dashboard</Link>
-                <Link className="button button-soft" href={`/u/${steamId}`}>View profile</Link>
-                <Link className="button button-ghost" href="/tweeter">Open Tweeter</Link>
+                <Link className="button button-primary community-main-button" href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /> Open your dashboard</Link>
+                <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Browse Tweeter</Link>
+                <Link className="button button-ghost" href={`/u/${steamId}`}>Public profile</Link>
               </>
             ) : (
               <>
-                <Link className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> {config.home.primaryCta}</Link>
-                <Link className="button button-soft" href="/tweeter">Preview Tweeter</Link>
+                <Link className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</Link>
+                <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link>
                 <a className="button button-ghost" href={config.server.discordUrl}>Join Discord</a>
               </>
             )}
           </div>
-          {loginFailed ? <p className="notice danger">Steam sign-in failed. Check SITE_URL, Caddy forwarding headers, and Steam OpenID callback reachability.</p> : null}
-          {loggedOut ? <p className="notice success">You have been signed out.</p> : null}
+
+          {loginFailed ? <p className="community-alert danger">Steam sign-in failed. Check SITE_URL, Caddy forwarding headers, and the callback URL.</p> : null}
+          {loggedOut ? <p className="community-alert success">You have been signed out. Come back when the city needs you.</p> : null}
         </div>
 
-        <aside className="home-identity-card card">
+        <aside className="community-hero-card">
+          <div className={`community-mood ${mood.tone}`}>
+            <span><i className={mood.icon} aria-hidden="true" /></span>
+            <div>
+              <strong>{mood.label}</strong>
+              <small>{mood.body}</small>
+            </div>
+          </div>
+          <div className="community-online-meter">
+            <div><strong>{population.onlineCount}</strong><span>online now</span></div>
+            <div><strong>{maxPlayers}</strong><span>slots</span></div>
+          </div>
+          <div className="community-meter-bar"><span style={{ width: `${Math.min(100, maxPlayers ? (population.onlineCount / maxPlayers) * 100 : 0)}%` }} /></div>
           {hasSignedIn ? (
-            <>
-              <div className="home-identity-topline">
-                <UserAvatar src={avatar} name={displayName} size="lg" />
-                <div>
-                  <strong>{displayName}</strong>
-                  <span>{steamProfile?.personaName ? `Steam: ${steamProfile.personaName}` : steamId}</span>
-                </div>
+            <div className="community-player-chip">
+              <UserAvatar src={avatar} name={displayName} size="md" />
+              <div>
+                <strong>{displayName}</strong>
+                <span>{duration(playtimeSeconds)} played · {playerDeaths} deaths</span>
               </div>
-              <p>{role} · {duration(Number(player?.TotalPlaytimeSeconds ?? 0))} in city</p>
-              <div className="home-identity-actions">
-                <Link href="/dashboard">Dashboard</Link>
-                <Link href={`/tweeter/profile/${steamId}`}>Tweeter profile</Link>
-                {steamProfile?.profileUrl ? <a href={steamProfile.profileUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a> : null}
-              </div>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="pulse-topline"><span className={`status-dot ${status.tone}`} />{status.label}</div>
-              <strong className="home-online-count">{population.onlineCount}/{maxPlayers}</strong>
-              <p>{status.body}</p>
-            </>
+            <p>Sign in to turn this card into your personal citizen snapshot.</p>
           )}
-          <dl className="home-quick-metrics">
-            <div><dt>Citizens</dt><dd>{overview.players.toLocaleString()}</dd></div>
-            <div><dt>Tweeter posts</dt><dd>{overview.tweets.toLocaleString()}</dd></div>
-            <div><dt>Layouts</dt><dd>{overview.propertyLayouts.toLocaleString()}</dd></div>
-          </dl>
         </aside>
       </section>
 
-      <section className="home-action-grid" aria-label="Northline shortcuts">
-        {featureCards.map((card) => (
-          <Link className="home-action-card" href={card.href} key={card.title}>
-            <span><i className={card.icon} aria-hidden="true" /></span>
-            <strong>{card.title}</strong>
-            <small>{card.body}</small>
-          </Link>
-        ))}
+      <section className="community-stat-strip" aria-label="Northline city stats">
+        {cityFacts.map((fact) => {
+          const content = (
+            <>
+              <i className={fact.icon} aria-hidden="true" />
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+              <small>{fact.body}</small>
+            </>
+          );
+          return fact.href ? <Link className="community-stat-card" href={fact.href} key={fact.label}>{content}</Link> : <article className="community-stat-card" key={fact.label}>{content}</article>;
+        })}
       </section>
 
-      <section className="home-snapshot-grid">
-        <article className="card home-feed-preview">
-          <div className="section-heading inline"><div><span className="kicker">City feed</span><h2>Latest Tweeter posts</h2></div><Link href="/tweeter">Open Tweeter</Link></div>
-          <div className="stack-list home-condensed-list">
+      <section className="community-main-grid">
+        <article className="community-card death-board">
+          <div className="community-section-heading">
+            <span className="community-kicker">City chaos report</span>
+            <h2>How are people dying?</h2>
+            <p>{topDeath?.count ? `${topDeath.label} is currently leading the scoreboard.` : 'No fatal damage has been recorded yet.'}</p>
+          </div>
+
+          <div className="death-grid">
+            {deathSummary.categories.slice(0, 6).map((category) => (
+              <div className={`death-tile ${category.count > 0 ? 'has-count' : ''}`} key={category.key}>
+                <i className={category.icon} aria-hidden="true" />
+                <strong>{category.count.toLocaleString()}</strong>
+                <span>{category.label}</span>
+                <small>{category.body}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="community-mini-list death-notes">
+            {topVictim ? <div><span>Most unlucky lately</span><strong>{topVictim.name}</strong><small>{topVictim.count} recorded death{topVictim.count === 1 ? '' : 's'}</small></div> : null}
+            {recentFatal ? <div><span>Latest fatal event</span><strong>{recentFatal.Cause || 'Unknown'}</strong><small>{recentFatal.VictimName || 'Someone'} · {relativeFromDate(recentFatal.Timestamp)}</small></div> : null}
+            {deathSummary.topCauses[0] ? <div><span>Top raw cause</span><strong>{deathSummary.topCauses[0].cause}</strong><small>{deathSummary.topCauses[0].count} event{deathSummary.topCauses[0].count === 1 ? '' : 's'}</small></div> : null}
+          </div>
+        </article>
+
+        <aside className="community-card community-now-card">
+          <div className="community-section-heading compact">
+            <span className="community-kicker">What to do first</span>
+            <h2>{hasSignedIn ? 'Your quick stops' : 'New here?'}</h2>
+          </div>
+          <div className="community-action-list">
+            <Link href={hasSignedIn ? '/dashboard' : '/api/auth/steam?returnTo=/dashboard'}><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>{hasSignedIn ? 'Open dashboard' : 'Link Steam'}</strong><span>{hasSignedIn ? 'Privacy, character, profile, and theme controls.' : 'Unlock your character dashboard and public profile settings.'}</span></Link>
+            <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /><strong>Read the starter guides</strong><span>Rules, economy, properties, and the basics.</span></Link>
+            <Link href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /><strong>Check the city status</strong><span>Server availability without the scary server-room jargon.</span></Link>
+            <Link href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /><strong>Open Tweeter</strong><span>Posts, threads, profiles, and website-safe likes.</span></Link>
+          </div>
+        </aside>
+      </section>
+
+      {hasSignedIn ? (
+        <section className="community-card personal-board">
+          <div className="community-section-heading inline">
+            <div>
+              <span className="community-kicker">Signed-in citizen panel</span>
+              <h2>A few things about you</h2>
+            </div>
+            <Link href="/dashboard">Tune your profile</Link>
+          </div>
+          <div className="personal-fact-grid">
+            {personalFacts.map((fact) => (
+              <div className="personal-fact" key={fact.label}>
+                <i className={fact.icon} aria-hidden="true" />
+                <span>{fact.label}</span>
+                <strong>{fact.value}</strong>
+                <small>{fact.body}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="community-lower-grid">
+        <article className="community-card tweeter-preview-card">
+          <div className="community-section-heading inline">
+            <div>
+              <span className="community-kicker">City chatter</span>
+              <h2>Fresh from Tweeter</h2>
+            </div>
+            <Link href="/tweeter">Open feed</Link>
+          </div>
+          <div className="community-post-list">
             {latestTweets.length ? latestTweets.map((tweet) => {
               const authorSteamId = String(tweet.AuthorSteamId);
               const authorPlayer = playersBySteam.get(authorSteamId);
               const authorProfile = steamProfiles.get(authorSteamId);
               const authorName = tweet.AuthorDisplayName || authorPlayer?.RpDisplayName || authorPlayer?.LastKnownDisplayName || authorProfile?.personaName || `Citizen ${authorSteamId.slice(-8)}`;
               return (
-                <Link className="home-post-row" href={`/tweeter/tweet/${tweet.Id}`} key={tweet.Id}>
-                  <strong>{authorName}</strong>
-                  <span>{tweet.Body}</span>
-                  <small>{tweet.PostedAtTimeSeconds ? fullDate(new Date(tweet.PostedAtTimeSeconds * 1000)) : 'Unknown time'} · {tweet.LikeCount ?? 0} likes</small>
+                <Link href={`/tweeter/tweet/${tweet.Id}`} className="community-post" key={tweet.Id}>
+                  <UserAvatar src={authorProfile?.avatarMedium ?? null} name={authorName} size="sm" />
+                  <div>
+                    <strong>{authorName}</strong>
+                    <p>{tweet.Body}</p>
+                    <small>{tweet.PostedAtTimeSeconds ? fullDate(new Date(tweet.PostedAtTimeSeconds * 1000)) : 'Unknown time'} · {tweet.LikeCount ?? 0} like{tweet.LikeCount === 1 ? '' : 's'}</small>
+                  </div>
                 </Link>
               );
-            }) : <div><strong>No posts yet</strong><span>In-game Tweeter posts will appear here.</span></div>}
+            }) : <div className="community-empty"><strong>No posts yet</strong><span>In-game Tweeter posts will appear here once citizens start talking.</span></div>}
           </div>
         </article>
 
-        <article className="card home-status-card">
-          <div className="section-heading"><span className="kicker">Server pulse</span><h2>{status.label}</h2><p>{status.body}</p></div>
-          <dl className="metric-grid compact">
-            <div><dt>Online</dt><dd>{population.onlineCount}/{maxPlayers}</dd></div>
-            <div><dt>Known citizens</dt><dd>{overview.players.toLocaleString()}</dd></div>
-            <div><dt>Total playtime</dt><dd>{duration(overview.totalPlaytime)}</dd></div>
-            <div><dt>Data</dt><dd>{health.exists ? 'Connected' : 'Missing'}</dd></div>
-          </dl>
-        </article>
-
-        <article className="card home-news-card">
-          <div className="section-heading"><span className="kicker">What changed</span><h2>Community updates</h2></div>
-          <div className="stack-list compact-stack">
-            {updates.length ? updates.map((update) => <div key={update.id}><strong>{update.title}</strong><span>{update.body}</span><small>{relativeFromDate(update.createdAt)} by {update.createdByName}</small></div>) : <div><strong>No notices posted</strong><span>Staff announcements will appear here.</span></div>}
-            {latestMetric ? <div><strong>Website telemetry</strong><span>Latest RAM sample: {latestMetric.processRamMb} MB</span><small>Status page tracks operational context.</small></div> : null}
+        <article className="community-card neighborhood-card">
+          <div className="community-section-heading">
+            <span className="community-kicker">Community noticeboard</span>
+            <h2>Useful at a glance</h2>
           </div>
-        </article>
-      </section>
-
-      <section className="home-civic-row">
-        <article className="card home-civic-card">
-          <span className="kicker">Economy</span>
-          <h2>{money(overview.totalCash + overview.totalBank)} tracked city funds</h2>
-          <p>Public pages keep sensitive player data opt-in. Each citizen controls whether economy, inventory, stats, properties, and activity appear on their profile.</p>
-          <Link href={hasSignedIn ? '/dashboard' : '/support'}>{hasSignedIn ? 'Adjust privacy settings' : 'Learn about the portal'}</Link>
-        </article>
-        <article className="card home-civic-card">
-          <span className="kicker">Community trust</span>
-          <h2>{overview.bans.active.toLocaleString()} active public moderation records</h2>
-          <p>Ban visibility stays public-safe while private staff notes, evidence logs, phone messages, and sensitive moderation context stay restricted.</p>
-          <Link href="/bans">View public bans</Link>
+          <div className="noticeboard-list">
+            {updates.length ? updates.map((update) => (
+              <div key={update.id}>
+                <strong>{update.title}</strong>
+                <span>{update.body}</span>
+                <small>{relativeFromDate(update.createdAt)} by {update.createdByName}</small>
+              </div>
+            )) : <div><strong>No staff notices posted</strong><span>When something important happens, it will land here.</span><small>Quiet is good sometimes.</small></div>}
+            <div>
+              <strong>{overview.propertyLayouts.toLocaleString()} saved property layouts</strong>
+              <span>Citizens are already decorating, building storefronts, or committing interior design crimes.</span>
+              <small>{overview.propertyProps.toLocaleString()} saved props</small>
+            </div>
+            <div>
+              <strong>{overview.bans.active.toLocaleString()} active public ban record{overview.bans.active === 1 ? '' : 's'}</strong>
+              <span>Public-safe moderation visibility without exposing private staff notes.</span>
+              <small><Link href="/bans">View ban list</Link></small>
+            </div>
+          </div>
         </article>
       </section>
     </main>
