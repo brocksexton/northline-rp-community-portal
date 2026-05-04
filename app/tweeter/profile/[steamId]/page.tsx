@@ -11,15 +11,20 @@ import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/twe
 
 export const dynamic = 'force-dynamic';
 
+type SearchParams = {
+  tab?: string | string[];
+};
+
 type Params = {
   params: Promise<{ steamId: string }>;
-  searchParams?: Promise<{ tab?: string }>;
+  searchParams?: Promise<SearchParams>;
 };
 
 type ProfileTab = 'tweets' | 'replies' | 'info';
 
-function cleanTab(value: string | undefined): ProfileTab {
-  if (value === 'replies' || value === 'info') return value;
+function cleanTab(value: unknown): ProfileTab {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === 'replies' || raw === 'info') return raw;
   return 'tweets';
 }
 
@@ -143,7 +148,8 @@ function ProfileInfoTab({
 }
 
 export default async function TweeterProfilePage({ params, searchParams }: Params) {
-  const [{ steamId }, resolvedSearchParams, sessionSteamId] = await Promise.all([params, searchParams ?? Promise.resolve({}), getSessionSteamId()]);
+  const [{ steamId }, sessionSteamId] = await Promise.all([params, getSessionSteamId()]);
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   if (!/^\d{15,20}$/.test(steamId)) notFound();
 
   const activeTab = cleanTab(resolvedSearchParams.tab);
