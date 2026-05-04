@@ -303,8 +303,8 @@ function deathCategoryMeta(key: DeathCategoryKey): Omit<DeathCategorySummary, 'c
     case 'hunger': return { label: 'Died hungry', icon: 'fa-solid fa-burger', body: 'Snacks were required.' };
     case 'firearm': return { label: 'Shot down', icon: 'fa-solid fa-crosshairs', body: 'Player combat with guns.' };
     case 'fists': return { label: 'Hands only', icon: 'fa-solid fa-hand-fist', body: 'Fists or melee chaos.' };
-    case 'fall': return { label: 'Gravity wins', icon: 'fa-solid fa-person-falling', body: 'Fall damage fatalities.' };
-    case 'self': return { label: 'Self-inflicted', icon: 'fa-solid fa-skull', body: 'Somehow their own fault.' };
+    case 'fall': return { label: 'Took a fall', icon: 'fa-solid fa-person-falling', body: 'Ledges, roofs, and stairs did their thing.' };
+    case 'self': return { label: 'Self-caused', icon: 'fa-solid fa-skull', body: 'Accidents where the game says they caused it.' };
     case 'world': return { label: 'The city did it', icon: 'fa-solid fa-city', body: 'World or system damage.' };
     default: return { label: 'Mystery deaths', icon: 'fa-solid fa-question', body: 'Unclassified chaos.' };
   }

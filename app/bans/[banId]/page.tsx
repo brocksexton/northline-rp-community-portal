@@ -126,7 +126,6 @@ export default async function BanDetailPage({ params }: Params) {
             <div><span>Prior warnings</span><strong>{prior.warnings}</strong></div>
             <div><span>Prior kicks</span><strong>{prior.kicks}</strong></div>
           </div>
-          <p>This is meant to give context, not to dogpile someone. Counts only reflect data the website can read from the server exports.</p>
         </aside>
       </section>
 

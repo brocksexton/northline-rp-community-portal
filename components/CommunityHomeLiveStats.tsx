@@ -44,13 +44,84 @@ type LiveHighlight = {
   recentFatal?: CommunityLiveSnapshot['recentFatal'];
 } | null;
 
-const quips = [
-  'Northline math is mostly counting bad ideas.',
-  'The coroner asked for a dashboard. We made one pretty.',
-  'If this number jumps, somebody probably learned something.',
-  'Hydration remains undefeated when ignored.',
-  'Community science, but with more ragdolls.',
-];
+const deathQuipsByCategory: Record<string, string[]> = {
+  dehydration: [
+    'Water bottles remain a strong investment.',
+    'A quick drink would have changed the whole arc.',
+    'The city has fountains. Citizens have priorities.',
+    'Hydration is still the cheapest insurance policy.',
+    'Somebody ignored the thirst meter like it was optional.',
+  ],
+  hunger: [
+    'The snack economy is begging for customers.',
+    'A burger would have solved at least one problem here.',
+    'Northline restaurants did not get enough foot traffic today.',
+    'The fridge was apparently too far away.',
+    'This is why pockets should have emergency fries.',
+  ],
+  firearm: [
+    'That conversation escalated into paperwork.',
+    'The city heard bangs and the logs took notes.',
+    'Some disputes could have used indoor voices.',
+    'Gun safety class remains an untapped market.',
+    'The streets got dramatic again.',
+  ],
+  fists: [
+    'Hands were thrown. Lessons were learned.',
+    'A disagreement reached the windmill-arms phase.',
+    'No fancy equipment, just commitment.',
+    'The oldest combat system in the world is still getting use.',
+    'Somebody chose the free melee option.',
+  ],
+  fall: [
+    'Penthouse ledges continue to demand respect.',
+    'Gravity filed the report before staff could.',
+    'Railings are decorative until suddenly they are not.',
+    'The sidewalk won that argument.',
+    'Northline architecture remains technically walkable.',
+  ],
+  self: [
+    'The logs say self-caused. We will leave it at that.',
+    'Curiosity remains a dangerous mechanic.',
+    'Some buttons probably deserved a second thought.',
+    'The city did not need help with this one.',
+    'A small accident became a full entry in the records.',
+  ],
+  world: [
+    'The city itself has entered the chat.',
+    'Northline infrastructure remains undefeated today.',
+    'Sometimes the map simply has opinions.',
+    'The environment caused problems, as environments do.',
+    'No suspect. Just vibes and a damage log.',
+  ],
+  other: [
+    'The logs shrugged, so we are shrugging too.',
+    'Mystery damage keeps the spreadsheet interesting.',
+    'Something happened. The city is being vague about it.',
+    'The details are fuzzy, but the result was not.',
+    'One for the “ask around later” pile.',
+  ],
+};
+
+function topDeathHeadline(category: CommunityDeathCategory | undefined) {
+  if (!category || category.count <= 0) return 'No fatal damage has been recorded yet.';
+  switch (category.key) {
+    case 'dehydration': return 'Thirst is causing the most trouble right now.';
+    case 'hunger': return 'Hunger is doing more damage than it should.';
+    case 'firearm': return 'Gunfights are moving the numbers today.';
+    case 'fists': return 'Hands-only chaos is surprisingly active.';
+    case 'fall': return 'Fall damage is leading the paperwork.';
+    case 'self': return 'Accidents are taking the lead for now.';
+    case 'world': return 'The city itself is causing the most trouble.';
+    default: return 'Mystery damage is carrying the chaos chart.';
+  }
+}
+
+function deathQuipFor(category: CommunityDeathCategory | undefined, seed: number) {
+  const key = category?.key ?? 'other';
+  const pool = deathQuipsByCategory[key] ?? deathQuipsByCategory.other;
+  return pool[Math.abs(seed) % pool.length];
+}
 
 const moneyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const numberFormatter = new Intl.NumberFormat('en-US');
@@ -166,6 +237,7 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [highlight, setHighlight] = useState<LiveHighlight>(null);
   const [pollState, setPollState] = useState<'idle' | 'checking' | 'updated' | 'quiet' | 'error'>('idle');
+  const [quipTick, setQuipTick] = useState(0);
   const previousSnapshot = useRef(initialSnapshot);
 
   useEffect(() => {
@@ -208,15 +280,18 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
     };
   }, []);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => setQuipTick((value) => value + 1), 11_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const topDeath = snapshot.deathSummary.categories.find((category) => category.count > 0) ?? snapshot.deathSummary.categories[0];
   const topVictim = snapshot.deathSummary.topVictims[0];
   const topCause = snapshot.deathSummary.topCauses[0];
   const cityFunds = snapshot.overview.totalCash + snapshot.overview.totalBank;
 
-  const rotatingQuip = useMemo(() => {
-    const index = Math.abs(snapshot.deathSummary.total + snapshot.deathSummary.damageEvents) % quips.length;
-    return quips[index];
-  }, [snapshot.deathSummary.damageEvents, snapshot.deathSummary.total]);
+  const leadDeathLine = topDeathHeadline(topDeath);
+  const rotatingQuip = useMemo(() => deathQuipFor(topDeath, snapshot.deathSummary.total + snapshot.deathSummary.damageEvents + quipTick), [quipTick, snapshot.deathSummary.damageEvents, snapshot.deathSummary.total, topDeath]);
 
   return (
     <>
@@ -235,7 +310,7 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
             <div>
               <span className="community-kicker">City chaos report</span>
               <h2>How are people dying?</h2>
-              <p>{topDeath?.count ? `${topDeath.label} is currently leading the scoreboard.` : 'No fatal damage has been recorded yet.'}</p>
+              <p>{leadDeathLine}</p>
             </div>
             <div className={`live-feed-pill ${pollState}`} aria-live="polite">
               <i className={pollState === 'checking' ? 'fa-solid fa-rotate spinning' : pollState === 'updated' ? 'fa-solid fa-bolt' : pollState === 'error' ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-satellite-dish'} aria-hidden="true" />
@@ -255,7 +330,7 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
               </div>
             </div>
           ) : (
-            <div className="community-quip-ticker"><i className="fa-solid fa-comment-dots" aria-hidden="true" /> {rotatingQuip}</div>
+            <div className="community-quip-ticker"><i className="fa-solid fa-comment-dots" aria-hidden="true" /><div><strong>{leadDeathLine}</strong><span>{rotatingQuip}</span></div></div>
           )}
 
           <div className="death-grid">
