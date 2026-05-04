@@ -2848,3 +2848,195 @@ body:has(.tweeter-mode[data-color-mode='dark']) {
     width: 100%;
   }
 }
+
+/* ==============================
+   Tweeter polish / v2.5.4
+   ============================== */
+
+/* The small Steam links in the profile meta/sidebar are enough; keep the profile action row light. */
+.tweeter-profile-actions {
+  gap: 0.6rem;
+}
+
+/* Legacy nav themes already have a top navbar, so hide duplicate rail navigation/search controls. */
+.tweeter-mode[data-era='retro'] .tweeter-left-rail .tweeter-nav,
+.tweeter-mode[data-era='retro'] .tweeter-left-rail .tweeter-post-button,
+.tweeter-mode[data-era='retro'] .tweeter-left-rail .tweeter-current-user,
+.tweeter-mode[data-era='retro'] .tweeter-left-rail .tweeter-login-card,
+.tweeter-mode[data-era='retro'] .tweeter-right-rail > .tweeter-search-box,
+.tweeter-mode[data-era='classic'] .tweeter-left-rail .tweeter-nav,
+.tweeter-mode[data-era='classic'] .tweeter-left-rail .tweeter-post-button,
+.tweeter-mode[data-era='classic'] .tweeter-left-rail .tweeter-current-user,
+.tweeter-mode[data-era='classic'] .tweeter-left-rail .tweeter-login-card,
+.tweeter-mode[data-era='classic'] .tweeter-right-rail > .tweeter-search-box {
+  display: none !important;
+}
+
+/* More polished navbar Tweet button. */
+.legacy-tweet-button {
+  border: 1px solid color-mix(in srgb, var(--tw-accent) 78%, white) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tw-accent) 88%, white), var(--tw-accent)) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  padding: 0.62rem 1rem !important;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--tw-accent) 25%, transparent) !important;
+  text-shadow: none !important;
+}
+
+.legacy-tweet-button:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.legacy-tweet-button:disabled {
+  opacity: 0.76;
+  cursor: not-allowed;
+}
+
+.tweeter-legacy-right {
+  gap: 0.9rem;
+}
+
+.tweeter-legacy-search {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset;
+}
+
+/* Keep who-to-follow usable in tight legacy layouts. */
+.tweeter-mode[data-era='retro'] .tweeter-suggestion,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion {
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-suggestion-main,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-main {
+  min-width: 0;
+  gap: 0.65rem;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-suggestion-main > div,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-main > div {
+  min-width: 0;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-suggestion-main strong,
+.tweeter-mode[data-era='retro'] .tweeter-suggestion-main span,
+.tweeter-mode[data-era='retro'] .tweeter-suggestion-main small,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-main strong,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-main span,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-main small {
+  max-width: 100%;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-suggestion button,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion button {
+  flex: 0 0 auto;
+  padding: 0.52rem 0.85rem;
+}
+
+/* Mid-2010s: wider social app feel, card panels, no duplicate page nav. */
+.tweeter-mode[data-era='retro'] .tweeter-grid {
+  max-width: 1260px;
+  grid-template-columns: 245px minmax(0, 650px) 325px;
+  gap: 16px;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-legacy-profile-card {
+  margin-top: 0;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-panel,
+.tweeter-mode[data-era='retro'] .tweeter-legacy-profile-card {
+  box-shadow: 0 10px 30px rgba(83, 100, 113, 0.12);
+}
+
+/* Classic: more breathing room in the right rail and clearer old-school layout. */
+.tweeter-mode[data-era='classic'] .tweeter-grid {
+  max-width: 1240px;
+  grid-template-columns: 240px minmax(0, 620px) 330px;
+  gap: 18px;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-left-rail,
+.tweeter-mode[data-era='classic'] .tweeter-right-rail {
+  padding-inline: 0;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-panel,
+.tweeter-mode[data-era='classic'] .tweeter-legacy-profile-card {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.42) inset !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-panel-header {
+  padding: 0.9rem 1rem 0.55rem;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-panel-header strong {
+  font-size: 1.02rem;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-suggestion-list {
+  max-height: none;
+  overflow: visible;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-suggestion button {
+  border-radius: 999px !important;
+  background: linear-gradient(#ffffff, #edf3f7) !important;
+  border: 1px solid rgba(52, 89, 104, 0.25) !important;
+  color: #305466 !important;
+  font-weight: 700;
+}
+
+.tweeter-mode[data-era='classic'] .legacy-tweet-button {
+  background: linear-gradient(#55b7e9, #2498d5) !important;
+  border-color: #147db5 !important;
+  color: #fff !important;
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.2) !important;
+}
+
+/* Make profile/meta rows feel finished and keep buttons from crowding. */
+.tweeter-profile-meta a,
+.steam-inline-link {
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.tweeter-profile-meta a:hover,
+.steam-inline-link:hover {
+  text-decoration: underline;
+}
+
+.tweet-card-v2 {
+  position: relative;
+}
+
+.tweet-card-v2::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tw-accent) 4%, transparent), transparent 36%);
+  transition: opacity .16s ease;
+}
+
+.tweet-card-v2:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 1120px) {
+  .tweeter-mode[data-era='retro'] .tweeter-grid,
+  .tweeter-mode[data-era='classic'] .tweeter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: min(100% - 1rem, 720px);
+  }
+
+  .tweeter-mode[data-era='retro'] .tweeter-left-rail,
+  .tweeter-mode[data-era='retro'] .tweeter-right-rail,
+  .tweeter-mode[data-era='classic'] .tweeter-left-rail,
+  .tweeter-mode[data-era='classic'] .tweeter-right-rail {
+    display: none;
+  }
+}

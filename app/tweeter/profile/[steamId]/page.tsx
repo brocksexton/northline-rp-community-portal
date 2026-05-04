@@ -215,7 +215,6 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
-                {!privateForViewer ? <a className="steam-profile-link" href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> View Steam Profile</a> : null}
                 {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
               </div>
             </div>
