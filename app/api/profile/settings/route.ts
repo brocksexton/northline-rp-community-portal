@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertCommunityProfile } from '@/lib/community-data';
-import { getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
+import { getSessionSteamId, getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ function cleanShowcase(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
-  const steamId = getSessionSteamIdFromRequest(request);
+  const steamId = getSessionSteamIdFromRequest(request) ?? await getSessionSteamId();
   if (!steamId) return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
 
   const body = await request.json().catch(() => ({}));

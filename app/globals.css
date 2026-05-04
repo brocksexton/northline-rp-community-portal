@@ -1658,3 +1658,197 @@ body:has(.tweeter-mode) #main-content {
   .profile-showcase-section { grid-template-columns: 1fr; }
   .profile-public-note { align-items: stretch; flex-direction: column; }
 }
+
+/* v2.4.1 profile/Tweeter cleanup */
+.tweeter-grid {
+  grid-template-columns: 260px minmax(560px, 680px) 340px;
+  max-width: 1280px;
+}
+
+.tweeter-right-rail {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+}
+
+.tweeter-panel {
+  overflow: hidden;
+}
+
+.tweeter-system-panel {
+  padding-bottom: 1rem;
+}
+
+.tweeter-system-panel .tweeter-panel-header {
+  padding-bottom: 0.35rem;
+}
+
+.tweeter-system-panel p {
+  margin-bottom: 0.75rem;
+}
+
+.tweeter-system-grid {
+  grid-template-columns: 1fr;
+}
+
+.tweeter-system-grid span {
+  white-space: nowrap;
+}
+
+.tweeter-suggestion-main > div {
+  min-width: 0;
+}
+
+.tweeter-suggestion button {
+  flex: 0 0 auto;
+}
+
+.tweeter-suggestion-list {
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.tweeter-profile-tabs a {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #8b98a5;
+  font-weight: 800;
+  padding: 1rem;
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+}
+
+.tweeter-profile-tabs a.active { color: #e7eef5; }
+.tweeter-profile-tabs a.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 56px;
+  height: 4px;
+  margin-left: -28px;
+  border-radius: 999px;
+  background: #1d9bf0;
+}
+
+.tweeter-profile-tabs button {
+  display: none;
+}
+
+.tweeter-profile-info-tab {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.tweeter-profile-info-card,
+.profile-info-empty {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1.25rem;
+  background: rgba(255,255,255,0.025);
+  padding: 1rem;
+}
+
+.tweeter-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.tweeter-info-grid div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tweeter-info-grid div:nth-child(2n) { border-right: 0; }
+.tweeter-info-grid dt {
+  color: #8b98a5;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+.tweeter-info-grid dd {
+  margin: 0;
+  color: #e7eef5;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.tweeter-info-grid a { color: #1d9bf0; text-decoration: none; }
+.tweeter-info-grid a:hover { text-decoration: underline; }
+
+.inline-info-showcases {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.empty-showcase-card {
+  min-height: auto;
+}
+
+.tweeter-private-profile-card {
+  min-height: calc(100vh - 70px);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 3rem 1.25rem;
+}
+
+.tweeter-private-profile-card h1 {
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  margin: 0;
+}
+
+.tweeter-private-profile-card p {
+  color: #8b98a5;
+  max-width: 560px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.compact-private-profile {
+  max-width: 720px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tweeter-profile-showcase-block .profile-showcase-section.compact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.profile-showcase-section:empty {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .tweeter-grid {
+    grid-template-columns: 88px minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: 960px) {
+  .tweeter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tweeter-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .tweeter-info-grid div,
+  .tweeter-info-grid div:nth-child(2n) {
+    border-right: 0;
+  }
+}

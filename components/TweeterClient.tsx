@@ -54,17 +54,17 @@ type TweeterPayload = {
   };
 };
 
-function formatTweetTime(seconds: number) {
+function formatTweetTime(seconds: number, nowMs: number) {
   if (!seconds) return 'Just now';
   const date = new Date(seconds * 1000);
-  const diff = Date.now() - date.getTime();
+  const diff = nowMs - date.getTime();
   const minute = 60 * 1000;
   const hour = 60 * minute;
   const day = 24 * hour;
-  if (diff < 0) return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  if (diff < 0) return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m`;
   if (diff < day) return `${Math.max(1, Math.floor(diff / hour))}h`;
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 function renderTweetText(body: string) {
@@ -109,7 +109,9 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
   const [tag, setTag] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'for-you' | 'latest'>('latest');
   const [refreshing, setRefreshing] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState(new Date(initialData.generatedAt));
+  const initialGeneratedMs = Number.isFinite(Date.parse(initialData.generatedAt)) ? Date.parse(initialData.generatedAt) : Date.now();
+  const [clockMs, setClockMs] = useState(initialGeneratedMs);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date(initialGeneratedMs));
 
   async function refreshFeed() {
     if (refreshing) return;
@@ -119,7 +121,9 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
       if (response.ok) {
         const next = await response.json() as TweeterPayload;
         setData(next);
-        setLastRefreshed(new Date(next.generatedAt));
+        const nextMs = Number.isFinite(Date.parse(next.generatedAt)) ? Date.parse(next.generatedAt) : Date.now();
+        setClockMs(nextMs);
+        setLastRefreshed(new Date(nextMs));
       }
     } catch {
       // Keep the existing timeline visible if the live read fails.
@@ -241,7 +245,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <div><strong>{data.stats.tweetCount.toLocaleString()}</strong><span>Posts</span></div>
             <div><strong>{data.stats.authorCount.toLocaleString()}</strong><span>Authors</span></div>
             <div><strong>{engagement.toLocaleString()}</strong><span>Interactions</span></div>
-            <div><strong>{lastRefreshed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</strong><span>Updated</span></div>
+            <div><strong>{lastRefreshed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })}</strong><span>Updated</span></div>
           </section>
 
           {query || tag ? (
@@ -275,7 +279,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                       </Link>
                       <span>{tweet.handle}</span>
                       <span>·</span>
-                      <span>{formatTweetTime(tweet.postedAtTimeSeconds)}</span>
+                      <span>{formatTweetTime(tweet.postedAtTimeSeconds, clockMs)}</span>
                     </div>
                     <Link className="tweet-more" href={`/tweeter/tweet/${tweet.id}`} aria-label="Open post">···</Link>
                   </div>
@@ -373,7 +377,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <dl>
               <div><dt>Posts</dt><dd>{data.stats.tweetCount.toLocaleString()}</dd></div>
               <div><dt>Authors</dt><dd>{data.stats.authorCount.toLocaleString()}</dd></div>
-              <div><dt>Updated</dt><dd>{new Date(data.generatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</dd></div>
+              <div><dt>Updated</dt><dd>{new Date(data.generatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })}</dd></div>
             </dl>
             <p>Open a post to view its thread, or open a profile to see that citizen’s public Tweeter timeline.</p>
           </section>

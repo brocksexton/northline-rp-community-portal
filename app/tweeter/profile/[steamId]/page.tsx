@@ -5,25 +5,35 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
-import { buildPublicProfileView } from '@/lib/profile-view';
+import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-view';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
 
 export const dynamic = 'force-dynamic';
 
-type Params = { params: Promise<{ steamId: string }> };
+type Params = {
+  params: Promise<{ steamId: string }>;
+  searchParams?: Promise<{ tab?: string }>;
+};
+
+type ProfileTab = 'tweets' | 'replies' | 'info';
+
+function cleanTab(value: string | undefined): ProfileTab {
+  if (value === 'replies' || value === 'info') return value;
+  return 'tweets';
+}
 
 function formatShortDate(value?: string | null) {
   if (!value) return 'Unknown';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Unknown';
-  return date.toLocaleDateString([], { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 function formatTweetTime(seconds: number) {
   if (!seconds) return 'Just now';
   const date = new Date(seconds * 1000);
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 function splitHashtags(body: string) {
@@ -53,17 +63,90 @@ function ProfileTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean
         <Link href={`/tweeter/tweet/${tweet.id}`} className="tweet-card-text">{splitHashtags(tweet.body)}</Link>
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
-          <button type="button"><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
+          <button type="button" disabled title="Reposts require the future game bridge."><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
           <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={signedIn} />
-          <button type="button"><span>↗</span></button>
+          <Link href={`/tweeter/tweet/${tweet.id}`}><span>↗</span></Link>
         </footer>
       </div>
     </article>
   );
 }
 
-export default async function TweeterProfilePage({ params }: Params) {
-  const [{ steamId }, sessionSteamId] = await Promise.all([params, getSessionSteamId()]);
+function ProfileTabs({ steamId, active }: { steamId: string; active: ProfileTab }) {
+  const tabs: Array<{ id: ProfileTab; label: string }> = [
+    { id: 'tweets', label: 'Tweets' },
+    { id: 'replies', label: 'Replies' },
+    { id: 'info', label: 'Info' },
+  ];
+  return (
+    <nav className="tweeter-profile-tabs" aria-label="Profile tabs">
+      {tabs.map((tab) => (
+        <Link className={active === tab.id ? 'active' : ''} href={`/tweeter/profile/${steamId}${tab.id === 'tweets' ? '' : `?tab=${tab.id}`}`} key={tab.id}>
+          {tab.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function ProfileInfoTab({
+  profile,
+  user,
+  posts,
+  originals,
+  replies,
+}: {
+  profile: PublicProfileView;
+  user: Awaited<ReturnType<typeof buildTweeterUser>>;
+  posts: number;
+  originals: number;
+  replies: number;
+}) {
+  const hasAnyModule = Boolean(profile.economy || profile.inventory || profile.stats || profile.properties || profile.activity);
+  return (
+    <section className="tweeter-profile-info-tab">
+      <article className="tweeter-profile-info-card">
+        <div className="tweeter-profile-section-title">
+          <strong>Public profile information</strong>
+          <span>{profile.hiddenSections.length ? `${profile.hiddenSections.length} modules hidden` : 'All modules public'}</span>
+        </div>
+        <dl className="tweeter-info-grid">
+          <div><dt>Handle</dt><dd>{user.handle}</dd></div>
+          <div><dt>Role</dt><dd>{profile.role || 'Citizen'}</dd></div>
+          <div><dt>Title</dt><dd>{profile.title}</dd></div>
+          <div><dt>Joined</dt><dd>{profile.activity?.joined ?? formatShortDate(user.joinedAt)}</dd></div>
+          <div><dt>Playtime</dt><dd>{profile.activity?.playtime ?? (user.playtimeHours ? `${user.playtimeHours.toLocaleString()}h in city` : 'Hidden')}</dd></div>
+          <div><dt>Posts</dt><dd>{posts.toLocaleString()}</dd></div>
+          <div><dt>Originals</dt><dd>{originals.toLocaleString()}</dd></div>
+          <div><dt>Replies</dt><dd>{replies.toLocaleString()}</dd></div>
+          {profile.location ? <div><dt>Location</dt><dd>{profile.location}</dd></div> : null}
+          {profile.websiteUrl ? <div><dt>Website</dt><dd><a href={profile.websiteUrl} rel="noreferrer" target="_blank">Open link</a></dd></div> : null}
+        </dl>
+      </article>
+
+      {hasAnyModule ? (
+        <div className="tweeter-profile-showcase-block inline-info-showcases">
+          <div className="tweeter-profile-section-title">
+            <strong>Published showcases</strong>
+            <span>Opt-in gameplay details</span>
+          </div>
+          <ProfileShowcasePanels profile={profile} compact showEmpty={false} />
+        </div>
+      ) : (
+        <article className="tweeter-empty-state profile-info-empty">
+          <strong>No gameplay details published</strong>
+          <p>This citizen has not opted into showing economy, inventory, stats, property, or activity details.</p>
+        </article>
+      )}
+    </section>
+  );
+}
+
+export default async function TweeterProfilePage({ params, searchParams }: Params) {
+  const [{ steamId }, resolvedSearchParams, sessionSteamId] = await Promise.all([params, searchParams ?? Promise.resolve({}), getSessionSteamId()]);
+  if (!/^\d{15,20}$/.test(steamId)) notFound();
+
+  const activeTab = cleanTab(resolvedSearchParams.tab);
   const payload = await buildTweeterPayload(sessionSteamId);
   const [user, player, role, layouts, communityProfile] = await Promise.all([
     buildTweeterUser(steamId, payload.tweets),
@@ -78,11 +161,36 @@ export default async function TweeterProfilePage({ params }: Params) {
 
   if (!user.displayName && !userTweets.length) notFound();
 
-  const replies = userTweets.filter((tweet) => tweet.isReply).length;
-  const originalPosts = userTweets.length - replies;
+  const replyTweets = userTweets.filter((tweet) => tweet.isReply);
+  const originalTweets = userTweets.filter((tweet) => !tweet.isReply);
   const isOwner = sessionSteamId === steamId;
   const publicProfile = buildPublicProfileView({ steamId, player, role, layouts, communityProfile, fallbackName: user.displayName });
   const privateForViewer = publicProfile.privacy === 'private' && !isOwner;
+  const visibleTweets = activeTab === 'replies' ? replyTweets : originalTweets;
+
+  if (privateForViewer) {
+    return (
+      <main className="tweeter-shell">
+        <div className="tweeter-detail-grid compact-private-profile">
+          <section className="tweeter-main-column">
+            <header className="tweeter-topbar">
+              <div className="tweeter-title-row">
+                <Link href="/tweeter" aria-label="Back to Tweeter">←</Link>
+                <div><h1>Private profile</h1><small>This citizen controls their visibility</small></div>
+              </div>
+            </header>
+            <section className="tweeter-private-profile-card">
+              <UserAvatar src={user.avatarUrl ?? null} name={user.displayName || 'Private profile'} size="xl" />
+              <span className="tweeter-badge">Private profile</span>
+              <h1>This user’s profile is private.</h1>
+              <p>Their Tweeter timeline and public gameplay information are hidden. Economy, inventory, stats, properties, and activity details are not visible.</p>
+              <Link className="button button-primary" href="/tweeter">Return to Tweeter</Link>
+            </section>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="tweeter-shell">
@@ -96,10 +204,10 @@ export default async function TweeterProfilePage({ params }: Params) {
           </header>
 
           <section className="tweeter-profile-hero">
-            <div className="tweeter-profile-banner" style={{ background: `linear-gradient(135deg, ${user.bannerColor || '#1d9bf0'}, #15202b)` }} />
+            <div className="tweeter-profile-banner" style={{ background: `linear-gradient(135deg, ${user.bannerColor || publicProfile.bannerColor || '#1d9bf0'}, #15202b)` }} />
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
-              {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button">Follow</button>}
+              {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
             </div>
             <div className="tweeter-profile-copy">
               <h1>{user.displayName} {verifiedBadge(user.verifiedKind)}</h1>
@@ -111,36 +219,28 @@ export default async function TweeterProfilePage({ params }: Params) {
                 {user.title ? <span>🏷 {user.title}</span> : null}
                 {publicProfile.location ? <span>📍 {publicProfile.location}</span> : null}
                 {publicProfile.websiteUrl ? <a href={publicProfile.websiteUrl} rel="noreferrer" target="_blank">🔗 Website</a> : null}
+                {publicProfile.privacy === 'private' ? <span>🔒 Private preview</span> : null}
               </div>
               <div className="tweeter-profile-stats">
                 <span><strong>{userTweets.length.toLocaleString()}</strong> Posts</span>
                 <span><strong>{(user.likeCount ?? 0).toLocaleString()}</strong> Likes earned</span>
-                <span><strong>{originalPosts.toLocaleString()}</strong> Originals</span>
-                <span><strong>{replies.toLocaleString()}</strong> Replies</span>
+                <span><strong>{originalTweets.length.toLocaleString()}</strong> Originals</span>
+                <span><strong>{replyTweets.length.toLocaleString()}</strong> Replies</span>
               </div>
             </div>
           </section>
 
-          <section className="tweeter-profile-showcase-block">
-            <div className="tweeter-profile-section-title">
-              <strong>Profile showcases</strong>
-              <span>{privateForViewer ? 'Private profile' : `Hidden: ${publicProfile.hiddenSections.length ? publicProfile.hiddenSections.join(', ') : 'None'}`}</span>
-            </div>
-            <ProfileShowcasePanels profile={privateForViewer ? { ...publicProfile, privacy: 'private' } : publicProfile} compact />
-          </section>
+          <ProfileTabs steamId={steamId} active={activeTab} />
 
-          <nav className="tweeter-profile-tabs" aria-label="Profile timeline tabs">
-            <button className="active" type="button">Posts</button>
-            <button type="button">Replies</button>
-            <button type="button">Showcases</button>
-            <button type="button">Likes</button>
-          </nav>
-
-          <section className="tweeter-feed-list">
-            {userTweets.length ? userTweets.map((tweet) => <ProfileTweet key={tweet.id} tweet={tweet} signedIn={!!sessionSteamId} />) : (
-              <div className="tweeter-empty-state"><strong>No posts yet</strong><p>This citizen has not posted to Tweeter in the visible server data.</p></div>
-            )}
-          </section>
+          {activeTab === 'info' ? (
+            <ProfileInfoTab profile={publicProfile} user={user} posts={userTweets.length} originals={originalTweets.length} replies={replyTweets.length} />
+          ) : (
+            <section className="tweeter-feed-list">
+              {visibleTweets.length ? visibleTweets.map((tweet) => <ProfileTweet key={tweet.id} tweet={tweet} signedIn={!!sessionSteamId} />) : (
+                <div className="tweeter-empty-state"><strong>No {activeTab === 'replies' ? 'replies' : 'tweets'} yet</strong><p>This citizen has no visible {activeTab === 'replies' ? 'replies' : 'original tweets'} in the current server data.</p></div>
+              )}
+            </section>
+          )}
         </section>
 
         <aside className="tweeter-right-rail tweeter-detail-rail">
@@ -151,7 +251,7 @@ export default async function TweeterProfilePage({ params }: Params) {
               <div><dt>Handle</dt><dd>{user.handle}</dd></div>
               <div><dt>Posts</dt><dd>{userTweets.length}</dd></div>
               <div><dt>Role</dt><dd>{user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : 'Citizen'}</dd></div>
-              <div><dt>Public modules</dt><dd>{privateForViewer ? 'Private' : 5 - publicProfile.hiddenSections.length}</dd></div>
+              <div><dt>Public modules</dt><dd>{5 - publicProfile.hiddenSections.length}</dd></div>
             </dl>
           </section>
           <section className="tweeter-panel">
@@ -163,7 +263,7 @@ export default async function TweeterProfilePage({ params }: Params) {
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
                     <div><strong>{suggestion.displayName} {verifiedBadge(suggestion.verifiedKind)}</strong><span>{suggestion.handle}</span></div>
                   </Link>
-                  <button type="button">Follow</button>
+                  <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>
                 </div>
               ))}
             </div>

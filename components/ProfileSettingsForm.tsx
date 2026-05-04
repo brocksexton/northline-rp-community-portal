@@ -64,6 +64,8 @@ export function ProfileSettingsForm({ profile }: { profile: CommunityProfile | n
       const response = await fetch('/api/profile/settings', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        cache: 'no-store',
         body: JSON.stringify({ privacy, bio, location, websiteUrl, customAvatarUrl, bannerColor, showcase }),
       });
       setState(response.ok ? 'saved' : 'error');
