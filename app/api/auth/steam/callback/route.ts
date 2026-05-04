@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getExternalOrigin, isSecureOrigin, verifySteamCallback } from '@/lib/steam-openid';
-import { authReturnToCookieName, createSessionCookieValue, noStoreHeaders, sessionCookieName } from '@/lib/session';
+import { getExternalOrigin, verifySteamCallback } from '@/lib/steam-openid';
+import { authReturnToCookieName, setSessionCookie, withNoStoreHeaders } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,27 +9,17 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const steamId = await verifySteamCallback(url);
   const returnTo = request.cookies.get(authReturnToCookieName)?.value || '/dashboard';
-  const secure = isSecureOrigin(origin);
 
   if (!steamId) {
-    const failed = NextResponse.redirect(new URL('/?login=failed', origin));
-    for (const [key, value] of Object.entries(noStoreHeaders())) failed.headers.set(key, value);
-    return failed;
+    return withNoStoreHeaders(NextResponse.redirect(new URL('/?login=failed', origin)));
   }
 
-  const response = NextResponse.redirect(new URL(returnTo, origin));
-  for (const [key, value] of Object.entries(noStoreHeaders())) response.headers.set(key, value);
-  response.cookies.set(sessionCookieName, createSessionCookieValue(steamId), {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure,
-    path: '/',
-    maxAge: 60 * 60 * 24 * 14,
-  });
+  const response = withNoStoreHeaders(NextResponse.redirect(new URL(returnTo, origin)));
+  setSessionCookie(response, steamId, request);
   response.cookies.set(authReturnToCookieName, '', {
     httpOnly: true,
     sameSite: 'lax',
-    secure,
+    secure: origin.startsWith('https://'),
     path: '/',
     maxAge: 0,
   });

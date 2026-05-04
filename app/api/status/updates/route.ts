@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPlayer, getPermissionsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { createStatusUpdate, deleteStatusUpdate, updateStatusUpdate, type StatusUpdateTone } from '@/lib/community-data';
-import { getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
+import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
 
 export const dynamic = 'force-dynamic';
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     createdByName: staff.identity.displayName,
   });
 
-  return NextResponse.json({ update }, { headers: noStoreHeaders() });
+  return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -100,7 +100,7 @@ export async function PATCH(request: NextRequest) {
   });
 
   if (!update) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
-  return NextResponse.json({ update }, { headers: noStoreHeaders() });
+  return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
 }
 
 export async function DELETE(request: NextRequest) {
@@ -113,5 +113,5 @@ export async function DELETE(request: NextRequest) {
 
   const deleted = await deleteStatusUpdate(id);
   if (!deleted) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
-  return NextResponse.json({ ok: true, id }, { headers: noStoreHeaders() });
+  return jsonWithSession({ ok: true, id }, undefined, staff.identity.steamId, request);
 }

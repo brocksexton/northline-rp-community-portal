@@ -50,7 +50,7 @@ function splitHashtags(body: string) {
 
 function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
-  return <span className="tweeter-verified" title={kind} aria-label={kind}>✓</span>;
+  return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
 }
 
 function ProfileTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean }) {
@@ -172,6 +172,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
   const isOwner = sessionSteamId === steamId;
   const publicProfile = buildPublicProfileView({ steamId, player, role, layouts, communityProfile, fallbackName: user.displayName });
   const privateForViewer = publicProfile.privacy === 'private' && !isOwner;
+  const steamProfileUrl = `https://steamcommunity.com/profiles/${steamId}`;
   const visibleTweets = activeTab === 'replies' ? replyTweets : originalTweets;
 
   if (privateForViewer) {
@@ -213,7 +214,10 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-banner" style={{ background: `linear-gradient(135deg, ${user.bannerColor || publicProfile.bannerColor || '#1d9bf0'}, #15202b)` }} />
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
-              {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
+              <div className="tweeter-profile-actions">
+                {!privateForViewer ? <a className="steam-profile-link" href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> View Steam Profile</a> : null}
+                {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
+              </div>
             </div>
             <div className="tweeter-profile-copy">
               <h1>{user.displayName} {verifiedBadge(user.verifiedKind)}</h1>
@@ -225,6 +229,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
                 {user.title ? <span>🏷 {user.title}</span> : null}
                 {publicProfile.location ? <span>📍 {publicProfile.location}</span> : null}
                 {publicProfile.websiteUrl ? <a href={publicProfile.websiteUrl} rel="noreferrer" target="_blank">🔗 Website</a> : null}
+                <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a>
                 {publicProfile.privacy === 'private' ? <span>🔒 Private preview</span> : null}
               </div>
               <div className="tweeter-profile-stats">
@@ -254,6 +259,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-panel-header"><strong>Profile summary</strong></div>
             <dl className="tweet-context-list">
               <div><dt>Steam ID</dt><dd>{steamId}</dd></div>
+              <div><dt>Steam</dt><dd><a className="steam-inline-link" href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Profile</a></dd></div>
               <div><dt>Handle</dt><dd>{user.handle}</dd></div>
               <div><dt>Posts</dt><dd>{userTweets.length}</dd></div>
               <div><dt>Role</dt><dd>{user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : 'Citizen'}</dd></div>

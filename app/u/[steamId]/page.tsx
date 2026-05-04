@@ -37,6 +37,7 @@ export default async function PublicProfilePage({ params }: Props) {
     fallbackName: steamProfile?.personaName || steamId,
   });
   const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium;
+  const steamProfileUrl = steamProfile?.profileUrl || `https://steamcommunity.com/profiles/${steamId}`;
   const privateForViewer = profile.privacy === 'private' && !isOwner;
 
   return (
@@ -58,7 +59,10 @@ export default async function PublicProfilePage({ params }: Props) {
               <Link className="pill neutral" href={`/tweeter/profile/${steamId}`}>Open in Tweeter</Link>
             </div>
           </div>
-          {isOwner ? <Link className="button button-soft" href="/dashboard">Edit profile</Link> : null}
+          <div className="profile-action-stack">
+            {isOwner ? <Link className="button button-soft" href="/dashboard">Edit profile</Link> : null}
+            {!privateForViewer ? <a className="button button-soft steam-button" href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> View Steam Profile</a> : null}
+          </div>
         </div>
       </section>
 

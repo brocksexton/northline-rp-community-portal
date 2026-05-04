@@ -21,7 +21,7 @@ export default async function StaffPage() {
           <span className="eyebrow">Staff</span>
           <h1>Access denied</h1>
           <p>This page requires a Northbound RP role with the <code>ViewLogs</code> permission.</p>
-          <Link className="button button-primary" href="/api/auth/steam?returnTo=/staff">Sign in with Steam</Link>
+          <Link className="button button-primary" href="/api/auth/steam?returnTo=/staff"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</Link>
         </section>
       </main>
     );

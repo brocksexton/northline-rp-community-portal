@@ -2531,3 +2531,320 @@ body:has(.tweeter-mode[data-color-mode='dark']) {
     position: static;
   }
 }
+
+/* v2.5.3 auth, Steam, and Tweeter theme polish */
+.button i,
+.pill i,
+.steam-profile-link i,
+.steam-inline-link i,
+.tweeter-profile-meta i {
+  margin-right: 0.45rem;
+}
+
+.profile-action-stack,
+.tweeter-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-left: auto;
+}
+
+.steam-button,
+.steam-profile-link,
+.steam-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.steam-profile-link {
+  border: 1px solid var(--tw-border);
+  color: var(--tw-text);
+  background: var(--tw-bg-elevated);
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  font-weight: 800;
+}
+
+.steam-profile-link:hover,
+.steam-inline-link:hover,
+.steam-button:hover {
+  color: var(--tw-link);
+}
+
+.tweeter-verified {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  border-radius: 999px;
+  background: #1d9bf0 !important;
+  color: #fff !important;
+  font-size: 0.68rem;
+  line-height: 1;
+  vertical-align: -0.08em;
+  margin-left: 0.18rem;
+}
+
+.tweeter-verified .verified-check {
+  display: block;
+  color: #fff !important;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateY(-0.02rem);
+}
+
+.tweeter-trend-list,
+.tweeter-trend-list button,
+.tweeter-trend-list strong,
+.tweeter-trend-list span,
+.tweeter-trend-list small {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+.tweeter-trend-list button {
+  display: block;
+  min-height: auto;
+  line-height: 1.35;
+}
+
+.tweeter-trend-list strong {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tweeter-mode .tweeter-panel {
+  overflow: visible;
+}
+
+.tweeter-mode[data-color-mode='light'] {
+  --tw-bg: #edf3f8;
+  --tw-bg-elevated: #ffffff;
+  --tw-bg-panel: #f5f8fa;
+  --tw-card: #ffffff;
+  --tw-card-soft: rgba(15, 20, 25, 0.04);
+  --tw-border: rgba(15, 20, 25, 0.16);
+  --tw-border-soft: rgba(15, 20, 25, 0.1);
+  --tw-text: #0f1419;
+  --tw-muted: #536471;
+  --tw-link: #1d9bf0;
+  --tw-accent: #1d9bf0;
+  --tw-shadow: 0 18px 42px rgba(83, 100, 113, 0.14);
+}
+
+.tweeter-mode[data-color-mode='blue'] {
+  --tw-bg: #d7e7f5;
+  --tw-bg-elevated: #f9fcff;
+  --tw-bg-panel: #eef7ff;
+  --tw-card: #ffffff;
+  --tw-card-soft: rgba(29, 155, 240, 0.07);
+  --tw-border: rgba(39, 94, 145, 0.2);
+  --tw-border-soft: rgba(39, 94, 145, 0.13);
+  --tw-text: #102a43;
+  --tw-muted: #486581;
+  --tw-link: #0969b8;
+  --tw-accent: #1d9bf0;
+  --tw-shadow: 0 18px 42px rgba(29, 155, 240, 0.16);
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-shell,
+.tweeter-mode[data-color-mode='light'] .tweeter-main-column,
+.tweeter-mode[data-color-mode='light'] .tweeter-panel,
+.tweeter-mode[data-color-mode='light'] .tweeter-topbar,
+.tweeter-mode[data-color-mode='light'] .tweet-card-v2,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-hero,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-info-card,
+.tweeter-mode[data-color-mode='light'] .profile-info-empty,
+.tweeter-mode[data-color-mode='blue'] .tweeter-shell,
+.tweeter-mode[data-color-mode='blue'] .tweeter-main-column,
+.tweeter-mode[data-color-mode='blue'] .tweeter-panel,
+.tweeter-mode[data-color-mode='blue'] .tweeter-topbar,
+.tweeter-mode[data-color-mode='blue'] .tweet-card-v2,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-hero,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-info-card,
+.tweeter-mode[data-color-mode='blue'] .profile-info-empty {
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] h1,
+.tweeter-mode[data-color-mode='light'] h2,
+.tweeter-mode[data-color-mode='light'] h3,
+.tweeter-mode[data-color-mode='light'] strong,
+.tweeter-mode[data-color-mode='light'] dd,
+.tweeter-mode[data-color-mode='light'] .tweet-card-text,
+.tweeter-mode[data-color-mode='light'] .tweet-author-link,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-copy p,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-copy h1,
+.tweeter-mode[data-color-mode='light'] .tweeter-panel-header strong,
+.tweeter-mode[data-color-mode='blue'] h1,
+.tweeter-mode[data-color-mode='blue'] h2,
+.tweeter-mode[data-color-mode='blue'] h3,
+.tweeter-mode[data-color-mode='blue'] strong,
+.tweeter-mode[data-color-mode='blue'] dd,
+.tweeter-mode[data-color-mode='blue'] .tweet-card-text,
+.tweeter-mode[data-color-mode='blue'] .tweet-author-link,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-copy p,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-copy h1,
+.tweeter-mode[data-color-mode='blue'] .tweeter-panel-header strong {
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] small,
+.tweeter-mode[data-color-mode='light'] dt,
+.tweeter-mode[data-color-mode='light'] .tweet-card-authorline,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-copy > span,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-meta,
+.tweeter-mode[data-color-mode='light'] .tweeter-suggestion span,
+.tweeter-mode[data-color-mode='light'] .tweeter-suggestion small,
+.tweeter-mode[data-color-mode='blue'] small,
+.tweeter-mode[data-color-mode='blue'] dt,
+.tweeter-mode[data-color-mode='blue'] .tweet-card-authorline,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-copy > span,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-meta,
+.tweeter-mode[data-color-mode='blue'] .tweeter-suggestion span,
+.tweeter-mode[data-color-mode='blue'] .tweeter-suggestion small {
+  color: var(--tw-muted) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-compose-body textarea,
+.tweeter-mode[data-color-mode='blue'] .tweeter-compose-body textarea {
+  color: var(--tw-text) !important;
+}
+
+/* Mid-2010s: card-heavy, bright, old top-nav style. */
+.tweeter-mode[data-era='retro'] .tweeter-grid {
+  max-width: 1210px;
+  grid-template-columns: 250px minmax(0, 650px) 310px;
+  gap: 12px;
+  padding-top: 1rem;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-main-column,
+.tweeter-mode[data-era='retro'] .tweeter-panel,
+.tweeter-mode[data-era='retro'] .tweeter-search-box,
+.tweeter-mode[data-era='retro'] .tweeter-legacy-profile-card {
+  border: 1px solid var(--tw-border);
+  border-radius: 0.45rem;
+  box-shadow: none;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-left-rail,
+.tweeter-mode[data-era='retro'] .tweeter-right-rail {
+  padding-top: 1rem;
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-compose-card {
+  background: color-mix(in srgb, var(--tw-accent) 7%, var(--tw-bg-elevated));
+}
+
+.tweeter-mode[data-era='retro'] .tweeter-tabs button,
+.tweeter-mode[data-era='retro'] .tweeter-nav a,
+.tweeter-mode[data-era='retro'] .tweeter-nav button {
+  font-size: 0.98rem;
+}
+
+/* Classic: deliberately old-school, flatter, narrower, and more compact. */
+.tweeter-mode[data-era='classic'] {
+  --tw-radius-lg: 0.2rem;
+  --tw-radius-md: 0.15rem;
+  --tw-font: Arial, Helvetica, sans-serif;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-shell {
+  background: linear-gradient(90deg, rgba(255,255,255,0.14), transparent 18%, transparent 82%, rgba(255,255,255,0.14)), #98c2bf !important;
+  color: #10242a !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-legacy-topnav {
+  background: linear-gradient(#2d2d2d, #0d0d0d) !important;
+  color: #fff !important;
+  border-bottom-color: #000 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-legacy-topnav a,
+.tweeter-mode[data-era='classic'] .tweeter-legacy-topnav button,
+.tweeter-mode[data-era='classic'] .tweeter-legacy-logo {
+  color: #fff !important;
+  font-size: 0.86rem;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-grid {
+  max-width: 1040px;
+  grid-template-columns: 250px minmax(0, 580px) 280px;
+  gap: 14px;
+  padding-top: 1.1rem;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-main-column,
+.tweeter-mode[data-era='classic'] .tweeter-panel,
+.tweeter-mode[data-era='classic'] .tweeter-search-box,
+.tweeter-mode[data-era='classic'] .tweeter-legacy-profile-card {
+  background: rgba(255,255,255,0.88) !important;
+  border: 1px solid rgba(20, 48, 55, 0.35) !important;
+  border-radius: 0.22rem !important;
+  color: #10242a !important;
+  box-shadow: none !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-topbar,
+.tweeter-mode[data-era='classic'] .tweet-card-v2,
+.tweeter-mode[data-era='classic'] .tweeter-compose-card,
+.tweeter-mode[data-era='classic'] .tweeter-metric-strip,
+.tweeter-mode[data-era='classic'] .tweeter-filter-bar {
+  background: rgba(255,255,255,0.82) !important;
+  color: #10242a !important;
+  border-color: rgba(20, 48, 55, 0.18) !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-nav a,
+.tweeter-mode[data-era='classic'] .tweeter-nav button {
+  color: #17434f !important;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-post-button,
+.tweeter-mode[data-era='classic'] .legacy-tweet-button {
+  background: linear-gradient(#f9fbfc, #d9e2e7) !important;
+  border: 1px solid #7e9aa6 !important;
+  color: #17434f !important;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-profile-banner {
+  border-radius: 0 !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweeter-profile-copy h1,
+.tweeter-mode[data-era='classic'] .tweet-author-link,
+.tweeter-mode[data-era='classic'] .tweet-card-text,
+.tweeter-mode[data-era='classic'] .tweeter-panel-header strong,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion strong,
+.tweeter-mode[data-era='classic'] .tweet-context-list dd {
+  color: #10242a !important;
+}
+
+.tweeter-mode[data-era='classic'] .tweet-card-authorline,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion span,
+.tweeter-mode[data-era='classic'] .tweeter-suggestion small,
+.tweeter-mode[data-era='classic'] small,
+.tweeter-mode[data-era='classic'] dt {
+  color: #4f6f78 !important;
+}
+
+@media (max-width: 720px) {
+  .profile-action-stack,
+  .tweeter-profile-actions {
+    justify-content: flex-start;
+    margin-left: 0;
+    width: 100%;
+  }
+}

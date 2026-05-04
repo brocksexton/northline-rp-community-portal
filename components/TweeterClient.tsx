@@ -87,7 +87,7 @@ function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
   return (
     <span className="tweeter-verified" title={kind} aria-label={kind}>
-      <Icon className="fa-solid fa-circle-check" />
+      <span className="verified-check">✓</span>
     </span>
   );
 }
@@ -234,7 +234,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <div className="tweeter-login-card">
               <strong>Join the conversation</strong>
               <p>Sign in with Steam to like posts and connect your citizen identity.</p>
-              <Link className="button button-primary" href="/api/auth/steam?returnTo=/tweeter">Steam sign-in</Link>
+              <Link className="button button-primary steam-button" href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-brands fa-steam" /> Steam sign-in</Link>
             </div>
           )}
         </aside>
@@ -385,15 +385,6 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             </div>
           </section>
 
-          <section className="tweeter-panel tweeter-mini-stats">
-            <div className="tweeter-panel-header"><strong>About this feed</strong></div>
-            <dl>
-              <div><dt>Posts</dt><dd>{data.stats.tweetCount.toLocaleString()}</dd></div>
-              <div><dt>Authors</dt><dd>{data.stats.authorCount.toLocaleString()}</dd></div>
-              <div><dt>Updated</dt><dd>{new Date(data.generatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })}</dd></div>
-            </dl>
-            <p>Open a post to view its thread, or open a profile to see that citizen’s public Tweeter timeline.</p>
-          </section>
         </aside>
       </div>
 

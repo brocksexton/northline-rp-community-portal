@@ -1,9 +1,12 @@
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { getExternalOrigin, isSecureOrigin } from '@/lib/steam-openid';
 
 const COOKIE_NAME = 'northline_steam_session';
 const RETURN_TO_COOKIE = 'northline_auth_return_to';
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
+const PROFILE_EDIT_TOKEN_TTL_SECONDS = 60 * 30;
 
 function getSecret(): string {
   return process.env.SESSION_SECRET || 'dev-secret-change-me';
@@ -13,11 +16,16 @@ function sign(value: string): string {
   return crypto.createHmac('sha256', getSecret()).update(value).digest('base64url');
 }
 
+function safeCompare(suppliedValue: string, expectedValue: string): boolean {
+  const supplied = Buffer.from(suppliedValue);
+  const generated = Buffer.from(expectedValue);
+  if (supplied.length !== generated.length) return false;
+  return crypto.timingSafeEqual(supplied, generated);
+}
+
 export function createSessionCookieValue(steamId: string): string {
   return `${steamId}.${sign(steamId)}`;
 }
-
-const PROFILE_EDIT_TOKEN_TTL_SECONDS = 60 * 30;
 
 export function createProfileEditToken(steamId: string): string {
   const safeSteamId = String(steamId || '').trim();
@@ -35,24 +43,14 @@ export function verifyProfileEditToken(value: unknown): string | null {
   if (!Number.isFinite(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) return null;
   const payload = `${steamId}.${expiresAtRaw}`;
   const expected = sign(`profile-edit.${payload}`);
-  const supplied = Buffer.from(signature);
-  const generated = Buffer.from(expected);
-  if (supplied.length !== generated.length) return null;
-  return crypto.timingSafeEqual(supplied, generated) ? steamId : null;
+  return safeCompare(signature, expected) ? steamId : null;
 }
-
 
 export function verifySessionCookieValue(value: string | undefined): string | null {
   if (!value) return null;
   const [steamId, signature] = value.split('.');
   if (!steamId || !signature || !/^\d{15,20}$/.test(steamId)) return null;
-
-  const expected = sign(steamId);
-  const supplied = Buffer.from(signature);
-  const generated = Buffer.from(expected);
-
-  if (supplied.length !== generated.length) return null;
-  return crypto.timingSafeEqual(supplied, generated) ? steamId : null;
+  return safeCompare(signature, sign(steamId)) ? steamId : null;
 }
 
 export async function getSessionSteamId(): Promise<string | null> {
@@ -60,9 +58,53 @@ export async function getSessionSteamId(): Promise<string | null> {
   return verifySessionCookieValue(jar.get(COOKIE_NAME)?.value);
 }
 
-
 export function getSessionSteamIdFromRequest(request: NextRequest): string | null {
   return verifySessionCookieValue(request.cookies.get(COOKIE_NAME)?.value);
+}
+
+function cookieSecureForRequest(request?: NextRequest): boolean {
+  if (!request) return (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '').startsWith('https://');
+  return isSecureOrigin(getExternalOrigin(request));
+}
+
+function baseCookieOptions(request?: NextRequest) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: cookieSecureForRequest(request),
+    path: '/',
+  };
+}
+
+export function setSessionCookie(response: NextResponse, steamId: string, request?: NextRequest): NextResponse {
+  response.cookies.set(COOKIE_NAME, createSessionCookieValue(steamId), {
+    ...baseCookieOptions(request),
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  });
+  return response;
+}
+
+export function refreshSessionCookie(response: NextResponse, steamId: string | null | undefined, request?: NextRequest): NextResponse {
+  if (!steamId) return response;
+  return setSessionCookie(response, steamId, request);
+}
+
+export function setAuthReturnToCookie(response: NextResponse, returnTo: string, request?: NextRequest): NextResponse {
+  response.cookies.set(RETURN_TO_COOKIE, returnTo, {
+    ...baseCookieOptions(request),
+    maxAge: 60 * 10,
+  });
+  return response;
+}
+
+export function clearAuthCookies(response: NextResponse, request?: NextRequest): NextResponse {
+  for (const name of [COOKIE_NAME, RETURN_TO_COOKIE]) {
+    response.cookies.set(name, '', {
+      ...baseCookieOptions(request),
+      maxAge: 0,
+    });
+  }
+  return response;
 }
 
 export function noStoreHeaders(): Record<string, string> {
@@ -71,6 +113,17 @@ export function noStoreHeaders(): Record<string, string> {
     Pragma: 'no-cache',
     Expires: '0',
   };
+}
+
+export function withNoStoreHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(noStoreHeaders())) response.headers.set(key, value);
+  return response;
+}
+
+export function jsonWithSession(body: unknown, init: ResponseInit | undefined, steamId: string | null | undefined, request: NextRequest): NextResponse {
+  const response = NextResponse.json(body, init);
+  withNoStoreHeaders(response);
+  return refreshSessionCookie(response, steamId, request);
 }
 
 export const sessionCookieName = COOKIE_NAME;

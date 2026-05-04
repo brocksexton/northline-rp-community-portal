@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTweeterData } from '@/lib/ape-data';
-import { getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
+import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { getTweeterWebLikeState, toggleTweeterWebLike } from '@/lib/community-data';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   const summary = await getLikeSummary(tweetId, sessionSteamId);
   if (!summary) return NextResponse.json({ error: 'Tweet not found' }, { status: 404, headers: noStoreHeaders() });
-  return NextResponse.json(summary, { headers: noStoreHeaders() });
+  return jsonWithSession(summary, undefined, sessionSteamId, request);
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -41,9 +41,9 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { tweetId } = await params;
   const tweeter = await getTweeterData();
   const tweet = tweeter.Tweets.find((item) => item.Id === tweetId);
-  if (!tweet) return NextResponse.json({ error: 'Tweet not found' }, { status: 404, headers: noStoreHeaders() });
+  if (!tweet) return jsonWithSession({ error: 'Tweet not found' }, { status: 404 }, sessionSteamId, request);
 
   await toggleTweeterWebLike(tweetId, sessionSteamId);
   const summary = await getLikeSummary(tweetId, sessionSteamId);
-  return NextResponse.json(summary, { headers: noStoreHeaders() });
+  return jsonWithSession(summary, undefined, sessionSteamId, request);
 }

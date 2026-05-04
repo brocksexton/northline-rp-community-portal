@@ -42,7 +42,7 @@ export async function Header() {
               <Link className="button button-ghost compact" href="/api/auth/logout">Log out</Link>
             </>
           ) : (
-            <Link className="button button-primary" href="/api/auth/steam?returnTo=/dashboard">Steam sign-in</Link>
+            <Link className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam sign-in</Link>
           )}
         </div>
       </div>

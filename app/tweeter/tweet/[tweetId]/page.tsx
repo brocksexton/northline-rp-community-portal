@@ -23,7 +23,7 @@ function splitHashtags(body: string) {
 
 function verifiedBadge(kind: string) {
   if (!kind || kind === 'None') return null;
-  return <span className="tweeter-verified" title={kind} aria-label={kind}>✓</span>;
+  return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
 }
 
 function MiniTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean }) {
