@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, type CSSProperties, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 import type {
   CommunityProfile,
   ProfileShowcaseSettings,
@@ -8,7 +9,14 @@ import type {
   TweeterThemeEra,
   WebsiteStyle,
 } from '@/lib/community-data';
-import { canUseCustomProfileCover, getProfileCoverPreset, PROFILE_COVER_PRESETS, PROFILE_THEMES, type ProfileTheme } from '@/lib/profile-customization';
+import {
+  canUseCustomProfileCover,
+  getProfileCoverPreset,
+  PROFILE_COVER_PRESETS,
+  PROFILE_THEMES,
+  type ProfileTheme,
+} from '@/lib/profile-customization';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const DEFAULT_CLIENT_SHOWCASE: ProfileShowcaseSettings = {
   economy: false,
@@ -18,6 +26,19 @@ const DEFAULT_CLIENT_SHOWCASE: ProfileShowcaseSettings = {
   activity: false,
 };
 
+const SHOWCASE_COPY: Array<{
+  id: keyof ProfileShowcaseSettings;
+  title: string;
+  body: string;
+  saferNote: string;
+}> = [
+  { id: 'economy', title: 'Money snapshot', body: 'Wallet, bank, and total visible funds.', saferNote: 'Good for flexing progress. Hide it if you would rather keep your balance private.' },
+  { id: 'inventory', title: 'Inventory summary', body: 'Item count and the biggest public item stacks.', saferNote: 'Shows a summary, not private messages or staff-only data.' },
+  { id: 'stats', title: 'Character stats', body: 'Level, XP, deaths, and tracked stat highlights.', saferNote: 'Useful if you want your character progress visible.' },
+  { id: 'properties', title: 'Saved properties', body: 'Saved layout names and prop counts.', saferNote: 'Good for builders. Phone data and staff notes are never included.' },
+  { id: 'activity', title: 'City activity', body: 'Playtime, joined date, and basic character info.', saferNote: 'Keeps the profile feeling alive without exposing private comms.' },
+];
+
 function normalizeShowcase(profile: CommunityProfile | null): ProfileShowcaseSettings {
   return {
     ...DEFAULT_CLIENT_SHOWCASE,
@@ -25,69 +46,87 @@ function normalizeShowcase(profile: CommunityProfile | null): ProfileShowcaseSet
   };
 }
 
+function handleFromName(name: string): string {
+  const safe = name.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 18);
+  return safe ? `@${safe}` : '@citizen';
+}
+
+function ProfileSection({
+  eyebrow,
+  title,
+  body,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="settings-studio-section">
+      <div className="settings-studio-section-head">
+        <span className="kicker">{eyebrow}</span>
+        <h3>{title}</h3>
+        <p>{body}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ChoiceButton({
+  active,
+  icon,
+  title,
+  body,
+  onClick,
+  tone = 'default',
+}: {
+  active: boolean;
+  icon: string;
+  title: string;
+  body: string;
+  onClick: () => void;
+  tone?: 'default' | 'safe' | 'private';
+}) {
+  return (
+    <button type="button" aria-pressed={active} className={`settings-choice-card ${active ? 'active' : ''} tone-${tone}`} onClick={onClick}>
+      <i className={icon} aria-hidden="true" />
+      <span>
+        <strong>{title}</strong>
+        <small>{body}</small>
+      </span>
+    </button>
+  );
+}
+
 function ShowcaseToggle({
   id,
   title,
   body,
+  saferNote,
   checked,
   onChange,
 }: {
   id: keyof ProfileShowcaseSettings;
   title: string;
   body: string;
+  saferNote: string;
   checked: boolean;
   onChange: (id: keyof ProfileShowcaseSettings, value: boolean) => void;
 }) {
   return (
-    <label className="showcase-toggle-card">
+    <label className={`showcase-toggle-card studio-toggle ${checked ? 'active' : ''}`}>
       <input type="checkbox" checked={checked} onChange={(event) => onChange(id, event.target.checked)} />
       <span>
         <strong>{title}</strong>
         <small>{body}</small>
+        <small className="toggle-note">{saferNote}</small>
       </span>
-      <em>{checked ? 'Public' : 'Hidden'}</em>
+      <em>{checked ? 'Shown' : 'Hidden'}</em>
     </label>
   );
 }
-
-function ThemeChoiceCard({
-  active,
-  title,
-  body,
-  onClick,
-}: {
-  active: boolean;
-  title: string;
-  body: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className={`theme-choice-card ${active ? 'active' : ''}`} onClick={onClick}>
-      <strong>{title}</strong>
-      <small>{body}</small>
-    </button>
-  );
-}
-
-function ModeChoiceCard({
-  active,
-  title,
-  body,
-  onClick,
-}: {
-  active: boolean;
-  title: string;
-  body: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className={`theme-mode-card ${active ? 'active' : ''}`} onClick={onClick}>
-      <strong>{title}</strong>
-      <small>{body}</small>
-    </button>
-  );
-}
-
 
 function CoverChoiceCard({
   active,
@@ -104,10 +143,12 @@ function CoverChoiceCard({
   } as unknown as CSSProperties;
 
   return (
-    <button type="button" className={`cover-choice-card ${active ? 'active' : ''} cover-kind-${preset.kind}`} style={style} onClick={onClick}>
+    <button type="button" aria-pressed={active} className={`cover-choice-card studio-cover-choice ${active ? 'active' : ''} cover-kind-${preset.kind}`} style={style} onClick={onClick}>
       <span className="cover-choice-preview" aria-hidden="true" />
-      <strong>{preset.label}</strong>
-      <small>{preset.description}</small>
+      <span className="cover-choice-copy">
+        <strong>{preset.label}</strong>
+        <small>{preset.description}</small>
+      </span>
     </button>
   );
 }
@@ -126,7 +167,7 @@ function ProfileThemeCard({
   onClick: () => void;
 }) {
   return (
-    <button type="button" className={`profile-theme-card ${active ? 'active' : ''} profile-theme-card-${id}`} onClick={onClick}>
+    <button type="button" aria-pressed={active} className={`profile-theme-card studio-theme-card ${active ? 'active' : ''} profile-theme-card-${id}`} onClick={onClick}>
       <span aria-hidden="true" />
       <strong>{title}</strong>
       <small>{body}</small>
@@ -134,26 +175,28 @@ function ProfileThemeCard({
   );
 }
 
-function WebsiteChoiceCard({
-  active,
-  title,
-  body,
-  onClick,
-}: {
-  active: boolean;
-  title: string;
-  body: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className={`website-style-card ${active ? 'active' : ''}`} onClick={onClick}>
-      <strong>{title}</strong>
-      <small>{body}</small>
-    </button>
-  );
+function SaveStatus({ state, errorMessage }: { state: 'idle' | 'saving' | 'saved' | 'error'; errorMessage: string }) {
+  if (state === 'saving') return <span className="form-status saving" role="status">Saving…</span>;
+  if (state === 'saved') return <span className="form-status success" role="status">Saved just now</span>;
+  if (state === 'error') return <span className="form-status error" role="alert">{errorMessage}</span>;
+  return <span className="form-status muted">Changes save when you press the button.</span>;
 }
 
-export function ProfileSettingsForm({ profile, profileEditToken, role }: { profile: CommunityProfile | null; profileEditToken?: string; role?: string | null }) {
+export function ProfileSettingsForm({
+  profile,
+  profileEditToken,
+  role,
+  steamId,
+  displayName,
+  fallbackAvatar,
+}: {
+  profile: CommunityProfile | null;
+  profileEditToken?: string;
+  role?: string | null;
+  steamId: string;
+  displayName: string;
+  fallbackAvatar?: string | null;
+}) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [location, setLocation] = useState(profile?.location ?? '');
@@ -168,8 +211,19 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
   const [tweeterMode, setTweeterMode] = useState<TweeterColorMode>(profile?.tweeterMode ?? 'dark');
   const [websiteStyle, setWebsiteStyle] = useState<WebsiteStyle>(profile?.websiteStyle ?? 'civic');
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('Could not save. Please try again.');
+
   const customCoverAllowed = canUseCustomProfileCover(role);
   const activeCover = getProfileCoverPreset(coverPreset);
+  const profilePrivate = privacy === 'private';
+  const visibleModuleCount = Object.values(showcase).filter(Boolean).length;
+  const avatarPreview = customAvatarUrl.trim() || fallbackAvatar || null;
+  const coverImage = customCoverAllowed && customCoverUrl.trim() ? customCoverUrl.trim() : activeCover.imageUrl;
+  const coverPreviewStyle = {
+    '--cover-preview-gradient': activeCover.gradient,
+    '--cover-preview-image': coverImage ? `url("${coverImage}")` : 'none',
+    '--profile-preview-accent': bannerColor,
+  } as unknown as CSSProperties;
 
   const previewLabel = useMemo(() => {
     const era = tweeterTheme === 'modern' ? 'Modern' : tweeterTheme === 'retro' ? 'Mid-2010s' : 'Classic';
@@ -184,6 +238,7 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState('saving');
+    setErrorMessage('Could not save. Please try again.');
     try {
       const response = await fetch('/api/profile/settings', {
         method: 'POST',
@@ -207,164 +262,161 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
           profileEditToken,
         }),
       });
-      setState(response.ok ? 'saved' : 'error');
+
+      if (response.ok) {
+        setState('saved');
+        return;
+      }
+
+      setState('error');
+      setErrorMessage(response.status === 401 ? 'Your Steam sign-in expired. Sign in again, then save.' : 'Could not save. Please check the fields and try again.');
     } catch {
       setState('error');
+      setErrorMessage('Could not reach the server. Try again in a moment.');
     }
   }
 
-  const profileDisabled = privacy === 'private';
-
   return (
-    <form className="card form-card profile-settings-card" onSubmit={submit}>
-      <div className="section-heading">
-        <span className="kicker">Profile settings</span>
-        <h2>Control your public identity</h2>
-        <p>One profile powers both the Northline website and Tweeter. Publish only what you want the community to see.</p>
-      </div>
-
-      <label className="field">
-        <span>Profile visibility</span>
-        <select value={privacy} onChange={(event) => setPrivacy(event.target.value as 'public' | 'private')}>
-          <option value="public">Public profile</option>
-          <option value="private">Private profile</option>
-        </select>
-      </label>
-
-      <div className="layout-two tight-form-grid">
-        <label className="field">
-          <span>Bio</span>
-          <textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={280} placeholder="A short in-character or community bio." />
-        </label>
-
-        <div className="stacked-fields">
-          <label className="field">
-            <span>Location / flavor text</span>
-            <input value={location} onChange={(event) => setLocation(event.target.value)} maxLength={80} placeholder="Downtown, waterfront, mayor's office..." />
-          </label>
-          <label className="field">
-            <span>Website / social link</span>
-            <input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
-          </label>
+    <form className="card form-card profile-settings-card profile-studio-card" onSubmit={submit}>
+      <div className="profile-studio-hero">
+        <div>
+          <span className="kicker">Profile studio</span>
+          <h2>Make your profile feel like yours.</h2>
+          <p>Choose what people see, how Tweeter looks for you, and how your public profile is dressed up.</p>
+        </div>
+        <div className="profile-studio-summary" aria-label="Profile setup summary">
+          <span><strong>{profilePrivate ? 'Private' : 'Public'}</strong> visibility</span>
+          <span><strong>{visibleModuleCount}</strong> public section{visibleModuleCount === 1 ? '' : 's'}</span>
+          <span><strong>{previewLabel}</strong> Tweeter</span>
         </div>
       </div>
 
-      <div className="layout-two tight-form-grid">
-        <label className="field">
-          <span>Custom avatar URL</span>
-          <input value={customAvatarUrl} onChange={(event) => setCustomAvatarUrl(event.target.value)} placeholder="https://..." />
-        </label>
+      <section className={`profile-studio-preview profile-theme-preview-${profileTheme}`}>
+        <div className={`studio-preview-cover cover-kind-${activeCover.kind}`} style={coverPreviewStyle}>
+          <span className="studio-preview-badge">{profilePrivate ? 'Private profile' : 'Public profile'}</span>
+        </div>
+        <div className="studio-preview-body">
+          <UserAvatar src={avatarPreview} name={displayName} size="lg" />
+          <div>
+            <h3>{displayName}</h3>
+            <p>{handleFromName(displayName)} · {role || 'User'}</p>
+            <span>{bio.trim() || 'Add a short bio so people know who they are looking at.'}</span>
+          </div>
+          <Link className="button button-soft" href={`/tweeter/profile/${steamId}`}>Preview profile</Link>
+        </div>
+      </section>
 
-        <label className="field compact-field">
-          <span>Profile accent</span>
-          <input type="color" value={bannerColor} onChange={(event) => setBannerColor(event.target.value)} />
-        </label>
-      </div>
-
-      <div className="profile-cover-builder">
-        <div className="section-heading compact-heading">
-          <span className="kicker">Profile cover</span>
-          <h3>Pick a game image for your Tweeter profile</h3>
-          <p>Everyone can choose one of the Northbound RP gameplay presets. Trusted and staff accounts can still use a custom image URL.</p>
+      <ProfileSection eyebrow="Step 1" title="Visibility and basic info" body="Start with the basics. If your profile is private, people will only see that it is private.">
+        <div className="settings-choice-grid two">
+          <ChoiceButton active={privacy === 'public'} tone="safe" icon="fa-solid fa-earth-americas" title="Public" body="People can open your profile and see the sections you choose below." onClick={() => setPrivacy('public')} />
+          <ChoiceButton active={privacy === 'private'} tone="private" icon="fa-solid fa-lock" title="Private" body="Your profile is hidden from public pages until you switch this back." onClick={() => setPrivacy('private')} />
         </div>
 
-        <div className="cover-choice-grid">
+        <div className="settings-field-grid">
+          <label className="field studio-field large-field">
+            <span>Bio <small>{bio.length}/280</small></span>
+            <textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={280} placeholder="A short in-character blurb, community note, or whatever fits your vibe." />
+          </label>
+
+          <div className="stacked-fields">
+            <label className="field studio-field">
+              <span>Location / flavor text</span>
+              <input value={location} onChange={(event) => setLocation(event.target.value)} maxLength={80} placeholder="Downtown, waterfront, mayor's office..." />
+            </label>
+            <label className="field studio-field">
+              <span>Website / social link</span>
+              <input value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://..." />
+            </label>
+            <label className="field studio-field">
+              <span>Custom avatar URL</span>
+              <input value={customAvatarUrl} onChange={(event) => setCustomAvatarUrl(event.target.value)} placeholder="Optional direct image link" />
+            </label>
+          </div>
+        </div>
+      </ProfileSection>
+
+      <ProfileSection eyebrow="Step 2" title="Cover image and color" body="Pick a Northbound RP screenshot for your Tweeter banner, then choose the accent color that ties it together.">
+        <div className="settings-accent-row">
+          <label className="field studio-color-field">
+            <span>Accent color</span>
+            <input type="color" value={bannerColor} onChange={(event) => setBannerColor(event.target.value)} />
+          </label>
+          <div className="settings-accent-note">
+            <strong>Used on profile highlights.</strong>
+            <small>This does not change your in-game character. It only styles your web profile.</small>
+          </div>
+        </div>
+
+        <div className="cover-choice-grid studio-cover-grid">
           {PROFILE_COVER_PRESETS.map((preset) => (
             <CoverChoiceCard key={preset.id} preset={preset} active={coverPreset === preset.id} onClick={() => setCoverPreset(preset.id)} />
           ))}
         </div>
 
-        <div className="custom-cover-panel">
+        <div className="custom-cover-panel studio-custom-cover">
           <div>
             <strong>Custom cover image</strong>
-            <small>{customCoverAllowed ? 'Available for this account. Use a direct image URL, including supported sbox CDN upload links.' : 'Available once your account has Trusted or staff access.'}</small>
+            <small>{customCoverAllowed ? 'Available for your account. Use a direct image URL or supported sbox CDN upload link.' : 'Available to Trusted and staff accounts so profile images stay easier to moderate.'}</small>
           </div>
-          <input value={customCoverUrl} onChange={(event) => setCustomCoverUrl(event.target.value)} placeholder="https://example.com/cover.webp" disabled={!customCoverAllowed} />
+          <input value={customCoverUrl} onChange={(event) => setCustomCoverUrl(event.target.value)} placeholder="https://cdn.sbox.game/upload/i/..." disabled={!customCoverAllowed} />
         </div>
+      </ProfileSection>
 
-        <div className={`cover-live-preview cover-kind-${activeCover.kind}`} style={{ '--cover-preview-gradient': activeCover.gradient, '--cover-preview-image': activeCover.imageUrl ? `url("${activeCover.imageUrl}")` : 'none' } as unknown as CSSProperties}>
-          <span>{customCoverAllowed && customCoverUrl ? 'Custom cover will be used after saving.' : activeCover.label}</span>
-        </div>
-      </div>
-
-      <div className="profile-theme-builder profile-skin-builder">
-        <div className="section-heading compact-heading">
-          <span className="kicker">Profile look</span>
-          <h3>Choose how your profile feels to visitors</h3>
-          <p>This only affects your own Tweeter profile page when other people open it.</p>
-        </div>
-
-        <div className="profile-theme-grid">
+      <ProfileSection eyebrow="Step 3" title="Profile look" body="This is the style other people see when they open your Tweeter profile.">
+        <div className="profile-theme-grid studio-profile-theme-grid">
           {PROFILE_THEMES.map((theme) => (
             <ProfileThemeCard key={theme.id} id={theme.id} active={profileTheme === theme.id} title={theme.label} body={theme.description} onClick={() => setProfileTheme(theme.id)} />
           ))}
         </div>
-      </div>
+      </ProfileSection>
 
-      <div className="profile-theme-builder">
-        <div className="section-heading compact-heading">
-          <span className="kicker">Tweeter themes</span>
-          <h3>Choose your personal Tweeter experience</h3>
-          <p>Your Tweeter theme follows your account. Pick a layout era and then choose how bright or blue it feels.</p>
-        </div>
-
-        <div className="theme-preview-banner">
+      <ProfileSection eyebrow="Step 4" title="Your Tweeter and website style" body="These are personal preferences. They change how the site feels when you are signed in.">
+        <div className="theme-preview-banner studio-theme-preview-banner">
           <div>
             <strong>{previewLabel}</strong>
-            <small>Applied whenever you browse Tweeter while signed in.</small>
+            <small>Your Tweeter choice is separate from the rest of the Northline website.</small>
           </div>
-          <span className="theme-preview-pill">Per-account preference</span>
+          <span className="theme-preview-pill">Saved to your account</span>
         </div>
 
-        <div className="theme-choice-grid">
-          <ThemeChoiceCard active={tweeterTheme === 'modern'} title="Modern" body="The current Twitter-inspired experience with roomy rails and the latest feed feel." onClick={() => setTweeterTheme('modern')} />
-          <ThemeChoiceCard active={tweeterTheme === 'retro'} title="Mid-2010s" body="A slightly older Twitter look with card-heavy panels, lighter structure, and compact rails." onClick={() => setTweeterTheme('retro')} />
-          <ThemeChoiceCard active={tweeterTheme === 'classic'} title="Classic" body="A nostalgic old-school Twitter experience with simpler framing and older-era profile energy." onClick={() => setTweeterTheme('classic')} />
+        <div className="settings-subsection-label">Tweeter layout</div>
+        <div className="settings-choice-grid three">
+          <ChoiceButton active={tweeterTheme === 'modern'} icon="fa-brands fa-twitter" title="Modern" body="Roomier, current Twitter-style layout." onClick={() => setTweeterTheme('modern')} />
+          <ChoiceButton active={tweeterTheme === 'retro'} icon="fa-solid fa-table-columns" title="Mid-2010s" body="Card-heavy, lighter, and a bit more compact." onClick={() => setTweeterTheme('retro')} />
+          <ChoiceButton active={tweeterTheme === 'classic'} icon="fa-solid fa-clock-rotate-left" title="Classic" body="Old-school Twitter energy with simpler framing." onClick={() => setTweeterTheme('classic')} />
         </div>
 
-        <div className="theme-mode-grid">
-          <ModeChoiceCard active={tweeterMode === 'dark'} title="Dark" body="Deep night UI similar to modern dark Twitter." onClick={() => setTweeterMode('dark')} />
-          <ModeChoiceCard active={tweeterMode === 'light'} title="Light" body="Bright classic white panels and lighter feed chrome." onClick={() => setTweeterMode('light')} />
-          <ModeChoiceCard active={tweeterMode === 'blue'} title="Twitter Blue" body="A soft blue-tinted take that feels playful and distinct." onClick={() => setTweeterMode('blue')} />
-        </div>
-      </div>
-
-      <div className="profile-theme-builder website-theme-builder">
-        <div className="section-heading compact-heading">
-          <span className="kicker">Website style</span>
-          <h3>Choose your Northline website look</h3>
-          <p>This changes the main website surfaces such as Home, Dashboard, Status, Staff, Bans, and public profiles. Tweeter keeps its own separate theme.</p>
+        <div className="settings-subsection-label">Tweeter color</div>
+        <div className="settings-choice-grid three">
+          <ChoiceButton active={tweeterMode === 'dark'} icon="fa-solid fa-moon" title="Dark" body="Deep dark mode for Tweeter." onClick={() => setTweeterMode('dark')} />
+          <ChoiceButton active={tweeterMode === 'light'} icon="fa-solid fa-sun" title="Light" body="Bright, readable white panels." onClick={() => setTweeterMode('light')} />
+          <ChoiceButton active={tweeterMode === 'blue'} icon="fa-solid fa-droplet" title="Twitter Blue" body="Soft blue tint with a playful feel." onClick={() => setTweeterMode('blue')} />
         </div>
 
-        <div className="website-style-grid">
-          <WebsiteChoiceCard active={websiteStyle === 'civic'} title="Civic Clean" body="A bright, readable community portal style for everyday browsing." onClick={() => setWebsiteStyle('civic')} />
-          <WebsiteChoiceCard active={websiteStyle === 'ops'} title="Control Center" body="A darker command-room look for dashboards, staff tools, and server operations." onClick={() => setWebsiteStyle('ops')} />
-          <WebsiteChoiceCard active={websiteStyle === 'glass'} title="Northline Glass" body="Soft blue glass panels inspired by the older website build." onClick={() => setWebsiteStyle('glass')} />
+        <div className="settings-subsection-label">Main website style</div>
+        <div className="settings-choice-grid three">
+          <ChoiceButton active={websiteStyle === 'civic'} icon="fa-solid fa-house-chimney" title="Civic Clean" body="Bright and easy to read for everyday browsing." onClick={() => setWebsiteStyle('civic')} />
+          <ChoiceButton active={websiteStyle === 'ops'} icon="fa-solid fa-display" title="Control Center" body="Darker dashboard feel for server tools." onClick={() => setWebsiteStyle('ops')} />
+          <ChoiceButton active={websiteStyle === 'glass'} icon="fa-regular fa-gem" title="Northline Glass" body="Soft blue panels inspired by the older site." onClick={() => setWebsiteStyle('glass')} />
         </div>
-      </div>
+      </ProfileSection>
 
-      <div className="profile-privacy-builder">
-        <div className="section-heading compact-heading">
-          <span className="kicker">Public showcases</span>
-          <h3>Choose which game details appear publicly</h3>
-          <p>These modules appear on your public profile and Tweeter profile. Phone messages, staff logs, evidence, and moderation notes are never published.</p>
+      <ProfileSection eyebrow="Step 5" title="Game details people can see" body="These are optional. Pick what makes your profile more fun without showing anything you would rather keep to yourself.">
+        {profilePrivate ? <div className="profile-warning-strip studio-warning-strip"><i className="fa-solid fa-lock" aria-hidden="true" /> Your profile is private right now. These choices are saved, but nobody sees them until you publish your profile.</div> : null}
+
+        <div className="showcase-toggle-grid studio-showcase-grid">
+          {SHOWCASE_COPY.map((item) => (
+            <ShowcaseToggle key={item.id} id={item.id} title={item.title} body={item.body} saferNote={item.saferNote} checked={showcase[item.id]} onChange={updateShowcase} />
+          ))}
         </div>
+      </ProfileSection>
 
-        {profileDisabled ? <div className="profile-warning-strip">Your profile is private, so all showcase modules are hidden until you switch back to public.</div> : null}
-
-        <div className="showcase-toggle-grid" aria-disabled={profileDisabled}>
-          <ShowcaseToggle id="economy" title="Economy" body="Cash, bank, and total visible funds." checked={!profileDisabled && showcase.economy} onChange={updateShowcase} />
-          <ShowcaseToggle id="inventory" title="Inventory" body="Item count and top public item stacks." checked={!profileDisabled && showcase.inventory} onChange={updateShowcase} />
-          <ShowcaseToggle id="stats" title="Stats" body="Level, XP, and top tracked stats." checked={!profileDisabled && showcase.stats} onChange={updateShowcase} />
-          <ShowcaseToggle id="properties" title="Properties" body="Saved layout names and prop counts." checked={!profileDisabled && showcase.properties} onChange={updateShowcase} />
-          <ShowcaseToggle id="activity" title="Activity" body="Playtime, joined date, and basic needs." checked={!profileDisabled && showcase.activity} onChange={updateShowcase} />
+      <div className="form-actions profile-studio-savebar">
+        <div>
+          <strong>Ready when you are.</strong>
+          <SaveStatus state={state} errorMessage={errorMessage} />
         </div>
-      </div>
-
-      <div className="form-actions">
-        <button className="button button-primary" disabled={state === 'saving'}>{state === 'saving' ? 'Saving...' : 'Save profile'}</button>
-        {state === 'saved' ? <span className="form-status success">Saved</span> : null}
-        {state === 'error' ? <span className="form-status error">Could not save</span> : null}
+        <button className="button button-primary" disabled={state === 'saving'}>{state === 'saving' ? 'Saving…' : 'Save profile'}</button>
       </div>
     </form>
   );

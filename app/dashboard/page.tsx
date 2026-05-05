@@ -52,8 +52,8 @@ export default async function DashboardPage() {
 
   return (
     <main className="page-shell dashboard-page">
-      <section className="dashboard-hero card">
-        <div className="profile-headline">
+      <section className="dashboard-hero card dashboard-studio-hero">
+        <div className="profile-headline dashboard-studio-headline">
           <UserAvatar src={avatar} name={displayName} size="xl" />
           <div>
             <span className="eyebrow">Citizen dashboard</span>
@@ -65,16 +65,17 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <aside className="role-card">
+        <aside className="role-card dashboard-studio-progress">
           <span>Guide progress</span>
           <strong>{guideProgress.percent}%</strong>
           <small>{guideProgress.completed}/{guideProgress.total} guides seen</small>
+          <div className="dashboard-progress-bar" aria-hidden="true"><span style={{ width: `${guideProgress.percent}%` }} /></div>
         </aside>
       </section>
 
       <section className="layout-two dashboard-layout">
         <CharacterCard player={player} steamId={steamId} layouts={layouts} />
-        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} role={role} />
+        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} role={role} steamId={steamId} displayName={displayName} fallbackAvatar={avatar} />
       </section>
 
       <section className="layout-three">
