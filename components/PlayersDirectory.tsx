@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { type CSSProperties, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
 
@@ -10,6 +10,8 @@ export type PlayerDirectoryEntry = {
   handle: string;
   avatarUrl: string | null;
   bannerColor: string;
+  coverImageUrl: string;
+  coverGradient: string;
   role: string;
   title: string;
   bio: string;
@@ -53,6 +55,22 @@ function entryScore(entry: PlayerDirectoryEntry) {
     + Math.min(80, entry.tweetCount * 8)
     + (entry.hasBio ? 15 : 0)
     + (entry.role !== 'User' ? 20 : 0);
+}
+
+
+function bannerStyle(entry: PlayerDirectoryEntry): CSSProperties {
+  if (entry.coverImageUrl) {
+    return {
+      backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, .06), rgba(15, 23, 42, .26)), url(${entry.coverImageUrl}), ${entry.coverGradient}`,
+      backgroundPosition: 'center',
+      backgroundSize: 'cover',
+      backgroundColor: entry.bannerColor,
+    };
+  }
+
+  return {
+    background: entry.coverGradient || `linear-gradient(135deg, ${entry.bannerColor}, #0ea5e9 55%, #111827)`,
+  };
 }
 
 function chipsFor(entry: PlayerDirectoryEntry) {
@@ -177,7 +195,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
         <section className="players-directory-grid">
           {shown.map((entry) => (
             <article className={`public-citizen-card ${entry.isCurrentUser ? 'is-you' : ''}`} key={entry.steamId}>
-              <div className="public-citizen-banner" style={{ background: `linear-gradient(135deg, ${entry.bannerColor}, #0ea5e9 55%, #111827)` }} />
+              <div className="public-citizen-banner" style={bannerStyle(entry)} />
               <div className="public-citizen-body">
                 <div className="public-citizen-avatar-row">
                   <UserAvatar src={entry.avatarUrl} name={entry.displayName} size="lg" />

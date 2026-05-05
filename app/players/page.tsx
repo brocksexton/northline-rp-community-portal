@@ -12,6 +12,7 @@ import { getCommunityProfiles } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
 import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
+import { getProfileCoverPreset } from '@/lib/profile-customization';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Players' };
@@ -80,12 +81,16 @@ export default async function PlayersPage() {
       const displayName = getCitizenName(player, steam?.personaName || `Citizen ${steamId.slice(-8)}`);
       const role = rolesBySteam.get(steamId) ?? defaultRole;
       const activity = activityLabel(steamId, onlineIds, lastSeenBySteam);
+      const coverPreset = getProfileCoverPreset(profile.coverPreset);
+      const coverImageUrl = profile.customCoverUrl?.trim() || coverPreset.imageUrl || '';
       return {
         steamId,
         displayName,
         handle: makeHandle(displayName, steamId),
         avatarUrl: profile.customAvatarUrl || steam?.avatarMedium || steam?.avatarFull || null,
         bannerColor: profile.bannerColor || '#38bdf8',
+        coverImageUrl,
+        coverGradient: coverPreset.gradient,
         role,
         title: playerTitle(player?.DisplayTitle),
         bio: profile.bio?.trim() || '',

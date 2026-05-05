@@ -290,40 +290,42 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
         </section>
 
         <aside className="tweeter-right-rail tweeter-detail-rail">
-          <section className="tweeter-panel tweeter-profile-side-card">
-            <div className="tweeter-panel-header"><strong>Citizen card</strong></div>
-            <div className="tweeter-profile-side-head">
+          <section className="tweeter-panel tweeter-profile-mini-card">
+            <div className="tweeter-profile-mini-head">
               <UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="md" />
               <div>
                 <strong>{user.displayName} {verifiedBadge(user.verifiedKind)}</strong>
                 <span>{user.handle}</span>
               </div>
             </div>
-            <div className="tweeter-side-metric-grid" aria-label="Profile stats">
-              <span><strong>{userTweets.length.toLocaleString()}</strong><small>Posts</small></span>
-              <span><strong>{(user.likeCount ?? 0).toLocaleString()}</strong><small>Likes</small></span>
-              <span><strong>{publishedSections.length}</strong><small>Shared</small></span>
-            </div>
-            <div className="tweeter-profile-side-links">
-              <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam profile</a>
+            <div className="tweeter-profile-mini-links">
+              <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a>
               {isOwner ? <Link href="/dashboard"><i className="fa-solid fa-palette" aria-hidden="true" /> Customize</Link> : null}
             </div>
-            <dl className="tweet-context-list tweeter-side-details">
-              <div><dt>Role</dt><dd>{roleLabel}</dd></div>
-              {publicProfile.title ? <div><dt>Title</dt><dd>{publicProfile.title}</dd></div> : null}
-              <div><dt>Joined</dt><dd>{joinedLabel}</dd></div>
-              {user.playtimeHours ? <div><dt>Time in city</dt><dd>{user.playtimeHours.toLocaleString()}h</dd></div> : null}
-              <div><dt>Profile look</dt><dd>{profileThemeLabel(user.profileTheme)}</dd></div>
-            </dl>
-            <div className="tweeter-profile-shared-strip">
-              <span>Shared on profile</span>
-              <div>
-                {publishedSections.length ? publishedSections.map((section) => <small key={section}>{section}</small>) : <small>Basics only</small>}
+            <details className="tweeter-profile-details-menu">
+              <summary>
+                <span>Profile details</span>
+                <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+              </summary>
+              <dl className="tweet-context-list tweeter-side-details">
+                <div><dt>Role</dt><dd>{roleLabel}</dd></div>
+                {publicProfile.title ? <div><dt>Title</dt><dd>{publicProfile.title}</dd></div> : null}
+                <div><dt>Joined</dt><dd>{joinedLabel}</dd></div>
+                {user.playtimeHours ? <div><dt>Time in city</dt><dd>{user.playtimeHours.toLocaleString()}h</dd></div> : null}
+                <div><dt>Profile look</dt><dd>{profileThemeLabel(user.profileTheme)}</dd></div>
+                <div><dt>Posts</dt><dd>{userTweets.length.toLocaleString()}</dd></div>
+                <div><dt>Likes earned</dt><dd>{(user.likeCount ?? 0).toLocaleString()}</dd></div>
+              </dl>
+              <div className="tweeter-profile-shared-strip">
+                <span>Shared on profile</span>
+                <div>
+                  {publishedSections.length ? publishedSections.map((section) => <small key={section}>{section}</small>) : <small>Basics only</small>}
+                </div>
               </div>
-            </div>
-            {publicProfile.hiddenSections.length ? <p className="tweeter-profile-muted-note">Hidden: {hiddenSectionText}</p> : null}
+              {publicProfile.hiddenSections.length ? <p className="tweeter-profile-muted-note">Hidden: {hiddenSectionText}</p> : null}
+            </details>
           </section>
-          <section className="tweeter-panel">
+          <section className="tweeter-panel tweeter-follow-compact">
             <div className="tweeter-panel-header"><strong>Who to follow</strong></div>
             <div className="tweeter-suggestion-list">
               {payload.suggestions.filter((suggestion) => suggestion.steamId !== steamId).slice(0, 3).map((suggestion) => (
