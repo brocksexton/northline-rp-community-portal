@@ -8724,3 +8724,184 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .studio-preview-body span {
   .profile-studio-savebar { position: static; flex-direction: column; align-items: stretch; }
   .profile-studio-savebar .button { width: 100%; justify-content: center; }
 }
+
+/* v2.8.2 Tweeter profile composition polish */
+.tweeter-profile-main {
+  min-height: 3.85rem;
+  padding: 0 1.15rem;
+}
+
+.tweeter-profile-avatar {
+  margin-top: -4.9rem;
+  border: 4px solid var(--tw-bg-elevated);
+  box-shadow: 0 12px 32px rgba(2, 6, 23, .22);
+}
+
+.tweeter-profile-actions {
+  padding-top: .72rem;
+  margin-left: auto;
+}
+
+.tweeter-profile-copy {
+  margin-top: -.72rem;
+  padding: 0 1.15rem 1.22rem;
+}
+
+.tweeter-profile-copy h1 {
+  margin: 0 0 .08rem;
+  letter-spacing: -0.035em;
+}
+
+.tweeter-profile-copy > span {
+  display: block;
+  margin-bottom: .85rem;
+}
+
+.tweeter-profile-copy p {
+  max-width: 46rem;
+  margin: 0 0 1rem;
+}
+
+.tweeter-profile-meta {
+  margin-bottom: .85rem;
+}
+
+.tweeter-profile-stats {
+  align-items: center;
+}
+
+.tweeter-profile-side-card {
+  overflow: hidden;
+}
+
+.tweeter-profile-side-head {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.tweeter-profile-side-head strong {
+  display: flex;
+  gap: .35rem;
+  align-items: center;
+  color: var(--tw-text);
+  line-height: 1.1;
+}
+
+.tweeter-profile-side-head span {
+  display: block;
+  margin-top: .15rem;
+  color: var(--tw-muted);
+}
+
+.tweeter-side-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.tweeter-side-metric-grid span {
+  display: grid;
+  gap: .12rem;
+  padding: .9rem .85rem;
+  border-right: 1px solid var(--tw-border);
+}
+
+.tweeter-side-metric-grid span:last-child { border-right: 0; }
+
+.tweeter-side-metric-grid strong {
+  color: var(--tw-text);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.tweeter-side-metric-grid small {
+  color: var(--tw-muted);
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.tweeter-profile-side-links {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .55rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.tweeter-profile-side-links a {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border: 1px solid var(--tw-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tw-bg-elevated) 88%, var(--tw-accent) 12%);
+  color: var(--tw-text);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.tweeter-profile-side-links a:hover {
+  background: color-mix(in srgb, var(--tw-bg-elevated) 78%, var(--tw-accent) 22%);
+  border-color: color-mix(in srgb, var(--tw-accent) 42%, var(--tw-border));
+  text-decoration: none;
+}
+
+.tweeter-side-details {
+  padding-top: .15rem;
+}
+
+.tweeter-side-details > div {
+  grid-template-columns: minmax(5.8rem, .62fr) minmax(0, 1fr);
+}
+
+.tweeter-profile-shared-strip {
+  display: grid;
+  gap: .65rem;
+  padding: 1rem;
+  border-top: 1px solid var(--tw-border);
+}
+
+.tweeter-profile-shared-strip > span {
+  color: var(--tw-muted);
+  font-size: .76rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.tweeter-profile-shared-strip > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.tweeter-profile-shared-strip small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  padding: .28rem .65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tw-accent) 12%, var(--tw-bg-soft));
+  color: var(--tw-text);
+  font-weight: 800;
+}
+
+.tweeter-profile-muted-note {
+  margin: 0;
+  padding: 0 1rem 1rem;
+  color: var(--tw-muted);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .tweeter-profile-main { min-height: 3.55rem; }
+  .tweeter-profile-avatar { margin-top: -4.25rem; border-width: 3px; }
+  .tweeter-profile-copy { margin-top: -.35rem; padding-inline: .95rem; }
+  .tweeter-profile-actions { padding-top: .55rem; }
+}

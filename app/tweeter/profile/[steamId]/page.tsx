@@ -200,6 +200,16 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
   const privateForViewer = publicProfile.privacy === 'private' && !isOwner;
   const steamProfileUrl = `https://steamcommunity.com/profiles/${steamId}`;
   const visibleTweets = activeTab === 'replies' ? replyTweets : originalTweets;
+  const publishedSections = [
+    publicProfile.economy ? 'Economy' : null,
+    publicProfile.inventory ? 'Inventory' : null,
+    publicProfile.stats ? 'Stats' : null,
+    publicProfile.properties ? 'Properties' : null,
+    publicProfile.activity ? 'Activity' : null,
+  ].filter(Boolean) as string[];
+  const hiddenSectionText = publicProfile.hiddenSections.length ? publicProfile.hiddenSections.join(', ') : 'Nothing hidden';
+  const joinedLabel = publicProfile.activity?.joined ?? formatShortDate(user.joinedAt);
+  const roleLabel = user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : (publicProfile.role || 'Citizen');
 
   if (privateForViewer) {
     return (
@@ -280,17 +290,38 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
         </section>
 
         <aside className="tweeter-right-rail tweeter-detail-rail">
-          <section className="tweeter-panel">
-            <div className="tweeter-panel-header"><strong>Profile summary</strong></div>
-            <dl className="tweet-context-list">
-              <div><dt>Steam ID</dt><dd>{steamId}</dd></div>
-              <div><dt>Steam</dt><dd><a className="steam-inline-link" href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Profile</a></dd></div>
-              <div><dt>Handle</dt><dd>{user.handle}</dd></div>
-              <div><dt>Posts</dt><dd>{userTweets.length}</dd></div>
-              <div><dt>Role</dt><dd>{user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : 'Citizen'}</dd></div>
-              <div><dt>Public modules</dt><dd>{5 - publicProfile.hiddenSections.length}</dd></div>
+          <section className="tweeter-panel tweeter-profile-side-card">
+            <div className="tweeter-panel-header"><strong>Citizen card</strong></div>
+            <div className="tweeter-profile-side-head">
+              <UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="md" />
+              <div>
+                <strong>{user.displayName} {verifiedBadge(user.verifiedKind)}</strong>
+                <span>{user.handle}</span>
+              </div>
+            </div>
+            <div className="tweeter-side-metric-grid" aria-label="Profile stats">
+              <span><strong>{userTweets.length.toLocaleString()}</strong><small>Posts</small></span>
+              <span><strong>{(user.likeCount ?? 0).toLocaleString()}</strong><small>Likes</small></span>
+              <span><strong>{publishedSections.length}</strong><small>Shared</small></span>
+            </div>
+            <div className="tweeter-profile-side-links">
+              <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam profile</a>
+              {isOwner ? <Link href="/dashboard"><i className="fa-solid fa-palette" aria-hidden="true" /> Customize</Link> : null}
+            </div>
+            <dl className="tweet-context-list tweeter-side-details">
+              <div><dt>Role</dt><dd>{roleLabel}</dd></div>
+              {publicProfile.title ? <div><dt>Title</dt><dd>{publicProfile.title}</dd></div> : null}
+              <div><dt>Joined</dt><dd>{joinedLabel}</dd></div>
+              {user.playtimeHours ? <div><dt>Time in city</dt><dd>{user.playtimeHours.toLocaleString()}h</dd></div> : null}
               <div><dt>Profile look</dt><dd>{profileThemeLabel(user.profileTheme)}</dd></div>
             </dl>
+            <div className="tweeter-profile-shared-strip">
+              <span>Shared on profile</span>
+              <div>
+                {publishedSections.length ? publishedSections.map((section) => <small key={section}>{section}</small>) : <small>Basics only</small>}
+              </div>
+            </div>
+            {publicProfile.hiddenSections.length ? <p className="tweeter-profile-muted-note">Hidden: {hiddenSectionText}</p> : null}
           </section>
           <section className="tweeter-panel">
             <div className="tweeter-panel-header"><strong>Who to follow</strong></div>
