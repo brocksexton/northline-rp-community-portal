@@ -34,17 +34,44 @@
     "earlyAccessBody": "Server systems, balance values, website pages, and profile data may change while Northline RP is being built. The game server remains the source of truth."
   },
   "quickLinks": [
-    { "label": "Dashboard", "href": "/dashboard" },
-    { "label": "City Feed", "href": "/tweeter" },
-    { "label": "Players", "href": "/players" },
-    { "label": "Guides", "href": "/guides" },
-    { "label": "Rules", "href": "/rules" },
-    { "label": "Discord", "href": "https://discord.gg/mmwPf2dT8W" }
+    {
+      "label": "Dashboard",
+      "href": "/dashboard"
+    },
+    {
+      "label": "City Feed",
+      "href": "/tweeter"
+    },
+    {
+      "label": "Players",
+      "href": "/players"
+    },
+    {
+      "label": "Guides",
+      "href": "/guides"
+    },
+    {
+      "label": "Rules",
+      "href": "/rules"
+    },
+    {
+      "label": "Discord",
+      "href": "https://discord.gg/mmwPf2dT8W"
+    }
   ],
   "features": [
-    { "title": "Citizen identity", "body": "Steam sign-in connects your account to your Northline save, public profile, titles, stats, and property summaries." },
-    { "title": "City pulse", "body": "Live server status, Tweeter posts, population activity, and staff notices keep the community informed." },
-    { "title": "Expandable foundation", "body": "The portal is built to support future bridge-backed features and cosmetic supporter perks without pay-to-win rewards." }
+    {
+      "title": "Citizen identity",
+      "body": "Steam sign-in connects your account to your Northline save, public profile, titles, stats, and property summaries."
+    },
+    {
+      "title": "City pulse",
+      "body": "Live server status, Tweeter posts, population activity, and staff notices keep the community informed."
+    },
+    {
+      "title": "Expandable foundation",
+      "body": "The portal is built to support future bridge-backed features and cosmetic supporter perks without pay-to-win rewards."
+    }
   ],
   "layout": {
     "showGridBackground": true,
@@ -58,21 +85,45 @@
     "metricSampleMinutes": 30
   },
   "legal": {
-    "lastModified": "2026-05-03",
+    "lastModified": "2026-05-04",
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms and Conditions",
     "contactEmail": "admin@northline.lol",
     "privacySections": [
-      { "title": "What the portal reads", "body": "The website reads Northbound RP server files such as player saves, role assignments, Tweeter posts, connection history, moderation records, property layout summaries, and server configuration values." },
-      { "title": "Steam sign-in", "body": "Steam OpenID is used to confirm your SteamID64. If a Steam Web API key is configured, the portal may fetch public Steam profile names and avatars." },
-      { "title": "Profile privacy", "body": "Public profiles are intentionally limited. Sensitive gameplay data such as exact inventory, phone messages, staff logs, and moderation evidence is not public by default." },
-      { "title": "Website-owned data", "body": "Profile bios, privacy settings, status notices, and future community settings are stored separately from the game save files." }
+      {
+        "title": "What the portal reads",
+        "body": "The website reads Northbound RP server files such as player saves, role assignments, Tweeter posts, connection history, moderation records, property layout summaries, and server configuration values."
+      },
+      {
+        "title": "Steam sign-in",
+        "body": "Steam OpenID is used to confirm your SteamID64. If a Steam Web API key is configured, the portal may fetch public Steam profile names and avatars."
+      },
+      {
+        "title": "Profile privacy",
+        "body": "Public profiles are intentionally limited. Sensitive gameplay data such as exact inventory, phone messages, staff logs, and moderation evidence is not public by default."
+      },
+      {
+        "title": "Website-owned data",
+        "body": "Profile bios, privacy settings, status notices, and future community settings are stored separately from the game save files."
+      }
     ],
     "termsSections": [
-      { "title": "Community portal", "body": "Northline RP provides this website for server information, player profiles, onboarding, moderation transparency, and community features." },
-      { "title": "Game source of truth", "body": "The game server remains authoritative. Website data may be delayed or unavailable during restarts, maintenance, or file migration." },
-      { "title": "Acceptable use", "body": "Do not abuse login, profile, social, appeal, status, or staff-facing systems. Staff may restrict portal access to protect the community." },
-      { "title": "No pay-to-win", "body": "Any future supporter perks should remain cosmetic or community-facing and must not grant gameplay power, money, items, property advantage, police access, or moderation preference." }
+      {
+        "title": "Community portal",
+        "body": "Northline RP provides this website for server information, player profiles, onboarding, moderation transparency, and community features."
+      },
+      {
+        "title": "Game source of truth",
+        "body": "The game server remains authoritative. Website data may be delayed or unavailable during restarts, maintenance, or file migration."
+      },
+      {
+        "title": "Acceptable use",
+        "body": "Do not abuse login, profile, social, appeal, status, or staff-facing systems. Staff may restrict portal access to protect the community."
+      },
+      {
+        "title": "No pay-to-win",
+        "body": "Any future supporter perks should remain cosmetic or community-facing and must not grant gameplay power, money, items, property advantage, police access, or moderation preference."
+      }
     ]
   }
 }

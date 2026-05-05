@@ -1,18 +1,16 @@
-import Link from 'next/link';
-import { UserAvatar } from '@/components/UserAvatar';
-import { getCitizenName, getPermissionsForSteamId, getPlayer, getRoleForSteamId } from '@/lib/ape-data';
+import { HeaderNavClient } from '@/components/HeaderNavClient';
+import { getCitizenName, getPermissionsForSteamId, getPlayer, getPopulationSummary, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
-import { getSiteConfig } from '@/lib/site-config';
 import { getSteamProfile } from '@/lib/steam-openid';
 
 const nav = [
-  { href: '/status', label: 'Status' },
-  { href: '/tweeter', label: 'Tweeter' },
-  { href: '/players', label: 'Players' },
-  { href: '/guides', label: 'Guides' },
-  { href: '/rules', label: 'Rules' },
-  { href: '/bans', label: 'Bans' },
+  { href: '/status', label: 'Status', icon: 'fa-solid fa-signal', description: 'Server state and activity' },
+  { href: '/tweeter', label: 'Tweeter', icon: 'fa-brands fa-twitter', description: 'In-character chatter' },
+  { href: '/players', label: 'Players', icon: 'fa-solid fa-users', description: 'Public citizen profiles' },
+  { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips' },
+  { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun' },
+  { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records' },
 ];
 
 function canSeeStaff(role: string, permissions: string[]) {
@@ -20,7 +18,7 @@ function canSeeStaff(role: string, permissions: string[]) {
 }
 
 export async function Header() {
-  const [config, steamId] = await Promise.all([getSiteConfig(), getSessionSteamId()]);
+  const [steamId, population] = await Promise.all([getSessionSteamId(), getPopulationSummary()]);
   const [role, permissions, player, communityProfile, steamProfile] = steamId
     ? await Promise.all([
       getRoleForSteamId(steamId),
@@ -35,42 +33,11 @@ export async function Header() {
   const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null;
 
   return (
-    <header className="site-header">
-      <div className="header-inner">
-        <Link href="/" className="brand-lockup" aria-label="Northline RP home">
-          <span className="brand-mark">NL</span>
-          <span>
-            <strong>{config.brand.logoText}</strong>
-            <small>{config.server.modeLabel}</small>
-          </span>
-        </Link>
-        <nav className="desktop-nav" aria-label="Primary navigation">
-          {nav.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
-          {staff ? <Link href="/staff">Staff</Link> : null}
-        </nav>
-        <div className="header-actions">
-          {steamId ? (
-            <>
-              <Link className="header-user-pill" href="/dashboard" title="Open dashboard">
-                <UserAvatar src={avatar} name={displayName} size="sm" />
-                <span><strong>{displayName}</strong><small>{role}</small></span>
-              </Link>
-              <form action="/api/auth/logout" method="post" className="logout-form">
-                <button className="button button-ghost compact" type="submit">Log out</button>
-              </form>
-            </>
-          ) : (
-            <a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam sign-in</a>
-          )}
-        </div>
-      </div>
-      <nav className="mobile-nav" aria-label="Mobile navigation">
-        <Link href="/">Home</Link>
-        <Link href="/status">Status</Link>
-        <Link href="/tweeter">Tweeter</Link>
-        <Link href="/players">Players</Link>
-        <Link href="/dashboard">Me</Link>
-      </nav>
-    </header>
+    <HeaderNavClient
+      navItems={nav}
+      staff={staff}
+      onlineCount={population.onlineCount}
+      user={steamId ? { steamId, displayName, role, avatar } : null}
+    />
   );
 }
