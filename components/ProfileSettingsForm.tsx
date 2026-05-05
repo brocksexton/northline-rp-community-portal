@@ -160,7 +160,7 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
   const [websiteUrl, setWebsiteUrl] = useState(profile?.websiteUrl ?? '');
   const [customAvatarUrl, setCustomAvatarUrl] = useState(profile?.customAvatarUrl ?? '');
   const [bannerColor, setBannerColor] = useState(profile?.bannerColor ?? '#1d9bf0');
-  const [coverPreset, setCoverPreset] = useState(profile?.coverPreset ?? 'northline-night');
+  const [coverPreset, setCoverPreset] = useState(profile?.coverPreset ?? 'northbound-downtown');
   const [customCoverUrl, setCustomCoverUrl] = useState(profile?.customCoverUrl ?? '');
   const [profileTheme, setProfileTheme] = useState<ProfileTheme>(profile?.profileTheme ?? 'clean');
   const [showcase, setShowcase] = useState<ProfileShowcaseSettings>(normalizeShowcase(profile));
@@ -264,8 +264,8 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
       <div className="profile-cover-builder">
         <div className="section-heading compact-heading">
           <span className="kicker">Profile cover</span>
-          <h3>Pick a banner for your Tweeter profile</h3>
-          <p>Everyone can choose one of the safe presets. Trusted and staff accounts can use a custom image URL.</p>
+          <h3>Pick a game image for your Tweeter profile</h3>
+          <p>Everyone can choose one of the Northbound RP gameplay presets. Trusted and staff accounts can still use a custom image URL.</p>
         </div>
 
         <div className="cover-choice-grid">
@@ -277,7 +277,7 @@ export function ProfileSettingsForm({ profile, profileEditToken, role }: { profi
         <div className="custom-cover-panel">
           <div>
             <strong>Custom cover image</strong>
-            <small>{customCoverAllowed ? 'Available for this account. Use a direct image URL ending in .png, .jpg, .webp, .gif, .avif, or .svg.' : 'Available once your account has Trusted or staff access.'}</small>
+            <small>{customCoverAllowed ? 'Available for this account. Use a direct image URL, including supported sbox CDN upload links.' : 'Available once your account has Trusted or staff access.'}</small>
           </div>
           <input value={customCoverUrl} onChange={(event) => setCustomCoverUrl(event.target.value)} placeholder="https://example.com/cover.webp" disabled={!customCoverAllowed} />
         </div>

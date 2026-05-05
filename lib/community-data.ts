@@ -32,7 +32,7 @@ export const DEFAULT_TWEETER_THEME = {
 };
 
 export const DEFAULT_WEBSITE_STYLE: WebsiteStyle = 'civic';
-export const DEFAULT_PROFILE_COVER_PRESET = 'northline-night';
+export const DEFAULT_PROFILE_COVER_PRESET = 'northbound-downtown';
 export const DEFAULT_PROFILE_THEME: ProfileTheme = 'clean';
 
 export type CommunityProfile = {
@@ -216,7 +216,16 @@ export function normalizeProfileTheme(value: unknown): ProfileTheme {
 
 export function normalizeProfileCoverPreset(value: unknown): string {
   const raw = String(value ?? '').trim();
-  const allowed = new Set(['northline-night', 'northline-sunset', 'sbox-play', 'sbox-create', 'sbox-share', 'sbox-release']);
+  const allowed = new Set([
+    'northbound-downtown',
+    'northbound-street-shift',
+    'northbound-civic-core',
+    'northbound-neon-night',
+    'northbound-alley-route',
+    'northbound-city-lights',
+    'northbound-shoreline',
+    'northbound-after-hours',
+  ]);
   return allowed.has(raw) ? raw : DEFAULT_PROFILE_COVER_PRESET;
 }
 

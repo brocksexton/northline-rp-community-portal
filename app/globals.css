@@ -8179,3 +8179,132 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
     grid-template-columns: 1fr;
   }
 }
+
+/* v2.8.0 Tweeter profile repair + Northbound RP game-image covers */
+.tweeter-profile-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--tw-bg-elevated);
+  border-bottom: 1px solid var(--tw-border);
+}
+
+.tweeter-profile-banner {
+  height: clamp(178px, 24vw, 232px);
+  background-color: color-mix(in srgb, var(--profile-cover-accent, #1d9bf0) 20%, #0f172a);
+  background-position: center center !important;
+  background-size: cover, cover, cover !important;
+}
+
+.tweeter-profile-banner.cover-kind-image::after {
+  background:
+    linear-gradient(180deg, rgba(2,6,23,0.06), rgba(2,6,23,0.18) 62%, rgba(2,6,23,0.34)),
+    radial-gradient(circle at 18% 20%, color-mix(in srgb, var(--profile-cover-accent, #1d9bf0) 22%, transparent), transparent 34rem);
+  background-size: cover;
+  opacity: 1;
+}
+
+.tweeter-profile-main {
+  position: relative;
+  z-index: 2;
+  min-height: 4.85rem;
+  padding: 0 1.1rem;
+  align-items: flex-start;
+}
+
+.tweeter-profile-avatar {
+  margin-top: -4.85rem;
+  background: var(--tw-bg-elevated);
+  border: 1px solid var(--tw-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.tweeter-profile-actions {
+  padding-top: .85rem;
+}
+
+.tweeter-profile-actions a,
+.tweeter-profile-actions button,
+.tweeter-profile-main > a,
+.tweeter-profile-main > button {
+  appearance: none;
+  border: 1px solid var(--tw-border);
+  background: color-mix(in srgb, var(--tw-bg-elevated) 92%, var(--tw-accent) 8%);
+  color: var(--tw-text);
+  border-radius: 999px;
+  padding: .64rem .95rem;
+  font-weight: 850;
+  font-size: .95rem;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.tweeter-profile-actions a:hover,
+.tweeter-profile-actions button:hover,
+.tweeter-profile-main > a:hover,
+.tweeter-profile-main > button:hover {
+  border-color: color-mix(in srgb, var(--tw-accent) 42%, var(--tw-border));
+  background: color-mix(in srgb, var(--tw-bg-elevated) 82%, var(--tw-accent) 18%);
+  text-decoration: none;
+}
+
+.tweeter-profile-actions button:disabled {
+  opacity: .72;
+  cursor: not-allowed;
+}
+
+.tweeter-profile-copy {
+  position: relative;
+  z-index: 2;
+  padding: .1rem 1.1rem 1.25rem;
+}
+
+.tweeter-profile-copy h1 {
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.tweeter-profile-meta,
+.tweeter-profile-stats {
+  gap: .65rem 1rem;
+}
+
+.tweeter-profile-tabs {
+  background: color-mix(in srgb, var(--tw-bg-elevated) 82%, transparent);
+}
+
+.tweeter-profile-tabs a {
+  flex: 1 1 0;
+  text-align: center;
+}
+
+.tweet-context-list > div {
+  display: grid;
+  grid-template-columns: minmax(6.8rem, .72fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.tweet-context-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cover-choice-preview,
+.cover-live-preview {
+  background-size: cover, cover, cover !important;
+  background-position: center center !important;
+}
+
+.cover-choice-card.cover-kind-image .cover-choice-preview,
+.cover-live-preview.cover-kind-image {
+  box-shadow: inset 0 -42px 70px rgba(2,6,23,.26);
+}
+
+@media (max-width: 720px) {
+  .tweeter-profile-banner { height: 158px; }
+  .tweeter-profile-main { min-height: 4.35rem; padding-inline: .95rem; }
+  .tweeter-profile-avatar { margin-top: -4.35rem; }
+  .tweeter-profile-actions { padding-top: .65rem; }
+  .tweeter-profile-copy { padding-inline: .95rem; }
+  .tweeter-profile-meta, .tweeter-profile-stats { gap: .55rem .8rem; }
+}

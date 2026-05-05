@@ -37,6 +37,10 @@ function formatShortDate(value?: string | null) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
+
+function formatPostCount(count: number) {
+  return `${count.toLocaleString()} ${count === 1 ? 'post' : 'posts'}`;
+}
 function formatTweetTime(seconds: number) {
   if (!seconds) return 'Just now';
   const date = new Date(seconds * 1000);
@@ -228,7 +232,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
           <header className="tweeter-topbar">
             <div className="tweeter-title-row">
               <Link href="/tweeter" aria-label="Back to Tweeter">←</Link>
-              <div><h1>{user.displayName}</h1><small>{userTweets.length} posts</small></div>
+              <div><h1>{user.displayName}</h1><small>{formatPostCount(userTweets.length)}</small></div>
             </div>
           </header>
 
