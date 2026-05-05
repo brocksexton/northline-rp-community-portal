@@ -46,7 +46,6 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
       <div className="header-inner header-inner-v3">
         <Link href="/" className="brand-lockup brand-lockup-v3" aria-label="Northline RP home">
           <Wordmark />
-          <small>Northbound RP / aperp</small>
         </Link>
 
         <nav className="desktop-nav desktop-nav-v3" aria-label="Primary navigation">
@@ -82,6 +81,8 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
                 </div>
                 <Link href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Profile studio</Link>
                 <Link href={profileHref}><i className="fa-brands fa-twitter" aria-hidden="true" /> My profile</Link>
+                <Link href="/cases"><i className="fa-solid fa-gift" aria-hidden="true" /> Cases</Link>
+                <Link href="/leaderboards"><i className="fa-solid fa-ranking-star" aria-hidden="true" /> Leaderboards</Link>
                 <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Guides</Link>
                 <form action="/api/auth/logout" method="post">
                   <button type="submit"><i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" /> Log out</button>
@@ -95,7 +96,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
           <details className="mobile-menu-v3">
             <summary aria-label="Open navigation menu"><i className="fa-solid fa-bars" aria-hidden="true" /></summary>
             <div className="mobile-menu-panel-v3">
-              <Link href="/" className="mobile-brand-link"><Wordmark /><small>Northbound RP / aperp</small></Link>
+              <Link href="/" className="mobile-brand-link"><Wordmark /></Link>
               <div className="mobile-menu-status"><span className="city-status-dot" /> <strong>{onlineCount}</strong> players online</div>
               <nav aria-label="Mobile navigation">
                 {visibleItems.map((item) => (
@@ -110,6 +111,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
                   <>
                     <Link href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Profile studio</Link>
                     <Link href={profileHref}><i className="fa-brands fa-twitter" aria-hidden="true" /> My profile</Link>
+                    <Link href="/cases"><i className="fa-solid fa-gift" aria-hidden="true" /> Cases</Link>
                     <form action="/api/auth/logout" method="post"><button type="submit"><i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" /> Log out</button></form>
                   </>
                 ) : (

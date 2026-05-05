@@ -8,6 +8,8 @@ const footerGroups = [
       { label: 'Status', href: '/status', icon: 'fa-solid fa-signal' },
       { label: 'Tweeter', href: '/tweeter', icon: 'fa-brands fa-twitter' },
       { label: 'Players', href: '/players', icon: 'fa-solid fa-users' },
+      { label: 'Leaderboards', href: '/leaderboards', icon: 'fa-solid fa-ranking-star' },
+      { label: 'Cases', href: '/cases', icon: 'fa-solid fa-gift' },
     ],
   },
   {

@@ -8,6 +8,8 @@ const nav = [
   { href: '/status', label: 'Status', icon: 'fa-solid fa-signal', description: 'Server state and activity' },
   { href: '/tweeter', label: 'Tweeter', icon: 'fa-brands fa-twitter', description: 'In-character chatter' },
   { href: '/players', label: 'Players', icon: 'fa-solid fa-users', description: 'Public citizen profiles' },
+  { href: '/leaderboards', label: 'Boards', icon: 'fa-solid fa-ranking-star', description: 'Public rankings and brag boards' },
+  { href: '/cases', label: 'Cases', icon: 'fa-solid fa-gift', description: 'Daily free check-in cases' },
   { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips' },
   { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun' },
   { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records' },
