@@ -78,6 +78,9 @@ export type MetricSample = {
   diskUsedGb?: number | null;
   diskTotalGb?: number | null;
   diskPercent?: number | null;
+  latencyMs?: number | null;
+  networkRxKbps?: number | null;
+  networkTxKbps?: number | null;
   processRamMb: number;
   webUptimeSeconds: number;
   hostUptimeSeconds: number;
@@ -430,7 +433,7 @@ export async function getMetricSamples(limit = 144): Promise<MetricSample[]> {
     .slice(-limit);
 }
 
-export async function captureMetricSample(): Promise<MetricSample> {
+export async function captureMetricSample(extra: Partial<Pick<MetricSample, 'latencyMs' | 'networkRxKbps' | 'networkTxKbps'>> = {}): Promise<MetricSample> {
   const totalMemory = os.totalmem();
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
@@ -447,6 +450,9 @@ export async function captureMetricSample(): Promise<MetricSample> {
       diskUsedGb: disk.diskUsedGb,
       diskTotalGb: disk.diskTotalGb,
       diskPercent: disk.diskPercent,
+      latencyMs: typeof extra.latencyMs === 'number' ? Math.max(0, Math.round(extra.latencyMs)) : null,
+      networkRxKbps: typeof extra.networkRxKbps === 'number' ? Math.max(0, Math.round(extra.networkRxKbps)) : null,
+      networkTxKbps: typeof extra.networkTxKbps === 'number' ? Math.max(0, Math.round(extra.networkTxKbps)) : null,
       processRamMb: Math.round(processMemory.rss / 1024 / 1024),
       webUptimeSeconds: Math.round(process.uptime()),
       hostUptimeSeconds: Math.round(os.uptime()),
@@ -471,6 +477,9 @@ export async function captureMetricSample(): Promise<MetricSample> {
     diskUsedGb: disk.diskUsedGb,
     diskTotalGb: disk.diskTotalGb,
     diskPercent: disk.diskPercent,
+    latencyMs: typeof extra.latencyMs === 'number' ? Math.max(0, Math.round(extra.latencyMs)) : null,
+    networkRxKbps: typeof extra.networkRxKbps === 'number' ? Math.max(0, Math.round(extra.networkRxKbps)) : null,
+    networkTxKbps: typeof extra.networkTxKbps === 'number' ? Math.max(0, Math.round(extra.networkTxKbps)) : null,
     processRamMb: Math.round(processMemory.rss / 1024 / 1024),
     webUptimeSeconds: Math.round(process.uptime()),
     hostUptimeSeconds: Math.round(os.uptime()),

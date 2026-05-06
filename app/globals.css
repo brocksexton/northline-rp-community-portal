@@ -4231,7 +4231,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-identity-card { back
 .bans-stats div { padding:1.2rem; border-radius:24px; }
 .bans-stats span { color:var(--site-muted); font-size:.7rem; font-weight:950; letter-spacing:.14em; text-transform:uppercase; }
 .bans-stats strong { display:block; margin-top:.5rem; font-size:2.65rem; line-height:.85; letter-spacing:-.06em; }
-.ban-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem; align-items:end; padding:1.1rem; border-radius:26px; }
+.ban-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem; align-items:flex-end; padding:1.1rem; border-radius:26px; }
 .ban-controls label { display:grid; gap:.5rem; }
 .ban-controls label span { color:var(--site-muted); font-size:.7rem; font-weight:950; letter-spacing:.14em; text-transform:uppercase; }
 .ban-controls input { min-height:48px; padding:0 1rem; border-radius:16px; border:1px solid var(--site-line); background:var(--site-surface-solid); color:var(--site-ink); }
@@ -4269,7 +4269,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .ban-card { background: rgb
 
 @media (max-width: 1120px) {
   .status-control-hero,.staff-command-hero,.bans-hero,.staff-command-grid { grid-template-columns:1fr; }
-  .ban-card { grid-template-columns:1fr 1fr; align-items:start; }
+  .ban-card { grid-template-columns:1fr 1fr; align-items:flex-start; }
   .staff-log-grid,.status-control-grid,.status-plain-grid,.staff-signal-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 820px) {
@@ -7494,7 +7494,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .ban-timeline-row { backgro
 .ban-timeline-staff { display:flex; align-items:center; gap:.6rem; color:var(--site-muted); font-weight:850; }
 @media (max-width:1120px) {
   .ban-detail-hero,.ban-detail-grid { grid-template-columns:1fr; }
-  .ban-timeline-row { grid-template-columns:1fr 1fr; align-items:start; }
+  .ban-timeline-row { grid-template-columns:1fr 1fr; align-items:flex-start; }
 }
 @media (max-width:820px) {
   .ban-detail-person { align-items:flex-start; flex-direction:column; }
@@ -15779,7 +15779,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-filter-wor
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, .42fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .status-ops-list,
@@ -15961,3 +15961,313 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-row { bac
   font-size: .82rem;
 }
 body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { background: rgba(255,255,255,.06); }
+
+/* v2.9.26 staff status studio + metric history */
+.staff-status-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.86fr);
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.staff-status-composer,
+.staff-status-list-panel,
+.staff-metric-history-panel {
+  overflow: hidden;
+}
+
+.staff-status-field {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.staff-status-field span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.staff-status-field input,
+.staff-status-field textarea,
+.staff-status-field select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--text);
+  padding: 0.85rem 0.95rem;
+  font: inherit;
+  outline: none;
+}
+
+.staff-status-field textarea {
+  min-height: 116px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.staff-status-field input:focus,
+.staff-status-field textarea:focus,
+.staff-status-field select:focus {
+  border-color: rgba(29, 155, 240, 0.45);
+  box-shadow: 0 0 0 4px rgba(29, 155, 240, 0.1);
+}
+
+.staff-status-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 0.85rem;
+  align-items: flex-end;
+}
+
+.staff-status-field input[type="color"] {
+  height: 52px;
+  padding: 0.35rem;
+}
+
+.staff-status-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--notice-accent, #1d9bf0) 35%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--notice-accent, #1d9bf0) 14%, white), rgba(255,255,255,0.7));
+}
+
+.staff-status-preview span,
+.staff-status-update span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.28rem 0.58rem;
+  background: color-mix(in srgb, var(--notice-accent, #1d9bf0) 18%, white);
+  color: color-mix(in srgb, var(--notice-accent, #1d9bf0) 72%, #0f172a);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.staff-status-preview strong,
+.staff-status-preview p,
+.staff-status-update strong,
+.staff-status-update p,
+.staff-status-update small {
+  display: block;
+  margin: 0;
+}
+
+.staff-status-preview strong,
+.staff-status-update strong {
+  margin-top: 0.65rem;
+  font-size: 1.05rem;
+}
+
+.staff-status-preview p,
+.staff-status-update p {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.staff-status-actions,
+.staff-status-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.staff-status-update-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.staff-status-update {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 0.9rem;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--notice-accent, #1d9bf0) 24%, rgba(148, 163, 184, 0.22));
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.staff-status-update small {
+  margin-top: 0.45rem;
+  color: var(--muted);
+}
+
+.staff-status-update-actions {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.staff-status-update-actions button {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: var(--text);
+  padding: 0.48rem 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.staff-metric-history-grid {
+  grid-template-columns: 1fr;
+}
+
+.staff-metric-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.staff-metric-tabs button {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.8);
+  color: var(--muted);
+  padding: 0.62rem 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.staff-metric-tabs button.active {
+  color: #075985;
+  border-color: rgba(29, 155, 240, 0.32);
+  background: rgba(29, 155, 240, 0.12);
+}
+
+.staff-metric-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.staff-metric-summary-row div {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 0.8rem;
+  background: rgba(255,255,255,0.68);
+}
+
+.staff-metric-summary-row span,
+.staff-metric-summary-row strong {
+  display: block;
+}
+
+.staff-metric-summary-row span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.staff-metric-summary-row strong {
+  margin-top: 0.25rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+}
+
+.staff-metric-chart {
+  min-height: 230px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(241, 248, 255, 0.72));
+  padding: 1rem;
+}
+
+.staff-metric-chart svg {
+  width: 100%;
+  height: 230px;
+  overflow: visible;
+}
+
+.staff-metric-chart line {
+  stroke: rgba(148, 163, 184, 0.22);
+  stroke-width: 1;
+}
+
+.staff-metric-chart polyline {
+  fill: none;
+  stroke: #1d9bf0;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 8px 14px rgba(29, 155, 240, 0.18));
+}
+
+.staff-metric-empty {
+  display: grid;
+  min-height: 198px;
+  place-content: center;
+  text-align: center;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.staff-metric-empty strong {
+  color: var(--text);
+}
+
+.staff-metric-chart-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .staff-status-field input,
+  .staff-status-field textarea,
+  .staff-status-field select,
+  .staff-status-update,
+  .staff-status-update-actions button,
+  .staff-metric-tabs button,
+  .staff-metric-summary-row div,
+  .staff-metric-chart {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .staff-status-preview {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--notice-accent, #1d9bf0) 16%, rgba(15,23,42,0.9)), rgba(15,23,42,0.68));
+  }
+
+  .staff-status-preview span,
+  .staff-status-update span {
+    background: color-mix(in srgb, var(--notice-accent, #1d9bf0) 20%, rgba(15,23,42,0.9));
+    color: color-mix(in srgb, var(--notice-accent, #1d9bf0) 55%, white);
+  }
+}
+
+@media (max-width: 900px) {
+  .staff-status-studio,
+  .staff-status-form-grid,
+  .staff-status-update {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-metric-summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .staff-metric-summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-metric-chart-footer {
+    flex-direction: column;
+  }
+}

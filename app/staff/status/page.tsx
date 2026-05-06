@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { getDataHealth, getPopulationSummary, getRoleForSteamId, getServerConfig, getServerRuntimeStatus, hasPermission } from '@/lib/ape-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getOperationalMetrics } from '@/lib/host-metrics';
+import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
+import { StaffMetricsHistoryPanel } from '@/components/StaffMetricsHistoryPanel';
+import { StatusUpdatesAdminPanel } from '@/components/StatusUpdatesAdminPanel';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
 
@@ -60,12 +63,13 @@ export default async function StaffStatusPage() {
     );
   }
 
-  const [config, health, population, serverConfig, metrics] = await Promise.all([
+  const [config, health, population, serverConfig, metrics, updates] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getPopulationSummary(),
     getServerConfig(),
     getOperationalMetrics(),
+    getStatusUpdates(20),
   ]);
 
   const runtime = await getServerRuntimeStatus({
@@ -81,6 +85,9 @@ export default async function StaffStatusPage() {
   const query = runtime.diagnostics?.query;
   const processCheck = runtime.diagnostics?.process;
   const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
+  const selectedAttempt = query?.attempts?.find((attempt) => attempt.online) ?? query?.attempts?.[0] ?? null;
+  await captureMetricSample({ latencyMs: selectedAttempt?.durationMs ?? null });
+  const metricSamples = await getMetricSamples(288);
 
   return (
     <main className="page-shell staff-page staff-command-page staff-status-page">
@@ -107,6 +114,13 @@ export default async function StaffStatusPage() {
         <article><span>Players</span><strong>{runtime.playerCount ?? population.onlineCount}/{maxPlayers}</strong><p>Runtime count with fallback to connection data.</p></article>
         <article><span>CPU</span><strong>{metrics.cpuPercent === null ? 'Sampling' : `${metrics.cpuPercent}%`}</strong><p>Current web host sample.</p></article>
         <article><span>RAM</span><strong>{metrics.ram.percent}%</strong><p>{mbToGbLabel(metrics.ram.usedMb)} used by the host.</p></article>
+      </section>
+
+
+      <StatusUpdatesAdminPanel initialUpdates={updates} />
+
+      <section className="staff-command-grid staff-metric-history-grid">
+        <StaffMetricsHistoryPanel samples={metricSamples} />
       </section>
 
       <section className="staff-command-grid">

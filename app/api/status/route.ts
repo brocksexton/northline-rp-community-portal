@@ -9,17 +9,18 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export async function GET() {
-  const [config, health, serverConfig, population, sample, samples, updates] = await Promise.all([
+  const [config, health, serverConfig, population, updates] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getServerConfig(),
     getPopulationSummary(),
-    captureMetricSample(),
-    getMetricSamples(144),
     getStatusUpdates(8),
   ]);
 
   const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes, serverHost: config.status.serverHost, serverPort: config.status.serverPort, queryTimeoutMs: config.status.queryTimeoutMs, fallbackQueryHosts: config.status.fallbackQueryHosts, processNames: config.status.processNames });
+  const selectedAttempt = runtime.diagnostics?.query?.attempts?.find((attempt) => attempt.online) ?? runtime.diagnostics?.query?.attempts?.[0] ?? null;
+  const sample = await captureMetricSample({ latencyMs: selectedAttempt?.durationMs ?? null });
+  const samples = await getMetricSamples(288);
   const publicRuntime = {
     state: runtime.state,
     label: runtime.label,

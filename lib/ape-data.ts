@@ -108,7 +108,7 @@ export type ServerRuntimeStatus = {
       error?: string | null;
       serverName?: string | null;
       mapName?: string | null;
-      attempts?: Array<{ host: string; online: boolean; playerCount: number | null; maxPlayers: number | null; error?: string | null; checkedAt: string }>;
+      attempts?: Array<{ host: string; online: boolean; playerCount: number | null; maxPlayers: number | null; error?: string | null; checkedAt: string; durationMs?: number | null }>;
     };
     process?: {
       checked: boolean;
@@ -299,6 +299,7 @@ type SourceServerQueryResult = {
   port: number;
   timeoutMs: number;
   error?: string;
+  durationMs?: number | null;
 };
 
 type SourceServerQueryBundle = {
@@ -423,6 +424,7 @@ async function querySourceServerStatus(options?: { host?: string; port?: number;
   const port = configuredServerPort(options?.port);
   const timeoutMs = configuredServerQueryTimeoutMs(options?.timeoutMs);
   const checkedAt = new Date().toISOString();
+  const startedAt = Date.now();
 
   return new Promise((resolve) => {
     const socket = createSocket('udp4');
@@ -431,6 +433,7 @@ async function querySourceServerStatus(options?: { host?: string; port?: number;
 
     const finish = (result: SourceServerQueryResult) => {
       if (settled) return;
+      result.durationMs = Math.max(0, Date.now() - startedAt);
       settled = true;
       clearTimeout(timer);
       try { socket.close(); } catch {}
@@ -489,6 +492,7 @@ function queryDiagnostics(bundle: SourceServerQueryBundle) {
       maxPlayers: attempt.maxPlayers,
       error: attempt.error ?? null,
       checkedAt: attempt.checkedAt,
+      durationMs: attempt.durationMs ?? null,
     })),
   };
 }
