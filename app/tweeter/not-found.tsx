@@ -5,7 +5,7 @@ export default function TweeterNotFound() {
     <TweeterErrorShell
       statusCode="404"
       title="This post flew away."
-      message="That Tweeter page does not exist, was removed, or is unavailable to your account."
+      message="That Tweeter page does not exist or is unavailable to your account."
     />
   );
 }

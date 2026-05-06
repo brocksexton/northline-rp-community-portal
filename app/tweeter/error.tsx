@@ -9,7 +9,7 @@ export default function TweeterError({ error, reset }: { error: Error & { digest
     <TweeterErrorShell
       statusCode="500"
       title="Tweeter hit a snag."
-      message="The timeline could not load this page cleanly. Try again, then check server logs if it keeps happening."
+      message="The timeline could not load this page cleanly."
       reset={reset}
     />
   );

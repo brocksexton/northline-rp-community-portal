@@ -30,6 +30,7 @@ type DirectoryStats = {
   listedProfiles: number;
   privateProfiles: number;
   unclaimedSaves: number;
+  moderatedProfiles?: number;
   onlineNow: number;
 };
 
@@ -42,6 +43,7 @@ type Props = {
   signedIn: boolean;
   currentUserListed: boolean;
   currentUserPrivate: boolean;
+  currentUserRestricted?: boolean;
 };
 
 function roleLabel(role: string) {
@@ -82,7 +84,7 @@ function chipsFor(entry: PlayerDirectoryEntry) {
   return chips.slice(0, 5);
 }
 
-export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserListed, currentUserPrivate }: Props) {
+export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserListed, currentUserPrivate, currentUserRestricted = false }: Props) {
   const [query, setQuery] = useState('');
   const [role, setRole] = useState('all');
   const [sort, setSort] = useState<SortMode>('featured');
@@ -142,6 +144,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
             <div><strong>{stats.totalSaves.toLocaleString()}</strong><span>known citizens</span></div>
             <div><strong>{stats.privateProfiles.toLocaleString()}</strong><span>staying private</span></div>
             <div><strong>{stats.unclaimedSaves.toLocaleString()}</strong><span>not claimed yet</span></div>
+            {stats.moderatedProfiles ? <div><strong>{stats.moderatedProfiles.toLocaleString()}</strong><span>restricted</span></div> : null}
           </div>
         </aside>
       </section>
@@ -149,14 +152,16 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       {signedIn && !currentUserListed ? (
         <section className={`players-directory-nudge ${currentUserPrivate ? 'private' : ''}`}>
           <div>
-            <strong>{currentUserPrivate ? 'You are hidden from the board.' : 'You are not on the board yet.'}</strong>
+            <strong>{currentUserRestricted ? 'Your profile is restricted from the board.' : currentUserPrivate ? 'You are hidden from the board.' : 'You are not on the board yet.'}</strong>
             <p>
-              {currentUserPrivate
-                ? 'Your profile is private, so nobody browsing this page can find you. Switch to public whenever you want to be listed.'
-                : 'Open your dashboard, publish your profile, and add a short bio if you want other citizens to find you here.'}
+              {currentUserRestricted
+                ? 'A staff or active ban restriction is keeping this account out of the public citizens directory.'
+                : currentUserPrivate
+                  ? 'Your profile is private, so nobody browsing this page can find you. Switch to public whenever you want to be listed.'
+                  : 'Open your dashboard, publish your profile, and add a short bio if you want other citizens to find you here.'}
             </p>
           </div>
-          <Link className="button button-soft" href="/dashboard">Profile settings</Link>
+          {currentUserRestricted ? <Link className="button button-soft" href="/support">Contact staff</Link> : <Link className="button button-soft" href="/dashboard">Profile settings</Link>}
         </section>
       ) : null}
 
@@ -188,7 +193,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
           <span className="kicker">Public citizens</span>
           <h2>{filteredEntries.length.toLocaleString()} citizen{filteredEntries.length === 1 ? '' : 's'} found</h2>
         </div>
-        <p>Only public profiles appear here.</p>
+        <p>Only public, unrestricted profiles appear here.</p>
       </section>
 
       {shown.length ? (
@@ -251,7 +256,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
           <strong>You control whether you appear here</strong>
         </div>
         <p>
-          The board only shows public, claimed profiles. Private citizens stay hidden, and sensitive gameplay details never appear unless the player explicitly publishes that section.
+          The board only shows public, claimed, unrestricted profiles. Private citizens and restricted accounts stay hidden, and sensitive gameplay details never appear unless the player explicitly publishes that section.
         </p>
       </section>
     </>

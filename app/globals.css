@@ -14634,3 +14634,340 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .maintenance-choice-strip s
   .tweeter-error-actions button { width: 100%; }
 }
 .tweeter-follow-compact .tweeter-suggestion { display: grid; }
+
+/* v2.9.14 portal spacing, player moderation filtering, and staff Tweeter admin polish */
+.community-feature-hub {
+  gap: clamp(1.25rem, 2.2vw, 1.75rem);
+  padding: clamp(1.25rem, 2.4vw, 1.65rem);
+}
+.community-feature-hub .community-section-heading.inline {
+  align-items: flex-end;
+  margin-bottom: .15rem;
+}
+.community-feature-hub .community-section-heading h2 {
+  margin-top: .55rem;
+}
+.community-feature-grid {
+  gap: clamp(1rem, 1.6vw, 1.25rem);
+}
+.community-feature-card {
+  padding: clamp(1.05rem, 1.5vw, 1.25rem);
+}
+.players-directory-scoreboard .scoreboard-grid {
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.tweeter-admin-page {
+  gap: 1.35rem;
+}
+.tweeter-admin-hero .staff-command-copy h1 {
+  max-width: 900px;
+}
+.tweeter-admin-workspace {
+  display: grid;
+  gap: 1rem;
+}
+.tweeter-admin-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .85rem;
+}
+.tweeter-admin-overview article {
+  position: relative;
+  overflow: hidden;
+  min-height: 8rem;
+  padding: 1.1rem;
+  border: 1px solid var(--site-line);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(29, 155, 240, .12), transparent 9rem),
+    var(--site-surface-solid);
+  box-shadow: var(--site-shadow);
+}
+.tweeter-admin-overview article::after {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  bottom: -2.4rem;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 999px;
+  background: rgba(29,155,240,.08);
+}
+.tweeter-admin-overview span,
+.tweeter-admin-account dt {
+  color: var(--site-muted);
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.tweeter-admin-overview strong {
+  display: block;
+  margin-top: .65rem;
+  font-size: clamp(2.3rem, 4vw, 3.6rem);
+  line-height: .82;
+  letter-spacing: -.065em;
+}
+.tweeter-admin-overview p {
+  position: relative;
+  z-index: 1;
+  margin: .6rem 0 0;
+  color: var(--site-muted);
+  font-weight: 750;
+}
+.tweeter-admin-grid {
+  grid-template-columns: minmax(390px, .92fr) minmax(0, 1.08fr);
+  gap: 1.15rem;
+}
+.tweeter-admin-editor,
+.tweeter-admin-list {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,252,255,.78));
+  box-shadow: var(--site-shadow);
+}
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .tweeter-admin-editor,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .tweeter-admin-list,
+body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-editor,
+body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-list {
+  background: rgba(15,23,42,.72);
+}
+.tweeter-admin-heading h2 {
+  margin-bottom: .25rem;
+}
+.tweeter-admin-editor form {
+  gap: 1.05rem;
+}
+.tweeter-admin-steamid-field input {
+  font-size: 1.05rem;
+  font-weight: 850;
+  letter-spacing: .01em;
+}
+.tweeter-admin-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+.tweeter-admin-status-grid button {
+  position: relative;
+  overflow: hidden;
+  min-height: 132px;
+  padding: 1rem;
+  display: grid;
+  align-content: start;
+  gap: .45rem;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.tweeter-admin-status-grid button::after {
+  content: '';
+  position: absolute;
+  inset: auto -2rem -2.8rem auto;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: rgba(29,155,240,.08);
+}
+.tweeter-admin-status-grid button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(29,155,240,.34);
+  box-shadow: 0 16px 34px rgba(15,23,42,.10);
+}
+.tweeter-admin-status-grid button > i {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: .85rem;
+  background: #e0f2fe;
+  color: #075985;
+}
+.tweeter-admin-status-grid button.status-choice-hidden > i { background: #ede9fe; color: #5b21b6; }
+.tweeter-admin-status-grid button.status-choice-soft_ban > i { background: #fef3c7; color: #92400e; }
+.tweeter-admin-status-grid button.status-choice-full_ban > i { background: #fee2e2; color: #991b1b; }
+.tweeter-admin-status-grid button.active {
+  background: linear-gradient(180deg, rgba(240,249,255,.94), rgba(255,255,255,.96));
+}
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .tweeter-admin-status-grid button.active,
+body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-status-grid button.active {
+  background: rgba(14,165,233,.13);
+}
+.tweeter-admin-status-grid strong {
+  font-size: .98rem;
+}
+.tweeter-admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
+}
+.tweeter-admin-expiry-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .8rem;
+  align-items: end;
+}
+.tweeter-admin-expiry-presets,
+.tweeter-admin-filter-pills,
+.tweeter-admin-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+.tweeter-admin-expiry-presets button,
+.tweeter-admin-filter-pills button,
+.tweeter-admin-actions button.secondary {
+  min-height: 40px;
+  padding: 0 .85rem;
+  border: 1px solid var(--site-line);
+  border-radius: 999px;
+  background: var(--site-surface-solid);
+  color: var(--site-ink);
+  font-weight: 900;
+  cursor: pointer;
+}
+.tweeter-admin-expiry-presets button:disabled {
+  opacity: .52;
+  cursor: not-allowed;
+}
+.tweeter-admin-filter-pills button.active {
+  background: #07111f;
+  border-color: #07111f;
+  color: #fff;
+}
+.tweeter-admin-action-preview {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: .85rem;
+  align-items: start;
+  padding: .95rem;
+  border: 1px solid rgba(29,155,240,.22);
+  border-radius: 20px;
+  background: rgba(224,242,254,.5);
+}
+.tweeter-admin-action-preview.preview-hidden { border-color: rgba(124,58,237,.25); background: rgba(237,233,254,.55); }
+.tweeter-admin-action-preview.preview-soft_ban { border-color: rgba(245,158,11,.30); background: rgba(254,243,199,.58); }
+.tweeter-admin-action-preview.preview-full_ban { border-color: rgba(239,68,68,.28); background: rgba(254,226,226,.60); }
+.tweeter-admin-action-preview > i {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,.75);
+}
+.tweeter-admin-action-preview strong {
+  display: block;
+  font-weight: 950;
+}
+.tweeter-admin-action-preview p {
+  margin: .2rem 0 0;
+  color: var(--site-ink-soft);
+}
+.tweeter-admin-actions {
+  padding-top: .3rem;
+  border-top: 1px solid var(--site-line);
+}
+.tweeter-admin-actions button.secondary {
+  background: transparent;
+}
+.tweeter-admin-actions button:not(.secondary) {
+  box-shadow: 0 16px 32px rgba(15,23,42,.16);
+}
+.tweeter-admin-list-tools {
+  display: grid;
+  gap: .75rem;
+  margin-bottom: .95rem;
+}
+.tweeter-admin-search {
+  margin-bottom: 0;
+}
+.tweeter-admin-account-list {
+  max-height: 780px;
+  gap: .85rem;
+}
+.tweeter-admin-account {
+  position: relative;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1.1fr) minmax(220px, .9fr) auto;
+  align-items: stretch;
+  padding: 1.05rem;
+  box-shadow: 0 16px 38px rgba(15,23,42,.06);
+}
+.tweeter-admin-account::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: #1d9bf0;
+}
+.tweeter-admin-account.status-hidden::before { background: #7c3aed; }
+.tweeter-admin-account.status-soft_ban::before { background: #f59e0b; }
+.tweeter-admin-account.status-full_ban::before { background: #ef4444; }
+.tweeter-admin-account-main {
+  min-width: 0;
+}
+.tweeter-admin-account .tweeter-admin-status-badge {
+  display: inline-flex;
+  gap: .35rem;
+  align-items: center;
+  margin: 0 0 .55rem;
+}
+.tweeter-admin-account-main strong {
+  font-size: 1.05rem;
+}
+.tweeter-admin-account dl {
+  padding: .85rem;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--site-accent) 5%, var(--site-surface));
+}
+.tweeter-admin-account dd {
+  overflow-wrap: anywhere;
+}
+.tweeter-admin-row-actions {
+  align-content: center;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+.tweeter-admin-row-actions a,
+.tweeter-admin-row-actions button {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 1120px) {
+  .tweeter-admin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tweeter-admin-grid,
+  .tweeter-admin-account {
+    grid-template-columns: 1fr;
+  }
+  .tweeter-admin-row-actions {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  .tweeter-admin-row-actions a,
+  .tweeter-admin-row-actions button {
+    width: auto;
+  }
+}
+@media (max-width: 760px) {
+  .tweeter-admin-overview,
+  .tweeter-admin-form-grid,
+  .tweeter-admin-expiry-row {
+    grid-template-columns: 1fr;
+  }
+  .tweeter-admin-status-grid {
+    grid-template-columns: 1fr;
+  }
+  .tweeter-admin-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .tweeter-admin-actions > div,
+  .tweeter-admin-actions button {
+    width: 100%;
+  }
+  .tweeter-admin-actions button {
+    justify-content: center;
+  }
+}

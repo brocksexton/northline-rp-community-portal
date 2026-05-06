@@ -7,7 +7,7 @@ export default function MissingTweeterRoute() {
     <TweeterErrorShell
       statusCode="404"
       title="Nothing to see here."
-      message="This Tweeter route is not connected to a post, profile, message thread, or feed page."
+      message="That Tweeter route is not available."
     />
   );
 }

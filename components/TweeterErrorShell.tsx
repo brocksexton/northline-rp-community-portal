@@ -40,7 +40,6 @@ export function TweeterErrorShell({
           {reset ? <button type="button" onClick={reset}>Try again</button> : <Link href={actionHref}>{actionLabel}</Link>}
           <Link href={secondaryHref}>{secondaryLabel}</Link>
         </div>
-        <small>Posts, profiles, and messages keep their own Tweeter look even when a route is missing.</small>
       </section>
     </main>
   );

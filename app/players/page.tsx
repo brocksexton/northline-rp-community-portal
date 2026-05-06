@@ -13,6 +13,7 @@ import { getSessionSteamId } from '@/lib/session';
 import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
 import { getProfileCoverPreset } from '@/lib/profile-customization';
+import { getTweeterRestrictionMap } from '@/lib/tweeter-moderation-data';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Players' };
@@ -70,11 +71,18 @@ export default async function PlayersPage() {
   }
 
   const profileSteamIds = Object.keys(profiles);
-  const steamProfiles = await getSteamProfiles(profileSteamIds);
+  const [steamProfiles, restrictionMap] = await Promise.all([
+    getSteamProfiles(profileSteamIds),
+    getTweeterRestrictionMap(profileSteamIds),
+  ]);
   const claimedSaveIds = new Set(profileSteamIds.filter((steamId) => playerBySteam.has(steamId)));
+  const isAllowedOnPublicDirectory = (steamId: string) => {
+    const restriction = restrictionMap[steamId];
+    return !restriction || (restriction.status === 'none' && !restriction.activeGameBan && !restriction.hiddenFromTweeter);
+  };
 
   const entries: PlayerDirectoryEntry[] = Object.entries(profiles)
-    .filter(([, profile]) => profile.privacy === 'public')
+    .filter(([steamId, profile]) => profile.privacy === 'public' && isAllowedOnPublicDirectory(steamId))
     .map(([steamId, profile]) => {
       const player = playerBySteam.get(steamId) ?? null;
       const steam = steamProfiles.get(steamId) ?? null;
@@ -110,7 +118,8 @@ export default async function PlayersPage() {
     if (b === defaultRole) return -1;
     return a.localeCompare(b);
   });
-  const privateProfiles = Object.entries(profiles).filter(([steamId, profile]) => profile.privacy === 'private' && playerBySteam.has(steamId)).length;
+  const privateProfiles = Object.entries(profiles).filter(([steamId, profile]) => profile.privacy === 'private' && playerBySteam.has(steamId) && isAllowedOnPublicDirectory(steamId)).length;
+  const moderatedProfiles = Object.keys(profiles).filter((steamId) => !isAllowedOnPublicDirectory(steamId)).length;
   const currentProfile = sessionSteamId ? profiles[sessionSteamId] ?? null : null;
 
   return (
@@ -123,11 +132,13 @@ export default async function PlayersPage() {
           listedProfiles: entries.length,
           privateProfiles,
           unclaimedSaves: Math.max(0, players.length - claimedSaveIds.size),
+          moderatedProfiles,
           onlineNow: population.onlineCount,
         }}
         signedIn={Boolean(sessionSteamId)}
         currentUserListed={Boolean(sessionSteamId && entries.some((entry) => entry.steamId === sessionSteamId))}
         currentUserPrivate={currentProfile?.privacy === 'private'}
+        currentUserRestricted={Boolean(sessionSteamId && !isAllowedOnPublicDirectory(sessionSteamId))}
       />
     </main>
   );

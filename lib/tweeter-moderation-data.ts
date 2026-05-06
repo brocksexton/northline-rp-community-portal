@@ -291,7 +291,7 @@ export function buildTweeterRestriction(steamId: string, websiteModeration: Twee
     steamId,
     status,
     hiddenFromTweeter,
-    canAppearInSuggestions: !hiddenFromTweeter && !gameBanned,
+    canAppearInSuggestions: status === 'none' && !gameBanned,
     canViewProfile: !hiddenFromTweeter,
     canReceiveFollow: !hiddenFromTweeter && !gameBanned,
     canReceiveMessage: !hiddenFromTweeter && !softBan && !gameBanned,

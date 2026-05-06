@@ -194,7 +194,6 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             <span className="community-kicker">Around the portal</span>
             <h2 id="community-feature-hub-title">Pick what you need.</h2>
           </div>
-          <span className="feature-hub-note">Quick stops for checking in, catching up, or finding help.</span>
         </div>
         <div className="community-feature-grid">
           <Link className="community-feature-card primary" href="/cases">
