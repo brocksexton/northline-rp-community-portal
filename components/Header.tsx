@@ -1,7 +1,8 @@
 import { HeaderNavClient } from '@/components/HeaderNavClient';
-import { getCitizenName, getPermissionsForSteamId, getPlayer, getPopulationSummary, getRoleForSteamId } from '@/lib/ape-data';
+import { getCitizenName, getDataHealth, getPermissionsForSteamId, getPlayer, getPopulationSummary, getRoleForSteamId, getServerRuntimeStatus } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
+import { getSiteConfig } from '@/lib/site-config';
 import { getSteamProfile } from '@/lib/steam-openid';
 
 const nav = [
@@ -19,8 +20,31 @@ function canSeeStaff(role: string, permissions: string[]) {
   return ['Developer', 'Admin', 'Moderator'].includes(role) || permissions.includes('ViewLogs') || permissions.includes('AdminTools');
 }
 
+function statusPillLabel(state: string, onlineCount: number | null) {
+  if (state === 'offline') return 'Offline';
+  if (state === 'data_missing' || state === 'unknown') return 'Checking';
+  if (onlineCount === 1) return '1 online';
+  return `${onlineCount ?? 0} online`;
+}
+
 export async function Header() {
-  const [steamId, population] = await Promise.all([getSessionSteamId(), getPopulationSummary()]);
+  const [steamId, population, config, health] = await Promise.all([
+    getSessionSteamId(),
+    getPopulationSummary(),
+    getSiteConfig(),
+    getDataHealth(),
+  ]);
+  const runtime = await getServerRuntimeStatus({
+    health,
+    population,
+    staleAfterMinutes: config.status.offlineAfterMinutes,
+    serverHost: config.status.serverHost,
+    serverPort: config.status.serverPort,
+    queryTimeoutMs: config.status.queryTimeoutMs,
+  });
+  const visibleOnlineCount = runtime.state === 'offline' || runtime.state === 'data_missing'
+    ? null
+    : runtime.playerCount ?? population.onlineCount;
   const [role, permissions, player, communityProfile, steamProfile] = steamId
     ? await Promise.all([
       getRoleForSteamId(steamId),
@@ -38,7 +62,9 @@ export async function Header() {
     <HeaderNavClient
       navItems={nav}
       staff={staff}
-      onlineCount={population.onlineCount}
+      onlineCount={visibleOnlineCount}
+      statusState={runtime.state}
+      statusLabel={statusPillLabel(runtime.state, visibleOnlineCount)}
       user={steamId ? { steamId, displayName, role, avatar } : null}
     />
   );

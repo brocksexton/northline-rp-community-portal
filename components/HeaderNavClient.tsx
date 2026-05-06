@@ -20,7 +20,9 @@ type HeaderNavClientProps = {
     role: string;
     avatar: string | null;
   } | null;
-  onlineCount: number;
+  onlineCount: number | null;
+  statusState: string;
+  statusLabel: string;
 };
 
 function isActive(pathname: string, href: string) {
@@ -36,7 +38,7 @@ function Wordmark() {
   );
 }
 
-export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNavClientProps) {
+export function HeaderNavClient({ navItems, staff, user, onlineCount, statusState, statusLabel }: HeaderNavClientProps) {
   const pathname = usePathname() || '/';
   const visibleItems = staff ? [...navItems, { href: '/staff', label: 'Staff', icon: 'fa-solid fa-shield-halved', description: 'Staff tools' }] : navItems;
   const supportItem: NavItem = { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' };
@@ -79,10 +81,9 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
         </nav>
 
         <div className="header-actions header-actions-v3">
-          <Link className="city-status-pill" href="/status" aria-label={`${onlineCount} players online, view status`}>
+          <Link className={`city-status-pill tone-${statusState}`} href="/status" aria-label={`${statusLabel}, view server status`}>
             <span className="city-status-dot" aria-hidden="true" />
-            <strong>{onlineCount}</strong>
-            <span>online</span>
+            {onlineCount === null ? <strong>{statusLabel}</strong> : <><strong>{onlineCount}</strong><span>online</span></>}
           </Link>
 
           {user ? (
@@ -118,7 +119,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
             <summary aria-label="Open navigation menu"><i className="fa-solid fa-bars" aria-hidden="true" /></summary>
             <div className="mobile-menu-panel-v3">
               <Link href="/" className="mobile-brand-link"><Wordmark /></Link>
-              <div className="mobile-menu-status"><span className="city-status-dot" /> <strong>{onlineCount}</strong> players online</div>
+              <div className={`mobile-menu-status tone-${statusState}`}><span className="city-status-dot" /> <strong>{statusLabel}</strong></div>
               <nav aria-label="Mobile navigation">
                 {mobileItems.map((item) => (
                   <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>

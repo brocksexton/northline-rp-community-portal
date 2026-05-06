@@ -4,69 +4,83 @@ import { getStatusUpdates } from '@/lib/community-data';
 import { duration, relativeFromDate } from '@/lib/format';
 import { getSiteConfig } from '@/lib/site-config';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { getOperationalMetrics } from '@/lib/host-metrics';
 
 export const dynamic = 'force-dynamic';
+
 export async function generateMetadata() {
   return buildPageMetadata({
-    title: 'Server Status',
-    description: 'Live Northline RP server status, city activity, recent events, and operational notices.',
+    title: 'Server Status & Metrics',
+    description: 'Northline RP server reachability, current population, and lightweight host metrics.',
     path: '/status',
   });
 }
 
 type StatusTone = 'success' | 'warning' | 'neutral' | 'danger';
 
-function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, latestEventAt: string | null) {
+type PublicState = {
+  label: string;
+  tone: StatusTone;
+  headline: string;
+  body: string;
+  primaryAction: string;
+};
+
+function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, latestEventAt: string | null): PublicState {
   if (runtime.state === 'data_missing') {
     return {
       label: 'Checking',
-      tone: 'warning' as StatusTone,
-      headline: 'One sec, checking the city.',
-      body: 'The website is waiting on fresh server info. The game may still be fine, but Discord is the best place to ask if joining feels weird.',
-      action: 'Check Discord',
+      tone: 'warning',
+      headline: 'Status data is unavailable.',
+      body: 'The portal cannot read the configured game data folder right now. The game server may still be reachable, but the website cannot verify the city state from local files.',
+      primaryAction: 'Check Discord',
     };
   }
+
   if (runtime.state === 'offline') {
     return {
       label: 'Offline',
-      tone: 'danger' as StatusTone,
-      headline: 'Northline looks offline.',
+      tone: 'danger',
+      headline: 'Server offline.',
       body: runtime.source === 'server_query'
-        ? 'The game server did not answer the configured server query. It may be stopped, restarting, or unreachable.'
+        ? 'The game server did not answer the configured query. It may be stopped, restarting, firewalled, or temporarily unreachable.'
         : runtime.lastSignalAt
           ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
           : 'The portal cannot see a fresh server signal right now. Check Discord for restart or maintenance updates.',
-      action: 'Check Discord',
+      primaryAction: 'Check Discord',
     };
   }
+
   if (runtime.state === 'online' && onlineCount > 0) {
     return {
-      label: 'Live',
-      tone: 'success' as StatusTone,
-      headline: 'Northline is open.',
-      body: 'People are in the city right now. Hop in, check Tweeter, or see what everyone has been up to.',
-      action: 'Join through s&box',
+      label: 'Online',
+      tone: 'success',
+      headline: 'Server online.',
+      body: 'The game server is reachable and players are connected right now.',
+      primaryAction: 'Join through s&box',
     };
   }
+
   if (runtime.state === 'quiet' || runtime.state === 'online') {
     return {
-      label: runtime.state === 'quiet' ? 'Quiet' : 'Online',
-      tone: 'neutral' as StatusTone,
-      headline: 'Northline is online but quiet.',
+      label: runtime.state === 'quiet' ? 'Online, quiet' : 'Online',
+      tone: 'neutral',
+      headline: 'Online, but quiet.',
       body: runtime.source === 'server_query'
-        ? 'The game server answered directly, but nobody is connected right now.'
+        ? 'The server answered directly, but nobody is connected right now.'
         : latestEventAt
           ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
-          : 'The game server is online, but nobody is showing online right now.',
-      action: 'Join through s&box',
+          : 'The game server appears online, but nobody is showing as connected.',
+      primaryAction: 'Join through s&box',
     };
   }
+
   return {
     label: 'Unknown',
-    tone: 'warning' as StatusTone,
-    headline: 'Server status is unclear.',
+    tone: 'warning',
+    headline: 'Status unclear.',
     body: 'The portal can read some data, but it cannot confidently tell whether the game server is online. Discord is the safest place to check.',
-    action: 'Check Discord',
+    primaryAction: 'Check Discord',
   };
 }
 
@@ -81,154 +95,231 @@ function eventLabel(isConnection: boolean) {
   return isConnection ? 'joined' : 'left';
 }
 
+function sourceLabel(source: ServerRuntimeStatus['source']) {
+  switch (source) {
+    case 'server_status.json': return 'Heartbeat file';
+    case 'server_query': return 'Direct server query';
+    case 'connection_logs': return 'Connection logs';
+    case 'data_path': return 'Data path';
+    default: return 'Portal check';
+  }
+}
+
+function metricText(value: number | null, suffix = '%') {
+  return value === null ? 'Sampling' : `${value}${suffix}`;
+}
+
+function clampPercent(value: number | null | undefined) {
+  return Math.max(0, Math.min(100, Math.round(Number(value ?? 0))));
+}
+
+function mbToGbLabel(mb: number) {
+  if (mb >= 1024) return `${Math.round((mb / 1024) * 10) / 10} GB`;
+  return `${mb.toLocaleString()} MB`;
+}
+
+function MetricCard({ icon, label, value, detail, percent }: { icon: string; label: string; value: string; detail: string; percent?: number | null }) {
+  const width = typeof percent === 'number' ? clampPercent(percent) : null;
+  return (
+    <article className="status-ops-metric-card">
+      <div className="status-ops-metric-top">
+        <i className={icon} aria-hidden="true" />
+        <span>{label}</span>
+      </div>
+      <strong>{value}</strong>
+      <p>{detail}</p>
+      {width !== null ? <div className="status-ops-meter" aria-hidden="true"><i style={{ width: `${width}%` }} /></div> : null}
+    </article>
+  );
+}
+
+function QuickCard({ icon, label, value, detail }: { icon: string; label: string; value: string; detail: string }) {
+  return (
+    <article className="status-ops-quick-card">
+      <i className={icon} aria-hidden="true" />
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <p>{detail}</p>
+    </article>
+  );
+}
+
 export default async function StatusPage() {
-  const [config, health, serverConfig, population, updates, overview] = await Promise.all([
+  const [config, health, serverConfig, population, updates, overview, metrics] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getServerConfig(),
     getPopulationSummary(),
-    getStatusUpdates(6),
+    getStatusUpdates(4),
     getCityOverview(),
+    getOperationalMetrics(),
   ]);
 
-  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes, serverHost: config.status.serverHost, serverPort: config.status.serverPort, queryTimeoutMs: config.status.queryTimeoutMs });
-  const state = inferPublicState(runtime, runtime.playerCount ?? population.onlineCount, runtime.lastSignalAt ?? population.latestEventAt);
+  const runtime = await getServerRuntimeStatus({
+    health,
+    population,
+    staleAfterMinutes: config.status.offlineAfterMinutes,
+    serverHost: config.status.serverHost,
+    serverPort: config.status.serverPort,
+    queryTimeoutMs: config.status.queryTimeoutMs,
+  });
+
+  const visiblePlayerCount = runtime.state === 'offline' || runtime.state === 'data_missing'
+    ? null
+    : runtime.playerCount ?? population.onlineCount;
+  const effectiveOnlineCount = visiblePlayerCount ?? 0;
+  const state = inferPublicState(runtime, effectiveOnlineCount, runtime.lastSignalAt ?? population.latestEventAt);
   const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
-  const notices = updates.slice(0, 3);
-  const recentEvents = population.recentEvents.slice(0, 5);
-  const onlinePlayers = population.onlinePlayers.slice(0, 8);
-  const shownOnlineCount = runtime.state === 'offline' ? null : (runtime.playerCount ?? population.onlineCount);
-  const capacityPercent = maxPlayers && typeof shownOnlineCount === 'number' ? Math.min(100, Math.round((shownOnlineCount / maxPlayers) * 100)) : 0;
-  const primaryActionHref = state.action === 'Check Discord' ? config.server.discordUrl : config.server.joinUrl;
+  const capacityPercent = visiblePlayerCount === null ? 0 : Math.min(100, Math.round((visiblePlayerCount / maxPlayers) * 100));
+  const primaryActionHref = state.primaryAction === 'Check Discord' ? config.server.discordUrl : config.server.joinUrl;
+  const onlinePlayers = runtime.state === 'offline' ? [] : population.onlinePlayers.slice(0, 6);
+  const notices = updates.slice(0, 2);
+  const recentEvents = population.recentEvents.slice(0, 4);
+  const signalLabel = runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Not reported';
+  const playerValue = visiblePlayerCount === null ? 'Offline' : `${visiblePlayerCount}/${maxPlayers}`;
 
   return (
-    <main className="page-shell status-page-v2">
-      <section className={`status-hero-v2 tone-${state.tone}`}>
-        <div className="status-hero-main-v2">
-          <span className="status-live-chip-v2"><i /> Server status</span>
+    <main className="page-shell status-ops-page">
+      <section className={`status-ops-hero tone-${state.tone}`}>
+        <div className="status-ops-copy">
+          <span className="status-ops-chip"><i aria-hidden="true" /> Server status</span>
           <h1>{state.headline}</h1>
           <p>{state.body}</p>
-          <div className="status-hero-actions-v2">
-            <a className="button button-primary" href={primaryActionHref} target={state.action === 'Check Discord' ? '_blank' : undefined} rel={state.action === 'Check Discord' ? 'noreferrer' : undefined}><i className={state.action === 'Check Discord' ? 'fa-brands fa-discord' : 'fa-solid fa-gamepad'} aria-hidden="true" /> {state.action}</a>
+          <div className="status-ops-actions">
+            <a className="button button-primary" href={primaryActionHref} target={state.primaryAction === 'Check Discord' ? '_blank' : undefined} rel={state.primaryAction === 'Check Discord' ? 'noreferrer' : undefined}>
+              <i className={state.primaryAction === 'Check Discord' ? 'fa-brands fa-discord' : 'fa-solid fa-gamepad'} aria-hidden="true" /> {state.primaryAction}
+            </a>
             <a className="button button-soft" href={config.server.discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Discord</a>
             <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter</Link>
           </div>
         </div>
-        <aside className="status-now-card-v2" aria-label="Current player count">
-          <span className="status-pill-v2">{state.label}</span>
-          <strong>{shownOnlineCount === null ? 'Offline' : <>{shownOnlineCount}<small>/{maxPlayers}</small></>}</strong>
-          <p>{shownOnlineCount === null ? 'Server not currently reachable' : shownOnlineCount === 1 ? 'person online' : 'people online'}</p>
-          <div className="status-capacity-track" aria-hidden="true"><i style={{ width: `${capacityPercent}%` }} /></div>
+
+        <aside className="status-ops-current" aria-label="Current server state">
+          <div className="status-ops-current-head">
+            <span>Current state</span>
+            <strong>{state.label}</strong>
+          </div>
+          <div className="status-ops-current-value">
+            <strong>{visiblePlayerCount === null ? 'Offline' : visiblePlayerCount}</strong>
+            {visiblePlayerCount !== null ? <span>/{maxPlayers}</span> : null}
+          </div>
+          <p>{visiblePlayerCount === null ? 'Server is not currently reachable.' : visiblePlayerCount === 1 ? '1 player connected.' : `${visiblePlayerCount} players connected.`}</p>
+          <div className="status-ops-meter" aria-hidden="true"><i style={{ width: `${capacityPercent}%` }} /></div>
+          <dl className="status-ops-current-meta">
+            <div><dt>Source</dt><dd>{sourceLabel(runtime.source)}</dd></div>
+            <div><dt>Signal</dt><dd>{signalLabel}</dd></div>
+          </dl>
         </aside>
       </section>
 
-      <section className="status-snapshot-grid-v2" aria-label="At a glance">
-        <article className="status-snapshot-card-v2 accent">
-          <i className="fa-solid fa-door-open" aria-hidden="true" />
-          <span>Join status</span>
-          <strong>{runtime.label}</strong>
-          <p>{runtime.message}</p>
-        </article>
-        <article className="status-snapshot-card-v2">
-          <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" />
-          <span>Last signal</span>
-          <strong>{runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Nothing yet'}</strong>
-          <p>{runtime.source === 'server_status.json' ? 'Last server heartbeat seen by the portal.' : runtime.source === 'server_query' ? 'Last direct server query run by the portal.' : 'Last public connection signal seen by the portal.'}</p>
-        </article>
-        <article className="status-snapshot-card-v2">
-          <i className="fa-solid fa-users" aria-hidden="true" />
-          <span>Known citizens</span>
-          <strong>{overview.players.toLocaleString()}</strong>
-          <p>Saved citizens the community site knows about.</p>
-        </article>
-        <article className="status-snapshot-card-v2">
-          <i className="fa-solid fa-hourglass-half" aria-hidden="true" />
-          <span>Average visit</span>
-          <strong>{duration(population.avgSessionSeconds)}</strong>
-          <p>Based on visible connection records.</p>
-        </article>
+      <section className="status-ops-metrics" aria-label="Useful server metrics">
+        <div className="status-ops-section-head">
+          <div>
+            <span className="kicker">Server metrics</span>
+            <h2>Quick operational snapshot</h2>
+          </div>
+          <small>Last checked {relativeFromDate(metrics.checkedAt)}</small>
+        </div>
+        <div className="status-ops-metric-grid">
+          <MetricCard
+            icon="fa-solid fa-microchip"
+            label="CPU load"
+            value={metricText(metrics.cpuPercent)}
+            detail="Current host utilization sample."
+            percent={metrics.cpuPercent}
+          />
+          <MetricCard
+            icon="fa-solid fa-memory"
+            label="RAM used"
+            value={`${metrics.ram.percent}%`}
+            detail={`${mbToGbLabel(metrics.ram.usedMb)} in use.`}
+            percent={metrics.ram.percent}
+          />
+          <MetricCard
+            icon="fa-solid fa-globe"
+            label="Website uptime"
+            value={duration(metrics.webProcess.uptimeSeconds)}
+            detail={`${mbToGbLabel(metrics.webProcess.rssMb)} web process memory.`}
+          />
+          <MetricCard
+            icon="fa-solid fa-wifi"
+            label="Query source"
+            value={sourceLabel(runtime.source)}
+            detail={runtime.source === 'server_query' ? `UDP query to ${config.status.serverHost ?? 'configured host'}:${config.status.serverPort ?? 27015}.` : 'Using local server data first.'}
+          />
+        </div>
       </section>
 
-      <section className="status-two-column-v2">
-        <article className="status-board-v2">
-          <div className="section-heading inline">
+      <section className="status-ops-quick-grid" aria-label="At a glance">
+        <QuickCard icon="fa-solid fa-door-open" label="Join status" value={runtime.label} detail={runtime.message} />
+        <QuickCard icon="fa-solid fa-users" label="Players" value={playerValue} detail={visiblePlayerCount === null ? 'When unreachable, the portal treats the server as offline.' : 'Current reachable population.'} />
+        <QuickCard icon="fa-solid fa-clock-rotate-left" label="Last signal" value={signalLabel} detail={runtime.signalAgeSeconds === null ? 'No signal age available.' : `Stale after ${duration(runtime.staleAfterSeconds)}.`} />
+        <QuickCard icon="fa-solid fa-address-book" label="Known citizens" value={overview.players.toLocaleString()} detail="Saved citizens known to the portal." />
+      </section>
+
+      <section className="status-ops-workspace">
+        <article className="status-ops-panel status-ops-notices">
+          <div className="status-ops-section-head compact">
             <div>
               <span className="kicker">City board</span>
-              <h2>What players should know</h2>
-              <p>Short public notes for maintenance, events, and anything worth checking before you hop in.</p>
+              <h2>Important notices</h2>
             </div>
             <Link href="/support">Need help?</Link>
           </div>
-          <div className="status-board-list-v2">
+          <div className="status-ops-list">
             {notices.length ? notices.map((update) => (
-              <article className={`status-board-card-v2 tone-${noticeTone(update.tone)}`} key={update.id}>
+              <article className={`status-ops-notice tone-${noticeTone(update.tone)}`} key={update.id}>
                 <span>{update.tone}</span>
                 <div>
-                  <h3>{update.title}</h3>
+                  <strong>{update.title}</strong>
                   <p>{update.body}</p>
                   <small>{relativeFromDate(update.createdAt)} · {update.createdByName}</small>
                 </div>
               </article>
             )) : (
-              <article className="status-board-card-v2 tone-info">
+              <article className="status-ops-notice tone-info">
                 <span>Clear</span>
                 <div>
-                  <h3>No active notices</h3>
-                  <p>Nothing major is posted right now. That usually means it is safe to hop in and make some questionable decisions.</p>
-                  <small>Check Discord for casual chat and quick announcements.</small>
+                  <strong>No active notices</strong>
+                  <p>No maintenance or city-wide alerts are posted right now.</p>
+                  <small>Discord remains the fastest place for live admin updates.</small>
                 </div>
               </article>
             )}
           </div>
         </article>
 
-        <aside className="status-side-stack-v2">
-          <article className="status-mini-panel-v2">
-            <div className="status-mini-panel-head">
-              <span className="kicker">Around town</span>
-              <strong>{runtime.state === 'offline' ? 'Server offline' : onlinePlayers.length ? 'Currently online' : 'Nobody showing online'}</strong>
+        <aside className="status-ops-panel status-ops-side">
+          <div className="status-ops-section-head compact">
+            <div>
+              <span className="kicker">Activity</span>
+              <h2>Recent movement</h2>
             </div>
-            {onlinePlayers.length ? (
-              <div className="status-online-list-v2">
-                {onlinePlayers.map((player) => (
-                  <div key={player.steamId}>
-                    <i className="fa-solid fa-circle" aria-hidden="true" />
-                    <span><strong>{player.name}</strong><small>Since {relativeFromDate(player.since)}</small></span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>{runtime.state === 'offline' ? 'The server is not reporting as online right now. Check Discord for restart or maintenance updates.' : 'Looks empty from here. Great time to claim the title of “first person online.”'}</p>
-            )}
-          </article>
+          </div>
 
-          <article className="status-mini-panel-v2">
-            <div className="status-mini-panel-head">
-              <span className="kicker">Recent movement</span>
-              <strong>Last few joins and leaves</strong>
+          {onlinePlayers.length ? (
+            <div className="status-ops-online-list">
+              {onlinePlayers.map((player) => (
+                <div key={player.steamId}>
+                  <i className="fa-solid fa-circle" aria-hidden="true" />
+                  <span><strong>{player.name}</strong><small>Online since {relativeFromDate(player.since)}</small></span>
+                </div>
+              ))}
             </div>
-            {recentEvents.length ? (
-              <div className="status-recent-list-v2">
-                {recentEvents.map((event, index) => (
-                  <div key={`${event.SteamId}-${event.Timestamp}-${index}`}>
-                    <span className={event.IsConnection ? 'join' : 'leave'}>{eventLabel(event.IsConnection)}</span>
-                    <strong>{event.PlayerName}</strong>
-                    <small>{relativeFromDate(event.Timestamp)}</small>
-                  </div>
-                ))}
+          ) : (
+            <p className="status-ops-empty">{runtime.state === 'offline' ? 'The server is offline, so online players are hidden until it answers again.' : 'Nobody is showing online right now.'}</p>
+          )}
+
+          <div className="status-ops-recent-list">
+            {recentEvents.length ? recentEvents.map((event, index) => (
+              <div key={`${event.SteamId}-${event.Timestamp}-${index}`}>
+                <span className={event.IsConnection ? 'join' : 'leave'}>{eventLabel(event.IsConnection)}</span>
+                <strong>{event.PlayerName}</strong>
+                <small>{relativeFromDate(event.Timestamp)}</small>
               </div>
-            ) : (
-              <p>No public movement yet.</p>
-            )}
-          </article>
+            )) : <p className="status-ops-empty">No public join or leave records yet.</p>}
+          </div>
         </aside>
-      </section>
-
-      <section className="status-bottom-strip-v2" aria-label="Community summary">
-        <div><span>Public sessions</span><strong>{population.totalSessions.toLocaleString()}</strong></div>
-        <div><span>Tweeter posts</span><strong>{overview.tweets.toLocaleString()}</strong></div>
-        <div><span>Property layouts</span><strong>{overview.propertyLayouts.toLocaleString()}</strong></div>
-        <div><span>Public ban records</span><strong>{overview.bans.total.toLocaleString()}</strong></div>
       </section>
     </main>
   );
