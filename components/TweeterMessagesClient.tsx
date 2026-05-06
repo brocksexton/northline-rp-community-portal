@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
 
@@ -39,6 +39,16 @@ function formatTime(value: string) {
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
+function formatConversationTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const now = Date.now();
+  const diff = now - date.getTime();
+  const day = 24 * 60 * 60 * 1000;
+  if (diff >= 0 && diff < day) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
   return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
@@ -52,6 +62,7 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const bubblesEndRef = useRef<HTMLDivElement | null>(null);
 
   const selectedUser = selectedSteamId ? users[selectedSteamId] : null;
 
@@ -86,6 +97,10 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSteamId]);
 
+  useEffect(() => {
+    bubblesEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages, selectedSteamId]);
+
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedSteamId || !body.trim() || busy) return;
@@ -116,23 +131,27 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
       <div className="tweeter-messages-layout">
         <aside className="tweeter-messages-list">
           <header>
-            <Link href="/tweeter" aria-label="Back to Tweeter">←</Link>
-            <div><h1>Messages</h1><p>Website-only DMs for Northline. These do not touch the game server.</p></div>
+            <Link className="tweeter-message-back" href="/tweeter" aria-label="Back to Tweeter"><i className="fa-solid fa-arrow-left" aria-hidden="true" /></Link>
+            <div><h1>Messages</h1><p>Private website DMs for Northline citizens.</p></div>
           </header>
           {summaries.length ? summaries.map((summary) => {
             const user = users[summary.otherSteamId];
+            const displayName = user?.displayName ?? `Citizen ${summary.otherSteamId.slice(-6)}`;
+            const mine = summary.lastMessage.fromSteamId === initialData.currentSteamId;
             return (
               <button type="button" key={summary.otherSteamId} className={selectedSteamId === summary.otherSteamId ? 'active' : ''} onClick={() => setSelectedSteamId(summary.otherSteamId)}>
-                <UserAvatar src={user?.avatarUrl ?? null} name={user?.displayName ?? 'Citizen'} size="sm" />
+                <UserAvatar src={user?.avatarUrl ?? null} name={displayName} size="md" />
                 <span>
-                  <strong>{user?.displayName ?? `Citizen ${summary.otherSteamId.slice(-6)}`}</strong>
-                  <small>{summary.lastMessage.body}</small>
+                  <span className="tweeter-message-person-line"><strong>{displayName} {verifiedBadge(user?.verifiedKind)}</strong><time dateTime={summary.lastMessage.createdAt}>{formatConversationTime(summary.lastMessage.createdAt)}</time></span>
+                  <small>{mine ? 'You: ' : ''}{summary.lastMessage.body}</small>
+                  <small className="tweeter-message-handle">{user?.handle ?? '@citizen'}</small>
                 </span>
                 {summary.unreadCount ? <em>{summary.unreadCount}</em> : null}
               </button>
             );
           }) : (
             <div className="tweeter-message-empty-mini">
+              <i className="fa-regular fa-comments" aria-hidden="true" />
               <strong>No messages yet</strong>
               <p>Open someone’s profile and press Message to start a conversation.</p>
             </div>
@@ -154,6 +173,7 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
                   <h2>{selectedUser.displayName} {verifiedBadge(selectedUser.verifiedKind)}</h2>
                   <Link href={`/tweeter/profile/${selectedUser.steamId}`}>{selectedUser.handle}</Link>
                 </div>
+                <Link className="tweeter-message-profile-link" href={`/tweeter/profile/${selectedUser.steamId}`}>View profile</Link>
               </header>
 
               <div className="tweeter-message-bubbles">
@@ -165,7 +185,8 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
                       <small>{formatTime(message.createdAt)}</small>
                     </article>
                   );
-                }) : <div className="tweeter-message-empty-mini"><strong>No messages here yet</strong><p>Send the first one.</p></div>}
+                }) : <div className="tweeter-message-empty-mini"><i className="fa-regular fa-message" aria-hidden="true" /><strong>No messages here yet</strong><p>Send the first one.</p></div>}
+                <div ref={bubblesEndRef} />
               </div>
 
               <form className="tweeter-message-compose" onSubmit={send}>
