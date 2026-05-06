@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { MaintenanceSettingsPanel } from '@/components/MaintenanceSettingsPanel';
 import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamId, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { duration, fullDate } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
@@ -72,13 +71,21 @@ export default async function StaffPage() {
 
 
       <section className="staff-command-grid maintenance-command-grid">
-        <MaintenanceSettingsPanel initialSettings={maintenanceSettings} canManage={role.toLowerCase() === 'developer'} />
+        <article className="staff-panel maintenance-control-card">
+          <div className="section-heading"><span className="kicker">Maintenance</span><h2>Maintenance studio</h2><p>Open the dedicated studio to pause the main site, pause Tweeter, pick a preset, and customize the downtime page.</p></div>
+          <dl className="maintenance-status-list">
+            <div><dt>Main site</dt><dd>{maintenanceSettings.enabled ? 'Maintenance on' : 'Open'}</dd></div>
+            <div><dt>Tweeter</dt><dd>{maintenanceSettings.tweeterMaintenanceEnabled ? 'Maintenance on' : maintenanceSettings.allowTweeterDuringMaintenance ? 'Allowed through' : 'Normal'}</dd></div>
+            <div><dt>Theme</dt><dd>{maintenanceSettings.theme}</dd></div>
+          </dl>
+          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/maintenance"><i className="fa-solid fa-screwdriver-wrench" aria-hidden="true" /> Open studio</Link></div>
+        </article>
         <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Close the main site, leave Tweeter open during a main-site update, or pause Tweeter by itself when the feed needs work.</p></div>
+          <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Use this when you want visitors to see a clean update page instead of a half-finished feature.</p></div>
           <div className="stack-list compact-stack">
-            <div><strong>Main-site updates</strong><span>Use this before deployments, layout work, or data-heavy changes.</span><small>Visitors get a clean update page instead of a half-finished site.</small></div>
-            <div><strong>Tweeter can be separate</strong><span>Keep Tweeter open during a main-site update, or give Tweeter its own downtime screen.</span><small>Useful when you are only working on one part of the site.</small></div>
-            <div><strong>Themeable</strong><span>Pick a look and accent color to match the kind of update.</span><small>This only affects the maintenance screen.</small></div>
+            <div><strong>Main site</strong><span>Close most pages while still letting Developer accounts in.</span><small>You can optionally keep Tweeter open.</small></div>
+            <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
+            <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
         </article>
       </section>

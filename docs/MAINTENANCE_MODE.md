@@ -1,8 +1,8 @@
 # Maintenance Mode
 
-Developer accounts can manage maintenance mode from `/staff`.
+Developer accounts can manage maintenance from `/staff/maintenance`.
 
-Settings are stored in:
+Settings are saved to:
 
 ```txt
 .northline-data/site-maintenance.json
@@ -16,29 +16,28 @@ NORTHLINE_DATA_PATH/site-maintenance.json
 
 ## Main website maintenance
 
-When main website maintenance is enabled, regular visitors see the custom maintenance page. Developer accounts can still sign in through Steam and view the site.
+When main-site maintenance is enabled, regular visitors see the configured maintenance page. Developer accounts can still sign in and view the site.
 
-Main website options:
+The maintenance studio supports:
 
-- enabled / disabled
-- headline
-- message
-- optional countdown time
-- visual theme
+- preset looks
+- custom headline/message/kicker
+- optional countdown
 - accent color
-- Discord/update button toggle
-- Discord/update URL
-- whether Tweeter should stay open while the main site is closed
+- layout style
+- icon choice
+- Discord/update button
+- optional custom link button
+- optional Visit Tweeter button when Tweeter is allowed through
 
 ## Tweeter maintenance
 
-Tweeter can also be paused on its own without closing the rest of the website. This shows a Tweeter-styled maintenance page only on `/tweeter` routes.
+Tweeter can be paused separately from the rest of the website. When enabled, `/tweeter` routes show a Tweeter-styled maintenance screen with its own copy, theme, and countdown.
 
-Tweeter options:
+This allows these combinations:
 
-- enabled / disabled
-- custom Tweeter headline
-- custom Tweeter message
-- optional Tweeter countdown time
+- close the main website, keep Tweeter open
+- close the main website and Tweeter together
+- keep the main website open, pause Tweeter only
 
-Maintenance mode only affects the website view. It does not modify game data or player saves.
+Maintenance mode only affects website views. It does not modify game data or player saves.
