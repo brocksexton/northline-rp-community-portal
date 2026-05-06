@@ -40,6 +40,8 @@ export type TweeterUserView = {
   profileTheme?: ProfileTheme;
   joinedAt?: string | null;
   hasPlayedInServer?: boolean;
+  hasClaimedProfile?: boolean;
+  isPublicProfile?: boolean;
   playtimeHours?: number;
   title?: string | null;
   tweetCount?: number;
@@ -86,7 +88,11 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
 
   const tweetIds = tweeter.Tweets.map((tweet) => tweet.Id);
   const authorIds = [...new Set(tweeter.Tweets.map((tweet) => String(tweet.AuthorSteamId)))];
-  const suggestionSteamIds = players.map((player) => String(player.SteamId)).slice(0, 10);
+  const publicClaimedSteamIds = Object.entries(communityProfiles)
+    .filter(([steamId, profile]) => steamId !== sessionSteamId && profile.privacy === 'public')
+    .map(([steamId]) => steamId)
+    .sort((a, b) => Number(playersById.get(b)?.TotalPlaytimeSeconds ?? 0) - Number(playersById.get(a)?.TotalPlaytimeSeconds ?? 0));
+  const suggestionSteamIds = publicClaimedSteamIds.slice(0, 10);
   const steamProfiles = await getSteamProfiles([...new Set([...authorIds, ...suggestionSteamIds, ...(sessionSteamId ? [sessionSteamId] : [])])]);
 
   const gameLikedTweetIds = new Set(
@@ -152,12 +158,9 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
   const currentRole = sessionSteamId ? await getRoleForSteamId(sessionSteamId) : 'Guest';
   const currentDisplayName = currentPlayer?.RpDisplayName || currentPlayer?.LastKnownDisplayName || currentSteam?.personaName || (sessionSteamId ? `Citizen ${sessionSteamId.slice(-8)}` : 'Guest');
 
-  const candidateSuggestions = players
-    .filter((player) => String(player.SteamId) !== sessionSteamId)
-    .sort((a, b) => Number(b.TotalPlaytimeSeconds ?? 0) - Number(a.TotalPlaytimeSeconds ?? 0))
-    .slice(0, 6);
+  const candidateSuggestionIds = publicClaimedSteamIds.slice(0, 6);
 
-  const suggestions = await Promise.all(candidateSuggestions.map(async (player) => buildTweeterUser(String(player.SteamId), tweets)));
+  const suggestions = await Promise.all(candidateSuggestionIds.map(async (steamId) => buildTweeterUser(steamId, tweets)));
 
   return {
     generatedAt: new Date().toISOString(),
@@ -175,6 +178,8 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       profileTheme: normalizeProfileTheme(currentCommunity?.profileTheme ?? DEFAULT_PROFILE_THEME),
       joinedAt: currentPlayer?.FirstJoinedUtc ?? null,
       hasPlayedInServer: Boolean(currentPlayer?.FirstJoinedUtc),
+      hasClaimedProfile: Boolean(currentCommunity),
+      isPublicProfile: currentCommunity?.privacy !== 'private',
       playtimeHours: Math.round(Number(currentPlayer?.TotalPlaytimeSeconds ?? 0) / 3600),
       title: currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : null,
       tweetCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).length,
@@ -215,6 +220,8 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     profileTheme: normalizeProfileTheme(communityProfile?.profileTheme ?? DEFAULT_PROFILE_THEME),
     joinedAt: player?.FirstJoinedUtc ?? null,
     hasPlayedInServer: Boolean(player?.FirstJoinedUtc),
+    hasClaimedProfile: Boolean(communityProfile),
+    isPublicProfile: communityProfile?.privacy !== 'private',
     playtimeHours: Math.round(Number(player?.TotalPlaytimeSeconds ?? 0) / 3600),
     title: player?.DisplayTitle ? playerTitle(player.DisplayTitle) : null,
     tweetCount: authoredTweets.length,

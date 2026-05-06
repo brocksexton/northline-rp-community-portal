@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
   const targetSteamId = String(body.targetSteamId ?? targetFromRequest(request) ?? '').trim();
   const follow = typeof body.follow === 'boolean' ? body.follow : undefined;
 
-  if (!(await hasGameServerIdentity(targetSteamId))) return NextResponse.json({ error: 'That account needs to join the game server before it can be followed.' }, { status: 400, headers: noStoreHeaders() });
 
   try {
     return jsonWithSession(await setFollowState(sessionSteamId, targetSteamId, follow), { headers: noStoreHeaders() }, sessionSteamId, request);

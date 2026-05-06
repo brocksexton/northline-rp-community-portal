@@ -36,6 +36,8 @@ type Suggestion = {
   bio?: string;
   joinedAt?: string | null;
   hasPlayedInServer?: boolean;
+  hasClaimedProfile?: boolean;
+  isPublicProfile?: boolean;
 };
 
 type TweeterPayload = {
@@ -49,6 +51,8 @@ type TweeterPayload = {
     verifiedKind?: string;
     joinedAt?: string | null;
     hasPlayedInServer?: boolean;
+    hasClaimedProfile?: boolean;
+    isPublicProfile?: boolean;
   } | null;
   tweets: TweetRow[];
   trends: Array<{ tag: string; count: number }>;
@@ -388,7 +392,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
           <section className="tweeter-panel tweeter-follow-compact">
             <div className="tweeter-panel-header"><strong>Who to follow</strong></div>
             <div className="tweeter-suggestion-list">
-              {data.suggestions.map((suggestion) => (
+              {data.suggestions.length ? data.suggestions.map((suggestion) => (
                 <div className="tweeter-suggestion" key={suggestion.steamId}>
                   <Link href={`/tweeter/profile/${suggestion.steamId}`} className="tweeter-suggestion-main">
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
@@ -398,9 +402,9 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                       {suggestion.bio ? <small>{suggestion.bio}</small> : null}
                     </div>
                   </Link>
-                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!data.sessionSteamId} compact disabledReason={socialLockReason || (suggestion.hasPlayedInServer === false ? 'This account needs to join the game server first.' : '')} />
+                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!data.sessionSteamId} compact disabledReason={socialLockReason} />
                 </div>
-              ))}
+              )) : <div className="tweeter-panel-empty">No public claimed profiles to suggest yet.</div>}
             </div>
           </section>
 

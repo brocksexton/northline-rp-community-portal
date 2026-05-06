@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getExternalOrigin, verifySteamCallback } from '@/lib/steam-openid';
 import { authReturnToCookieName, setSessionCookie, withNoStoreHeaders } from '@/lib/session';
+import { claimCommunityProfile } from '@/lib/community-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,12 @@ export async function GET(request: NextRequest) {
 
   if (!steamId) {
     return withNoStoreHeaders(NextResponse.redirect(new URL('/?login=failed', origin)));
+  }
+
+  try {
+    await claimCommunityProfile(steamId);
+  } catch {
+    // Authentication should still succeed if the local profile store is temporarily unavailable.
   }
 
   const response = withNoStoreHeaders(NextResponse.redirect(new URL(returnTo, origin)));

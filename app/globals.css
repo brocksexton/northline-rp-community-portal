@@ -14364,3 +14364,52 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .maintenance-choice-strip s
     padding-inline: .8rem;
   }
 }
+
+
+/* v2.9.12 Tweeter claimed-profile gating */
+.tweeter-profile-claim-banner {
+  display: flex;
+  gap: .9rem;
+  align-items: flex-start;
+  padding: 1rem 1.1rem;
+  border-top: 1px solid var(--tw-border, rgba(148,163,184,.24));
+  border-bottom: 1px solid var(--tw-border, rgba(148,163,184,.24));
+  background: color-mix(in srgb, var(--tw-bg-elevated, #1e293b) 82%, var(--tw-accent, #1d9bf0) 18%);
+  color: var(--tw-text, #f8fafc);
+}
+
+.tweeter-profile-claim-banner > i {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tw-accent, #1d9bf0) 22%, transparent);
+  color: var(--tw-accent, #1d9bf0);
+}
+
+.tweeter-profile-claim-banner strong,
+.tweeter-profile-claim-banner p {
+  display: block;
+  margin: 0;
+}
+
+.tweeter-profile-claim-banner p {
+  margin-top: .22rem;
+  color: var(--tw-muted, #94a3b8);
+  line-height: 1.45;
+  font-size: .94rem;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-claim-banner,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-claim-banner {
+  background: color-mix(in srgb, var(--tw-bg-elevated, #fff) 84%, var(--tw-accent, #1d9bf0) 16%);
+}
+
+.tweeter-panel-empty {
+  padding: .95rem 1rem;
+  color: var(--tw-muted, #94a3b8);
+  line-height: 1.4;
+  font-size: .92rem;
+}

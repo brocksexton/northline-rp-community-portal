@@ -252,6 +252,42 @@ export async function getCommunityProfile(steamId: string): Promise<CommunityPro
   return profiles[steamId] ?? null;
 }
 
+export async function claimCommunityProfile(steamId: string): Promise<CommunityProfile | null> {
+  const safeSteamId = String(steamId ?? '').trim();
+  if (!/^\d{15,20}$/.test(safeSteamId)) return null;
+
+  const store = await enqueueStoreWrite((current) => {
+    if (current.profiles[safeSteamId]) return current;
+    const now = new Date().toISOString();
+    const claimedProfile: CommunityProfile = {
+      steamId: safeSteamId,
+      privacy: 'public',
+      bio: '',
+      location: '',
+      websiteUrl: '',
+      customAvatarUrl: '',
+      bannerColor: '#1194f0',
+      coverPreset: DEFAULT_PROFILE_COVER_PRESET,
+      customCoverUrl: '',
+      profileTheme: DEFAULT_PROFILE_THEME,
+      showcase: DEFAULT_PROFILE_SHOWCASE,
+      tweeterTheme: DEFAULT_TWEETER_THEME.era,
+      tweeterMode: DEFAULT_TWEETER_THEME.mode,
+      websiteStyle: DEFAULT_WEBSITE_STYLE,
+      updatedAt: now,
+    };
+    return {
+      ...current,
+      profiles: {
+        ...current.profiles,
+        [safeSteamId]: claimedProfile,
+      },
+    };
+  });
+
+  return store.profiles[safeSteamId] ? normalizeProfile(store.profiles[safeSteamId]) : null;
+}
+
 export async function upsertCommunityProfile(steamId: string, patch: Partial<CommunityProfile>): Promise<CommunityProfile> {
   const store = await enqueueStoreWrite((current) => {
     const existing = current.profiles[steamId];
