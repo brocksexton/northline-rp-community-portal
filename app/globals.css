@@ -3957,6 +3957,13 @@ body[data-site-style='ops']:not(:has(.tweeter-mode))::before {
 body[data-site-style]:not(:has(.tweeter-mode)) p { color: var(--site-ink-soft); }
 body[data-site-style='ops']:not(:has(.tweeter-mode)) p { color: #cbd5e1; }
 body[data-site-style]:not(:has(.tweeter-mode)) a:hover { color: var(--site-accent); }
+body[data-site-style]:not(:has(.tweeter-mode)) .button-primary:hover,
+body[data-site-style]:not(:has(.tweeter-mode)) a.button-primary:hover,
+body[data-site-style]:not(:has(.tweeter-mode)) .button.button-primary:hover,
+body[data-site-style]:not(:has(.tweeter-mode)) button.button-primary:hover {
+  color: #fff;
+  text-shadow: 0 1px 10px rgba(15, 23, 42, 0.18);
+}
 
 body[data-site-style]:not(:has(.tweeter-mode)) .site-header {
   background: rgba(255,255,255,.86);
@@ -5210,6 +5217,11 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.07);
 }
 
+.rules-section-block .section-heading p,
+body[data-site-style]:not(:has(.tweeter-mode)) .rules-section-block .section-heading p {
+  color: #334155;
+}
+
 .rules-sign-grid,
 .scenario-grid {
   display: grid;
@@ -5219,6 +5231,8 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
 }
 
 .rules-sign-card {
+  position: relative;
+  overflow: hidden;
   min-height: 220px;
   display: flex;
   flex-direction: column;
@@ -5226,8 +5240,23 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
   padding: 1.1rem;
   border-radius: 1.25rem;
   background: linear-gradient(180deg, #0f172a, #19385c);
-  color: white;
+  color: #fff;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+.rules-sign-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.22), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.12));
+  pointer-events: none;
+}
+
+.rules-sign-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .rules-sign-card:nth-child(2) { background: linear-gradient(180deg, #075985, #0e7490); }
@@ -5235,22 +5264,29 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
 .rules-sign-card:nth-child(4) { background: linear-gradient(180deg, #14532d, #15803d); }
 
 .rules-sign-card span {
-  color: rgba(255,255,255,0.62);
-  font-weight: 900;
+  color: rgba(255,255,255,0.72);
+  font-weight: 950;
   letter-spacing: -0.05em;
   font-size: 1.6rem;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.2);
 }
 
 .rules-sign-card h3 {
   margin: auto 0 0.55rem;
+  color: #fff;
   font-size: 1.45rem;
   line-height: 1.05;
   letter-spacing: -0.06em;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.24);
 }
 
-.rules-sign-card p {
-  color: rgba(255,255,255,0.82);
-  line-height: 1.55;
+.rules-sign-card p,
+body[data-site-style]:not(:has(.tweeter-mode)) .rules-sign-card p,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .rules-sign-card p {
+  color: rgba(255,255,255,0.88);
+  line-height: 1.58;
+  font-weight: 650;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.20);
 }
 
 .rules-accordion-list {
@@ -5521,11 +5557,18 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .commu
   letter-spacing: -0.06em;
 }
 
-.rules-final-callout p {
+.rules-final-callout p,
+body[data-site-style]:not(:has(.tweeter-mode)) .rules-final-callout p,
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .rules-final-callout p {
   max-width: 760px;
   margin: 0;
-  color: rgba(255,255,255,0.78);
+  color: rgba(255,255,255,0.82);
   line-height: 1.6;
+}
+
+.rules-final-callout .button-primary:hover,
+body[data-site-style]:not(:has(.tweeter-mode)) .rules-final-callout .button-primary:hover {
+  color: #fff;
 }
 
 .rules-final-callout .kicker {

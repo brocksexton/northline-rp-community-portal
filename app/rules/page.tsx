@@ -10,10 +10,10 @@ export async function generateMetadata() {
 }
 
 const quickStart = [
-  { label: 'Stay in character', body: 'Treat Northline like a shared story. OOC chat is for clarification, not winning arguments.' },
-  { label: 'Create scenes, not victims', body: 'Conflict is welcome when it gives everyone something to play with. Random grief is not roleplay.' },
-  { label: 'Escalate naturally', body: 'Threats, fights, chases, robbery, and shootouts need context. Let scenes breathe before they explode.' },
-  { label: 'Keep it fair', body: 'No metagaming, powergaming, exploiting, combat logging, or forcing outcomes.' },
+  { label: 'Stay in character', body: 'Treat Northline like a shared story. Use OOC chat for clarity, not leverage.' },
+  { label: 'Create scenes, not victims', body: 'Conflict is welcome when everyone gets something to play. Random grief is not roleplay.' },
+  { label: 'Escalate naturally', body: 'Threats, chases, robberies, and shootouts need context. Let scenes build before they explode.' },
+  { label: 'Keep it fair', body: 'No metagaming, powergaming, combat logging, exploit abuse, or forced outcomes.' },
 ];
 
 const rulebook = [
@@ -120,7 +120,7 @@ export default function RulesPage() {
           <span className="eyebrow">Northline citizen handbook</span>
           <h1>Rules that keep the city fun.</h1>
           <p>
-            Northline works best when players treat every interaction like a chance to make someone else’s night better. This guide is built to be skimmable, practical, and useful before you jump in.
+            Northline works best when every interaction gives someone else something to play. This guide keeps the important expectations skimmable before you jump in.
           </p>
           <div className="rules-hero-actions">
             <a className="button button-primary" href="#quick-start">Start with the basics</a>
@@ -130,31 +130,31 @@ export default function RulesPage() {
         <aside className="rules-pass-card" aria-label="Rulebook quick pass">
           <div className="rules-pass-stamp">NL</div>
           <span>Five-minute pass</span>
-          <strong>Read the basics, try a scenario, know how to report.</strong>
-          <small>Good citizens make better stories.</small>
+          <strong>Read the basics, test a scenario, know how to get help.</strong>
+          <small>Better scenes start with clear expectations.</small>
         </aside>
       </section>
 
       <section className="rules-vibe-strip" aria-label="Community expectations">
         <article>
           <strong>Be memorable</strong>
-          <span>Scenes beat scoreboards.</span>
+          <span>Good scenes last longer than wins.</span>
         </article>
         <article>
           <strong>Be fair</strong>
-          <span>Give people room to react.</span>
+          <span>Leave room for the other side.</span>
         </article>
         <article>
           <strong>Be human</strong>
-          <span>There is a real person behind every character.</span>
+          <span>Every character has a person behind it.</span>
         </article>
       </section>
 
       <section id="quick-start" className="rules-section-block">
         <div className="section-heading">
           <span className="kicker">Quick start</span>
-          <h2>The rules in four street signs.</h2>
-          <p>New here? Read these first. Most staff calls come down to one of these four ideas.</p>
+          <h2>Four rules that carry most situations.</h2>
+          <p>New here? Start here. Most staff calls come down to these four expectations.</p>
         </div>
         <div className="rules-sign-grid">
           {quickStart.map((item, index) => (
@@ -170,8 +170,8 @@ export default function RulesPage() {
       <section className="rules-section-block">
         <div className="section-heading">
           <span className="kicker">Rulebook</span>
-          <h2>Open the sections you care about.</h2>
-          <p>These are written as practical expectations rather than legal paperwork.</p>
+          <h2>Open what matters to your situation.</h2>
+          <p>These sections are practical expectations, not legal paperwork.</p>
         </div>
         <div className="rules-accordion-list">
           {rulebook.map((section, index) => (
@@ -194,8 +194,8 @@ export default function RulesPage() {
       <section id="scenario-lab" className="rules-section-block scenario-lab-block">
         <div className="section-heading">
           <span className="kicker">Scenario lab</span>
-          <h2>Would this fly in Northline?</h2>
-          <p>Click each card to reveal the better play. This is the fast way to learn the server’s roleplay culture.</p>
+          <h2>Would this work in Northline?</h2>
+          <p>Open each card to compare the messy choice with the better play.</p>
         </div>
         <div className="scenario-grid">
           {scenarios.map((scenario, index) => (
@@ -225,8 +225,8 @@ export default function RulesPage() {
         <div className="rules-section-block severity-block">
           <div className="section-heading compact-heading">
             <span className="kicker">Consequences</span>
-            <h2>How staff usually think about punishment.</h2>
-            <p>Context matters. Honest mistakes and repeated disruption are not treated the same.</p>
+            <h2>How staff usually judge consequences.</h2>
+            <p>Context matters. A confused moment and repeated disruption are not treated the same.</p>
           </div>
           <div className="severity-roadmap">
             {severity.map((item) => (
@@ -242,8 +242,8 @@ export default function RulesPage() {
         <aside className="rules-section-block report-card-block">
           <div className="section-heading compact-heading">
             <span className="kicker">Need staff?</span>
-            <h2>Make reports easy to solve.</h2>
-            <p>Clear reports protect everyone and keep OOC drama out of the city.</p>
+            <h2>Make reports easy to review.</h2>
+            <p>Clear reports help staff act faster and keep OOC drama out of the city.</p>
           </div>
           <ul className="report-checklist">
             {reportChecklist.map((item) => <li key={item}>{item}</li>)}
@@ -257,7 +257,7 @@ export default function RulesPage() {
 
       <section className="rules-final-callout">
         <div>
-          <span className="kicker">The northline rule of thumb</span>
+          <span className="kicker">Northline rule of thumb</span>
           <h2>Would this make a good story for everyone involved?</h2>
           <p>If the answer is no, slow down, give the other side something to work with, or ask staff before the scene turns into a mess.</p>
         </div>
