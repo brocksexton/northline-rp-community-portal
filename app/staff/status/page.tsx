@@ -7,6 +7,7 @@ import { StaffMetricsHistoryPanel } from '@/components/StaffMetricsHistoryPanel'
 import { StatusUpdatesAdminPanel } from '@/components/StatusUpdatesAdminPanel';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
+import { isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -63,13 +64,14 @@ export default async function StaffStatusPage() {
     );
   }
 
-  const [config, health, population, serverConfig, metrics, updates] = await Promise.all([
+  const [config, health, population, serverConfig, metrics, updates, publicStatusVisible] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getPopulationSummary(),
     getServerConfig(),
     getOperationalMetrics(),
     getStatusUpdates(20),
+    isSiteFeatureEnabled('status'),
   ]);
 
   const runtime = await getServerRuntimeStatus({
@@ -98,7 +100,7 @@ export default async function StaffStatusPage() {
           <p>Private server reachability details, host metrics, and fallback checks for staff troubleshooting.</p>
           <div className="staff-hero-actions">
             <Link className="button button-soft" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff panel</Link>
-            <Link className="button button-primary" href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /> Public status</Link>
+            {publicStatusVisible ? <Link className="button button-primary" href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /> Public status</Link> : null}
           </div>
         </div>
         <aside className="staff-identity-card">

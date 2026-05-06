@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 import { getBanRecords, getModerationProfile, type BanRecord, type ModerationTimelineAction } from '@/lib/ape-data';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,6 +79,8 @@ export async function generateMetadata({ params }: Params) {
 }
 
 export default async function BanDetailPage({ params }: Params) {
+  if (!(await isSiteFeatureEnabled('bans'))) notFound();
+
   const { banId } = await params;
   const records = await getBanRecords();
   const matchedBan = records.find((record) => record.id === decodeURIComponent(banId));

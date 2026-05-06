@@ -43,6 +43,8 @@ type Props = {
   currentUserListed: boolean;
   currentUserPrivate: boolean;
   currentUserRestricted?: boolean;
+  tweeterVisible?: boolean;
+  supportVisible?: boolean;
 };
 
 function roleLabel(role: string) {
@@ -74,16 +76,16 @@ function bannerStyle(entry: PlayerDirectoryEntry): CSSProperties {
   };
 }
 
-function chipsFor(entry: PlayerDirectoryEntry) {
+function chipsFor(entry: PlayerDirectoryEntry, tweeterVisible: boolean) {
   const chips = [roleLabel(entry.role)];
   if (entry.isCurrentUser) chips.push('You');
   if (entry.activityBucket === 'recent') chips.push('Recently around');
   if (entry.publicModules) chips.push(`${entry.publicModules} public section${entry.publicModules === 1 ? '' : 's'}`);
-  if (entry.tweetCount) chips.push(`${entry.tweetCount} Tweeter post${entry.tweetCount === 1 ? '' : 's'}`);
+  if (tweeterVisible && entry.tweetCount) chips.push(`${entry.tweetCount} Tweeter post${entry.tweetCount === 1 ? '' : 's'}`);
   return chips.slice(0, 5);
 }
 
-export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserListed, currentUserPrivate, currentUserRestricted = false }: Props) {
+export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserListed, currentUserPrivate, currentUserRestricted = false, tweeterVisible = true, supportVisible = true }: Props) {
   const [query, setQuery] = useState('');
   const [role, setRole] = useState('all');
   const [sort, setSort] = useState<SortMode>('featured');
@@ -125,9 +127,11 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
                 <i className="fa-solid fa-id-card" aria-hidden="true" /> Claim my profile
               </a>
             )}
-            <Link className="button button-soft" href="/tweeter">
-              <i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter
-            </Link>
+            {tweeterVisible ? (
+              <Link className="button button-soft" href="/tweeter">
+                <i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter
+              </Link>
+            ) : null}
           </div>
         </div>
         <aside className="players-directory-scoreboard" aria-label="Directory summary">
@@ -156,7 +160,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
                   : 'Open your dashboard, publish your profile, and add a short bio if you want other citizens to find you here.'}
             </p>
           </div>
-          {currentUserRestricted ? <Link className="button button-soft" href="/support">Contact staff</Link> : <Link className="button button-soft" href="/dashboard">Profile settings</Link>}
+          {currentUserRestricted ? (supportVisible ? <Link className="button button-soft" href="/support">Contact staff</Link> : null) : <Link className="button button-soft" href="/dashboard">Profile settings</Link>}
         </section>
       ) : null}
 
@@ -177,7 +181,7 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
           <select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}>
             <option value="featured">Featured</option>
             <option value="recent">Recently around</option>
-            <option value="posts">Tweeter posts</option>
+            {tweeterVisible ? <option value="posts">Tweeter posts</option> : null}
             <option value="name">Name</option>
           </select>
         </label>
@@ -199,9 +203,11 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
               <div className="public-citizen-body">
                 <div className="public-citizen-avatar-row">
                   <UserAvatar src={entry.avatarUrl} name={entry.displayName} size="lg" />
-                  <Link className="public-citizen-open" href={`/tweeter/profile/${entry.steamId}`} aria-label={`Open ${entry.displayName}'s profile`}>
-                    <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
-                  </Link>
+                  {tweeterVisible ? (
+                    <Link className="public-citizen-open" href={`/tweeter/profile/${entry.steamId}`} aria-label={`Open ${entry.displayName}'s profile`}>
+                      <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
+                    </Link>
+                  ) : null}
                 </div>
                 <div className="public-citizen-title-row">
                   <div>
@@ -217,9 +223,9 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
                   <span><i className="fa-solid fa-signal" aria-hidden="true" /> {entry.lastSeenLabel}</span>
                 </div>
                 <div className="public-citizen-chips">
-                  {chipsFor(entry).map((chip) => <span key={chip}>{chip}</span>)}
+                  {chipsFor(entry, tweeterVisible).map((chip) => <span key={chip}>{chip}</span>)}
                 </div>
-                <Link className="button button-soft" href={`/tweeter/profile/${entry.steamId}`}>View profile</Link>
+                {tweeterVisible ? <Link className="button button-soft" href={`/tweeter/profile/${entry.steamId}`}>View profile</Link> : null}
               </div>
             </article>
           ))}

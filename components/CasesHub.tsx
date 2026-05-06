@@ -33,7 +33,8 @@ export function CasesHub({ initialState, signedIn }: Props) {
   const [openingCaseName, setOpeningCaseName] = useState('Daily case');
   const [revealReward, setRevealReward] = useState<CaseRewardDefinition | null>(null);
 
-  const reelRewards = useMemo(() => rewardStripe(state?.dailyCase.rewards ?? [], revealReward), [state?.dailyCase.rewards, revealReward]);
+  const dailyCase = state?.dailyCase ?? null;
+  const reelRewards = useMemo(() => rewardStripe(dailyCase?.rewards ?? [], revealReward), [dailyCase?.rewards, revealReward]);
 
   async function claimCase() {
     setBusy(true);
@@ -106,6 +107,16 @@ export function CasesHub({ initialState, signedIn }: Props) {
   const unopened = state.inventory.filter((item) => !item.openedAt);
   const opened = state.inventory.filter((item) => item.openedAt);
 
+  if (!dailyCase) {
+    return (
+      <section className="cases-guest-card">
+        <div className="cases-guest-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></div>
+        <h2>Daily drops are not active right now.</h2>
+        <p>Staff has hidden or retired the current drop pool. Check back later for the next public reward window.</p>
+      </section>
+    );
+  }
+
   return (
     <>
       {openingPhase !== 'idle' ? (
@@ -160,7 +171,7 @@ export function CasesHub({ initialState, signedIn }: Props) {
         <aside className="cases-summary-card">
           <div><strong>{state.unopenedCount}</strong><span>unopened</span></div>
           <div><strong>{state.openedCount}</strong><span>opened</span></div>
-          <div><strong>{state.definitions.length}</strong><span>case type</span></div>
+          <div><strong>{state.definitions.length}</strong><span>case type{state.definitions.length === 1 ? '' : 's'}</span></div>
         </aside>
       </section>
 
@@ -194,10 +205,10 @@ export function CasesHub({ initialState, signedIn }: Props) {
 
         <aside className="cases-side-panel">
           <span className="kicker">Reward pool</span>
-          <h2>{state.dailyCase.label}</h2>
-          <p>{state.dailyCase.description}</p>
+          <h2>{dailyCase.label}</h2>
+          <p>{dailyCase.description}</p>
           <div className="case-reward-list">
-            {state.dailyCase.rewards.map((reward) => (
+            {dailyCase.rewards.map((reward) => (
               <div className={`case-reward-row rarity-${reward.rarity} ${lastRewardId === reward.id ? 'just-won' : ''}`} key={reward.id}>
                 <i className={reward.icon} aria-hidden="true" />
                 <span><strong>{reward.label}</strong><small>{rarityLabel(reward.rarity)} · {reward.description}</small></span>

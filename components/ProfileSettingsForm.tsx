@@ -189,6 +189,7 @@ export function ProfileSettingsForm({
   steamId,
   displayName,
   fallbackAvatar,
+  tweeterVisible = true,
 }: {
   profile: CommunityProfile | null;
   profileEditToken?: string;
@@ -196,6 +197,7 @@ export function ProfileSettingsForm({
   steamId: string;
   displayName: string;
   fallbackAvatar?: string | null;
+  tweeterVisible?: boolean;
 }) {
   const [privacy, setPrivacy] = useState(profile?.privacy ?? 'public');
   const [bio, setBio] = useState(profile?.bio ?? '');
@@ -302,7 +304,7 @@ export function ProfileSettingsForm({
             <p>{handleFromName(displayName)} · {role || 'User'}</p>
             <span>{bio.trim() || 'Add a short bio so people know who they are looking at.'}</span>
           </div>
-          <Link className="button button-soft" href={`/tweeter/profile/${steamId}`}>Preview profile</Link>
+          {tweeterVisible ? <Link className="button button-soft" href={`/tweeter/profile/${steamId}`}>Preview profile</Link> : null}
         </div>
       </section>
 

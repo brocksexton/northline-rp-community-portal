@@ -3,6 +3,8 @@ import path from 'path';
 import crypto from 'crypto';
 
 export type CaseRewardKind = 'cash' | 'item' | 'utility' | 'special';
+export type CaseRewardRarity = 'common' | 'uncommon' | 'rare' | 'legendary';
+export type CaseStatus = 'active' | 'hidden' | 'retired';
 
 export type CaseRewardDefinition = {
   id: string;
@@ -10,8 +12,9 @@ export type CaseRewardDefinition = {
   description: string;
   kind: CaseRewardKind;
   icon: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
+  rarity: CaseRewardRarity;
   weight: number;
+  hidden?: boolean;
   value?: number;
   itemId?: string;
 };
@@ -20,7 +23,7 @@ export type CaseDefinition = {
   id: string;
   label: string;
   description: string;
-  status: 'active' | 'retired';
+  status: CaseStatus;
   cadenceHours: number;
   accent: string;
   rewards: CaseRewardDefinition[];
@@ -46,7 +49,7 @@ type CaseStore = {
 
 const DEFAULT_STORE: CaseStore = { claimedCases: [], lastDailyClaimBySteamId: {} };
 
-export const CASE_DEFINITIONS: CaseDefinition[] = [
+export const DEFAULT_CASE_DEFINITIONS: CaseDefinition[] = [
   {
     id: 'daily-city-supply',
     label: 'Daily City Supply Case',
@@ -65,12 +68,19 @@ export const CASE_DEFINITIONS: CaseDefinition[] = [
   },
 ];
 
+// Backward-compatible static export for older imports. Runtime reads use getCaseDefinitions().
+export const CASE_DEFINITIONS: CaseDefinition[] = DEFAULT_CASE_DEFINITIONS;
+
 function dataDir() {
   return process.env.NORTHLINE_DATA_PATH?.trim() || path.join(process.cwd(), '.northline-data');
 }
 
 function storePath() {
   return path.join(dataDir(), 'daily-cases-store.json');
+}
+
+function definitionsPath() {
+  return path.join(dataDir(), 'daily-cases-config.json');
 }
 
 async function ensureDir() {
@@ -95,8 +105,107 @@ async function writeStore(store: CaseStore) {
   await writeFile(storePath(), JSON.stringify(store, null, 2), 'utf8');
 }
 
-function dailyCase() {
-  return CASE_DEFINITIONS.find((item) => item.id === 'daily-city-supply') ?? CASE_DEFINITIONS[0];
+function slugify(value: unknown, fallback: string) {
+  const raw = String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
+  return raw || fallback;
+}
+
+function shortText(value: unknown, fallback: string, max: number) {
+  const raw = String(value ?? '').replace(/\s+/g, ' ').trim();
+  return raw ? raw.slice(0, max) : fallback;
+}
+
+function boundedNumber(value: unknown, fallback: number, min: number, max: number) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.max(min, Math.min(max, numeric));
+}
+
+function rewardKind(value: unknown): CaseRewardKind {
+  return ['cash', 'item', 'utility', 'special'].includes(String(value)) ? String(value) as CaseRewardKind : 'item';
+}
+
+function rewardRarity(value: unknown): CaseRewardRarity {
+  return ['common', 'uncommon', 'rare', 'legendary'].includes(String(value)) ? String(value) as CaseRewardRarity : 'common';
+}
+
+function caseStatus(value: unknown): CaseStatus {
+  return ['active', 'hidden', 'retired'].includes(String(value)) ? String(value) as CaseStatus : 'hidden';
+}
+
+function normalizeReward(input: unknown, index: number): CaseRewardDefinition {
+  const item = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
+  const label = shortText(item.label, `Reward ${index + 1}`, 80);
+  const fallbackId = `reward-${index + 1}`;
+  const value = item.value === '' || item.value === undefined || item.value === null ? undefined : Math.round(boundedNumber(item.value, 0, 0, 1_000_000_000));
+  const itemId = String(item.itemId ?? '').trim().slice(0, 120) || undefined;
+
+  return {
+    id: slugify(item.id, slugify(label, fallbackId)),
+    label,
+    description: shortText(item.description, 'A configurable website reward.', 220),
+    kind: rewardKind(item.kind),
+    icon: shortText(item.icon, 'fa-solid fa-gift', 80),
+    rarity: rewardRarity(item.rarity),
+    weight: Math.round(boundedNumber(item.weight, 1, 0, 1_000_000)),
+    hidden: Boolean(item.hidden),
+    ...(value === undefined ? {} : { value }),
+    ...(itemId ? { itemId } : {}),
+  };
+}
+
+export function normalizeCaseDefinition(input: unknown, index: number): CaseDefinition {
+  const item = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
+  const label = shortText(item.label, `Daily Drop ${index + 1}`, 80);
+  const rewards = Array.isArray(item.rewards) ? item.rewards.map(normalizeReward) : [];
+  const safeRewards = rewards.length ? rewards : [normalizeReward({ label: '$250 city cash', kind: 'cash', rarity: 'common', weight: 1, value: 250 }, 0)];
+
+  return {
+    id: slugify(item.id, slugify(label, `daily-drop-${index + 1}`)),
+    label,
+    description: shortText(item.description, 'A configurable daily drop for website check-ins.', 280),
+    status: caseStatus(item.status),
+    cadenceHours: boundedNumber(item.cadenceHours, 24, 1, 720),
+    accent: shortText(item.accent, 'linear-gradient(135deg, #0ea5e9, #2563eb)', 140),
+    rewards: safeRewards,
+  };
+}
+
+export function normalizeCaseDefinitions(input: unknown): CaseDefinition[] {
+  const raw = Array.isArray(input) ? input : (typeof input === 'object' && input !== null && Array.isArray((input as Record<string, unknown>).definitions) ? (input as Record<string, unknown>).definitions as unknown[] : DEFAULT_CASE_DEFINITIONS);
+  const seen = new Set<string>();
+  return raw.map(normalizeCaseDefinition).map((definition, index) => {
+    let id = definition.id;
+    while (seen.has(id)) id = `${definition.id}-${index + 1}`;
+    seen.add(id);
+    return { ...definition, id };
+  });
+}
+
+export async function getCaseDefinitions(): Promise<CaseDefinition[]> {
+  try {
+    const raw = await readFile(definitionsPath(), 'utf8');
+    return normalizeCaseDefinitions(JSON.parse(raw));
+  } catch {
+    return normalizeCaseDefinitions(DEFAULT_CASE_DEFINITIONS);
+  }
+}
+
+export async function saveCaseDefinitions(input: unknown): Promise<CaseDefinition[]> {
+  const definitions = normalizeCaseDefinitions(input);
+  await ensureDir();
+  await writeFile(definitionsPath(), JSON.stringify({ definitions, updatedAt: new Date().toISOString() }, null, 2), 'utf8');
+  return definitions;
+}
+
+function publicDefinitions(definitions: CaseDefinition[]) {
+  return definitions
+    .filter((definition) => definition.status === 'active')
+    .map((definition) => ({ ...definition, rewards: definition.rewards.filter((reward) => !reward.hidden) }));
+}
+
+function dailyCase(definitions: CaseDefinition[]) {
+  return publicDefinitions(definitions).find((item) => item.rewards.some((reward) => reward.weight > 0)) ?? null;
 }
 
 function nextClaimAt(lastClaim: string | undefined, cadenceHours: number) {
@@ -113,7 +222,10 @@ function isClaimReady(lastClaim: string | undefined, cadenceHours: number) {
 }
 
 function rollReward(definition: CaseDefinition): CaseRewardRecord {
-  const rewards = definition.rewards.filter((reward) => reward.weight > 0);
+  const rewards = definition.rewards.filter((reward) => !reward.hidden && reward.weight > 0);
+  if (!rewards.length) {
+    return { id: 'empty', label: 'No reward configured', description: 'This case did not have an active reward pool.', kind: 'special', icon: 'fa-solid fa-circle-question', rarity: 'common', weight: 1, rolledAt: new Date().toISOString() };
+  }
   const total = rewards.reduce((sum, reward) => sum + reward.weight, 0);
   let roll = crypto.randomInt(Math.max(1, total));
   for (const reward of rewards) {
@@ -124,28 +236,30 @@ function rollReward(definition: CaseDefinition): CaseRewardRecord {
 }
 
 export async function getCasesState(steamId: string) {
-  const store = await readStore();
-  const definition = dailyCase();
+  const [store, allDefinitions] = await Promise.all([readStore(), getCaseDefinitions()]);
+  const definitions = publicDefinitions(allDefinitions);
+  const definition = dailyCase(allDefinitions);
   const inventory = store.claimedCases
     .filter((item) => item.steamId === steamId)
     .sort((a, b) => new Date(b.claimedAt).getTime() - new Date(a.claimedAt).getTime());
   const lastClaim = store.lastDailyClaimBySteamId[steamId];
-  const claimAvailableAt = nextClaimAt(lastClaim, definition.cadenceHours);
+  const claimAvailableAt = definition ? nextClaimAt(lastClaim, definition.cadenceHours) : null;
   return {
-    definitions: CASE_DEFINITIONS,
+    definitions,
     dailyCase: definition,
     inventory,
     unopenedCount: inventory.filter((item) => !item.openedAt).length,
     openedCount: inventory.filter((item) => Boolean(item.openedAt)).length,
     rewards: inventory.filter((item) => item.reward).map((item) => ({ caseItemId: item.id, claimedAt: item.claimedAt, openedAt: item.openedAt, reward: item.reward })),
-    canClaim: isClaimReady(lastClaim, definition.cadenceHours),
+    canClaim: definition ? isClaimReady(lastClaim, definition.cadenceHours) : false,
     claimAvailableAt,
   };
 }
 
 export async function claimDailyCase(steamId: string) {
-  const store = await readStore();
-  const definition = dailyCase();
+  const [store, definitions] = await Promise.all([readStore(), getCaseDefinitions()]);
+  const definition = dailyCase(definitions);
+  if (!definition) return { ok: false as const, reason: 'disabled', state: await getCasesState(steamId) };
   if (!isClaimReady(store.lastDailyClaimBySteamId[steamId], definition.cadenceHours)) {
     return { ok: false as const, reason: 'not_ready', state: await getCasesState(steamId) };
   }
@@ -158,14 +272,28 @@ export async function claimDailyCase(steamId: string) {
 }
 
 export async function openClaimedCase(steamId: string, caseItemId: string) {
-  const store = await readStore();
+  const [store, definitions] = await Promise.all([readStore(), getCaseDefinitions()]);
   const item = store.claimedCases.find((entry) => entry.id === caseItemId && entry.steamId === steamId);
   if (!item) return { ok: false as const, reason: 'missing', state: await getCasesState(steamId) };
   if (item.openedAt || item.reward) return { ok: false as const, reason: 'already_opened', state: await getCasesState(steamId) };
-  const definition = CASE_DEFINITIONS.find((entry) => entry.id === item.caseId) ?? dailyCase();
+  const definition = definitions.find((entry) => entry.id === item.caseId) ?? dailyCase(definitions);
+  if (!definition) return { ok: false as const, reason: 'disabled', state: await getCasesState(steamId) };
   const reward = rollReward(definition);
   item.openedAt = new Date().toISOString();
   item.reward = reward;
   await writeStore(store);
   return { ok: true as const, item, reward, state: await getCasesState(steamId) };
+}
+
+export async function getDailyDropsAdminState() {
+  const [definitions, store] = await Promise.all([getCaseDefinitions(), readStore()]);
+  return {
+    definitions,
+    claimedCount: store.claimedCases.length,
+    openedCount: store.claimedCases.filter((item) => item.openedAt).length,
+    activeCount: definitions.filter((item) => item.status === 'active').length,
+    hiddenCount: definitions.filter((item) => item.status === 'hidden').length,
+    retiredCount: definitions.filter((item) => item.status === 'retired').length,
+    updatedAt: new Date().toISOString(),
+  };
 }

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -73,7 +74,9 @@ const privacySections = [
 ];
 
 export default async function PrivacyPage() {
-  const config = await getSiteConfig();
+  const [config, featureSettings] = await Promise.all([getSiteConfig(), getSiteFeatureSettings()]);
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const supportVisible = enabledFeatures.has('support');
 
   return (
     <main className="page-shell policy-page policy-page-v2">
@@ -87,7 +90,7 @@ export default async function PrivacyPage() {
           </p>
           <div className="policy-hero-actions-v2">
             <Link className="button button-primary" href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Manage profile settings</Link>
-            <Link className="button button-soft" href="/support"><i className="fa-solid fa-life-ring" aria-hidden="true" /> Ask for help</Link>
+            {supportVisible ? <Link className="button button-soft" href="/support"><i className="fa-solid fa-life-ring" aria-hidden="true" /> Ask for help</Link> : null}
           </div>
         </div>
         <aside className="policy-note-v2">

@@ -233,7 +233,15 @@ function findChangedCategory(previous: CommunityLiveSnapshot, next: CommunityLiv
   return undefined;
 }
 
-export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialSnapshot: CommunityLiveSnapshot; signedIn: boolean }) {
+export function CommunityHomeLiveStats({
+  initialSnapshot,
+  signedIn,
+  featureVisibility = {},
+}: {
+  initialSnapshot: CommunityLiveSnapshot;
+  signedIn: boolean;
+  featureVisibility?: { players?: boolean; guides?: boolean; status?: boolean; tweeter?: boolean };
+}) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [highlight, setHighlight] = useState<LiveHighlight>(null);
   const [pollState, setPollState] = useState<'idle' | 'checking' | 'updated' | 'quiet' | 'error'>('idle');
@@ -285,6 +293,10 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
     return () => window.clearInterval(interval);
   }, []);
 
+  const playersVisible = featureVisibility.players ?? true;
+  const guidesVisible = featureVisibility.guides ?? true;
+  const statusVisible = featureVisibility.status ?? true;
+  const tweeterVisible = featureVisibility.tweeter ?? true;
   const topDeath = snapshot.deathSummary.categories.find((category) => category.count > 0) ?? snapshot.deathSummary.categories[0];
   const topVictim = snapshot.deathSummary.topVictims[0];
   const topCause = snapshot.deathSummary.topCauses[0];
@@ -296,10 +308,10 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
   return (
     <>
       <section className="community-stat-strip live-stat-strip" aria-label="Northline city stats">
-        <StatCard icon="fa-solid fa-users" label="Unique citizens" value={snapshot.overview.players} body="Saved characters known by the city." href="/players" />
+        <StatCard icon="fa-solid fa-users" label="Unique citizens" value={snapshot.overview.players} body="Saved characters known by the city." href={playersVisible ? '/players' : undefined} />
         <StatCard icon="fa-solid fa-skull-crossbones" label="Total deaths" value={snapshot.deathSummary.total} body={topDeathLabel(snapshot.deathSummary.total)} highlight={Boolean(highlight?.totalDelta)} />
         <StatCard icon="fa-solid fa-heart-crack" label="Damage events" value={snapshot.deathSummary.damageEvents} body="Every bonk, fall, shot, and bad life choice we could read." highlight={Boolean(highlight?.damageDelta)} />
-        <StatCard icon="fa-brands fa-twitter" label="Tweeter posts" value={snapshot.overview.tweets} body="The in-city social feed, mirrored to the web." href="/tweeter" />
+        {tweeterVisible ? <StatCard icon="fa-brands fa-twitter" label="Tweeter posts" value={snapshot.overview.tweets} body="The in-city social feed, mirrored to the web." href="/tweeter" /> : null}
         <StatCard icon="fa-solid fa-couch" label="Saved layouts" value={snapshot.overview.propertyLayouts} body={`${numberFormatter.format(snapshot.overview.propertyProps)} props placed across saved homes and businesses.`} />
         <StatCard icon="fa-solid fa-wallet" label="City funds" value={compactMoney(cityFunds)} body="Aggregate cash and bank value from saved characters." />
       </section>
@@ -358,9 +370,9 @@ export function CommunityHomeLiveStats({ initialSnapshot, signedIn }: { initialS
           </div>
           <div className="community-action-list playful-action-list">
             {signedIn ? (<Link href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>Open dashboard</strong><span>Privacy, character, profile, and theme controls.</span></Link>) : (<a href="/api/auth/steam?returnTo=/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /><strong>Link Steam</strong><span>Unlock your character dashboard and profile settings.</span></a>)}
-            <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /><strong>Read the starter guides</strong><span>Rules, economy, properties, and the basics.</span></Link>
-            <Link href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /><strong>Check city status</strong><span>Server availability without server-room nonsense.</span></Link>
-            <Link href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /><strong>Open Tweeter</strong><span>Posts, threads, profiles, and website-safe likes.</span></Link>
+            {guidesVisible ? <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /><strong>Read the starter guides</strong><span>Rules, economy, properties, and the basics.</span></Link> : null}
+            {statusVisible ? <Link href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /><strong>Check city status</strong><span>Server availability without server-room nonsense.</span></Link> : null}
+            {tweeterVisible ? <Link href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /><strong>Open Tweeter</strong><span>Posts, threads, profiles, and website-safe likes.</span></Link> : null}
           </div>
         </aside>
       </section>

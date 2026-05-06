@@ -68,7 +68,7 @@ function formatIssued(value: string) {
   };
 }
 
-function BanCard({ ban, now }: { ban: BanRecord; now: number }) {
+function BanCard({ ban, now, tweeterVisible }: { ban: BanRecord; now: number; tweeterVisible: boolean }) {
   const status = getStatus(ban, now);
   const issued = formatIssued(ban.createdAt);
   const isTemporary = !ban.isPermanent && ban.expiresAt;
@@ -78,7 +78,7 @@ function BanCard({ ban, now }: { ban: BanRecord; now: number }) {
       <div className="ban-person">
         <UserAvatar src={ban.avatarUrl ?? null} name={ban.playerName} size="md" />
         <div>
-          <Link href={`/tweeter/profile/${ban.steamId}`}><strong>{ban.playerName}</strong></Link>
+          {tweeterVisible ? <Link href={`/tweeter/profile/${ban.steamId}`}><strong>{ban.playerName}</strong></Link> : <strong>{ban.playerName}</strong>}
           <span>{ban.steamId}</span>
           <small>{isTemporary ? 'Temporary ban' : ban.isPermanent ? 'Permanent ban' : 'Moderation action'}</small>
         </div>
@@ -116,7 +116,7 @@ function BanCard({ ban, now }: { ban: BanRecord; now: number }) {
   );
 }
 
-export function BanListClient({ initialData }: { initialData: BanPayload }) {
+export function BanListClient({ initialData, tweeterVisible = true }: { initialData: BanPayload; tweeterVisible?: boolean }) {
   const [data, setData] = useState(initialData);
   const [now, setNow] = useState(Date.now());
   const [query, setQuery] = useState('');

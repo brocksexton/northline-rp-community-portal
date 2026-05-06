@@ -11,9 +11,14 @@ type NavItem = {
   description?: string;
 };
 
+type AccountLink = { href: string; label: string; icon: string };
+
 type HeaderNavClientProps = {
   navItems: NavItem[];
   staff: boolean;
+  supportVisible: boolean;
+  statusVisible: boolean;
+  accountLinks: AccountLink[];
   user: {
     steamId: string;
     displayName: string;
@@ -38,16 +43,15 @@ function Wordmark() {
   );
 }
 
-export function HeaderNavClient({ navItems, staff, user, onlineCount, statusState, statusLabel }: HeaderNavClientProps) {
+export function HeaderNavClient({ navItems, staff, supportVisible, statusVisible, accountLinks, user, onlineCount, statusState, statusLabel }: HeaderNavClientProps) {
   const pathname = usePathname() || '/';
   const visibleItems = staff ? [...navItems, { href: '/staff', label: 'Staff', icon: 'fa-solid fa-shield-halved', description: 'Staff tools' }] : navItems;
-  const supportItem: NavItem = { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' };
+  const supportItem: NavItem | null = supportVisible ? { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' } : null;
   const primaryHrefs = new Set(['/status', '/tweeter', '/players', '/rules', '/leaderboards']);
   const primaryItems = visibleItems.filter((item) => primaryHrefs.has(item.href));
-  const moreItems = [...visibleItems.filter((item) => !primaryHrefs.has(item.href)), supportItem];
+  const moreItems = [...visibleItems.filter((item) => !primaryHrefs.has(item.href)), ...(supportItem ? [supportItem] : [])];
   const moreActive = moreItems.some((item) => isActive(pathname, item.href));
-  const mobileItems = [...visibleItems, supportItem];
-  const profileHref = user ? `/tweeter/profile/${user.steamId}` : '/api/auth/steam?returnTo=/dashboard';
+  const mobileItems = [...visibleItems, ...(supportItem ? [supportItem] : [])];
 
   return (
     <header className="site-header site-header-v3">
@@ -63,28 +67,32 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount, statusStat
               <span>{item.label}</span>
             </Link>
           ))}
-          <details className="nav-more-menu">
-            <summary className={moreActive ? 'active' : ''}>
-              <i className="fa-solid fa-ellipsis" aria-hidden="true" />
-              <span>More</span>
-              <i className="fa-solid fa-chevron-down nav-more-chevron" aria-hidden="true" />
-            </summary>
-            <div className="nav-more-panel">
-              {moreItems.map((item) => (
-                <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
-                  <i className={item.icon} aria-hidden="true" />
-                  <span><strong>{item.label}</strong><small>{item.description}</small></span>
-                </Link>
-              ))}
-            </div>
-          </details>
+          {moreItems.length ? (
+            <details className="nav-more-menu">
+              <summary className={moreActive ? 'active' : ''}>
+                <i className="fa-solid fa-ellipsis" aria-hidden="true" />
+                <span>More</span>
+                <i className="fa-solid fa-chevron-down nav-more-chevron" aria-hidden="true" />
+              </summary>
+              <div className="nav-more-panel">
+                {moreItems.map((item) => (
+                  <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
+                    <i className={item.icon} aria-hidden="true" />
+                    <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                  </Link>
+                ))}
+              </div>
+            </details>
+          ) : null}
         </nav>
 
         <div className="header-actions header-actions-v3">
-          <Link className={`city-status-pill tone-${statusState}`} href="/status" aria-label={`${statusLabel}, view server status`}>
-            <span className="city-status-dot" aria-hidden="true" />
-            {onlineCount === null ? <strong>{statusLabel}</strong> : <><strong>{onlineCount}</strong><span>online</span></>}
-          </Link>
+          {statusVisible ? (
+            <Link className={`city-status-pill tone-${statusState}`} href="/status" aria-label={`${statusLabel}, view server status`}>
+              <span className="city-status-dot" aria-hidden="true" />
+              {onlineCount === null ? <strong>{statusLabel}</strong> : <><strong>{onlineCount}</strong><span>online</span></>}
+            </Link>
+          ) : null}
 
           {user ? (
             <details className="account-menu">
@@ -101,11 +109,9 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount, statusStat
                   <UserAvatar src={user.avatar} name={user.displayName} size="md" />
                   <span><strong>{user.displayName}</strong><small>{user.role}</small></span>
                 </div>
-                <Link href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Profile studio</Link>
-                <Link href={profileHref}><i className="fa-brands fa-twitter" aria-hidden="true" /> My profile</Link>
-                <Link href="/cases"><i className="fa-solid fa-gift" aria-hidden="true" /> Cases</Link>
-                <Link href="/leaderboards"><i className="fa-solid fa-ranking-star" aria-hidden="true" /> Leaderboards</Link>
-                <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Guides</Link>
+                {accountLinks.map((link) => (
+                  <Link href={link.href} key={link.href}><i className={link.icon} aria-hidden="true" /> {link.label}</Link>
+                ))}
                 <form action="/api/auth/logout" method="post">
                   <button type="submit"><i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" /> Log out</button>
                 </form>
@@ -119,7 +125,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount, statusStat
             <summary aria-label="Open navigation menu"><i className="fa-solid fa-bars" aria-hidden="true" /></summary>
             <div className="mobile-menu-panel-v3">
               <Link href="/" className="mobile-brand-link"><Wordmark /></Link>
-              <div className={`mobile-menu-status tone-${statusState}`}><span className="city-status-dot" /> <strong>{statusLabel}</strong></div>
+              {statusVisible ? <div className={`mobile-menu-status tone-${statusState}`}><span className="city-status-dot" /> <strong>{statusLabel}</strong></div> : null}
               <nav aria-label="Mobile navigation">
                 {mobileItems.map((item) => (
                   <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
@@ -131,9 +137,9 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount, statusStat
               <div className="mobile-account-actions">
                 {user ? (
                   <>
-                    <Link href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Profile studio</Link>
-                    <Link href={profileHref}><i className="fa-brands fa-twitter" aria-hidden="true" /> My profile</Link>
-                    <Link href="/cases"><i className="fa-solid fa-gift" aria-hidden="true" /> Cases</Link>
+                    {accountLinks.map((link) => (
+                      <Link href={link.href} key={link.href}><i className={link.icon} aria-hidden="true" /> {link.label}</Link>
+                    ))}
                     <form action="/api/auth/logout" method="post"><button type="submit"><i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" /> Log out</button></form>
                   </>
                 ) : (

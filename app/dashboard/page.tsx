@@ -7,6 +7,7 @@ import { getCommunityProfile } from '@/lib/community-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { createProfileEditToken, getSessionSteamId } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
+import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [player, role, permissions, steamProfile, layouts, communityProfile, guideProgress, phoneSummary, chatLogs, adminLogs, damageLogs] = await Promise.all([
+  const [player, role, permissions, steamProfile, layouts, communityProfile, guideProgress, phoneSummary, chatLogs, adminLogs, damageLogs, featureSettings] = await Promise.all([
     getPlayer(steamId),
     getRoleForSteamId(steamId),
     getPermissionsForSteamId(steamId),
@@ -41,6 +42,7 @@ export default async function DashboardPage() {
     getRecentChatLogs(50),
     getRecentAdminLogs(50),
     getRecentDamageLogs(50),
+    getSiteFeatureSettings(),
   ]);
 
   const displayName = getCitizenName(player, steamId);
@@ -49,6 +51,9 @@ export default async function DashboardPage() {
   const ownAdmin = adminLogs.filter((log) => String(log.TargetSteamId) === steamId || String(log.AdminSteamId) === steamId).slice(0, 5);
   const ownDamage = damageLogs.filter((log) => String(log.VictimSteamId) === steamId || String(log.AttackerSteamId ?? '') === steamId).slice(0, 5);
   const missingGuides = GUIDE_CATALOG.filter((guide) => guideProgress.missing.includes(guide.id));
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const tweeterVisible = enabledFeatures.has('tweeter');
+  const guidesVisible = enabledFeatures.has('guides');
 
   return (
     <main className="page-shell dashboard-page">
@@ -60,8 +65,8 @@ export default async function DashboardPage() {
             <h1>{displayName}</h1>
             <p>{steamProfile?.personaName ? `Steam: ${steamProfile.personaName}` : steamId} · {role} · {permissions.length} permissions</p>
             <div className="button-row">
-              <Link className="button button-primary" href={`/tweeter/profile/${steamId}`}>View public profile</Link>
-              <Link className="button button-soft" href="/guides">Continue onboarding</Link>
+              {tweeterVisible ? <Link className="button button-primary" href={`/tweeter/profile/${steamId}`}>View public profile</Link> : null}
+              {guidesVisible ? <Link className="button button-soft" href="/guides">Continue onboarding</Link> : null}
             </div>
           </div>
         </div>
@@ -75,7 +80,7 @@ export default async function DashboardPage() {
 
       <section className="layout-two dashboard-layout">
         <CharacterCard player={player} steamId={steamId} layouts={layouts} />
-        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} role={role} steamId={steamId} displayName={displayName} fallbackAvatar={avatar} />
+        <ProfileSettingsForm profile={communityProfile} profileEditToken={createProfileEditToken(steamId)} role={role} steamId={steamId} displayName={displayName} fallbackAvatar={avatar} tweeterVisible={tweeterVisible} />
       </section>
 
       <section className="layout-three">

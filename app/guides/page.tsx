@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { GUIDE_CATALOG, getGuideProgress } from '@/lib/ape-data';
 import { getSessionSteamId } from '@/lib/session';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { notFound } from 'next/navigation';
+import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
@@ -165,6 +167,15 @@ function stepStatus(done: boolean, previousDone: boolean) {
 }
 
 export default async function GuidesPage() {
+  if (!(await isSiteFeatureEnabled('guides'))) notFound();
+  const featureSettings = await getSiteFeatureSettings();
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const tweeterVisible = enabledFeatures.has('tweeter');
+  const rulesVisible = enabledFeatures.has('rules');
+  const playersVisible = enabledFeatures.has('players');
+  const statusVisible = enabledFeatures.has('status');
+  const supportVisible = enabledFeatures.has('support');
+
   const steamId = await getSessionSteamId();
   const progress = steamId ? await getGuideProgress(steamId) : null;
   const completed = progress?.completed ?? 0;
@@ -188,7 +199,7 @@ export default async function GuidesPage() {
       ? { title: `Open “${nextCoreGuide.title}”`, body: 'This is the next basics card to check off. You can read the short version below, then look for it in-game when you hop on.', href: `#${slugFromTitle(nextCoreGuide.title)}`, label: 'Jump to the guide card' }
       : nextMissingGuide
         ? { title: 'You are through the basics', body: 'The remaining cards are extra or role-specific. Open them when they match what you are doing in-game.', href: `#${slugFromTitle(nextMissingGuide.title)}`, label: 'See the next extra card' }
-        : { title: 'You are caught up', body: 'You have seen every guide card currently mirrored here. Go make a mess, open a shop, or see what people are doing.', href: '/tweeter', label: 'Check Tweeter' };
+        : { title: 'You are caught up', body: 'You have seen every guide card currently mirrored here. Go make a mess, open a shop, or see what people are doing.', href: tweeterVisible ? '/tweeter' : '/dashboard', label: tweeterVisible ? 'Check Tweeter' : 'Open dashboard' };
   const journeySteps = [
     {
       id: 'sign-in',
@@ -244,8 +255,8 @@ export default async function GuidesPage() {
           </p>
           <div className="guides-hero-actions">
             <a className="button button-primary" href="#first-night">Start with your first night</a>
-            <Link className="button button-soft" href="/rules">Quick rules pass</Link>
-            <Link className="button button-ghost" href="/tweeter">Open Tweeter</Link>
+            {rulesVisible ? <Link className="button button-soft" href="/rules">Quick rules pass</Link> : null}
+            {tweeterVisible ? <Link className="button button-ghost" href="/tweeter">Open Tweeter</Link> : null}
           </div>
         </div>
         <aside className="guides-progress-card">
@@ -258,9 +269,9 @@ export default async function GuidesPage() {
 
       <section className="guides-quickbar" aria-label="Useful links">
         <Link href="/dashboard"><strong>Dashboard</strong><span>Your character, settings, and profile.</span></Link>
-        <Link href="/players"><strong>Players</strong><span>Public profiles from people who opted in.</span></Link>
-        <Link href="/status"><strong>Status</strong><span>Check the server before blaming your router.</span></Link>
-        <Link href="/support"><strong>Support</strong><span>When something actually needs a hand.</span></Link>
+        {playersVisible ? <Link href="/players"><strong>Players</strong><span>Public profiles from people who opted in.</span></Link> : null}
+        {statusVisible ? <Link href="/status"><strong>Status</strong><span>Check the server before blaming your router.</span></Link> : null}
+        {supportVisible ? <Link href="/support"><strong>Support</strong><span>When something actually needs a hand.</span></Link> : null}
       </section>
 
       <section className="guide-journey-panel" aria-label="Your onboarding progress">
@@ -396,8 +407,8 @@ export default async function GuidesPage() {
           <p>Check Tweeter, read the quick rules, ask someone in-game, or open support if something is actually broken. Most of the fun comes from figuring things out with other people.</p>
         </div>
         <div className="guides-hero-actions">
-          <Link className="button button-primary" href="/tweeter">See what people are saying</Link>
-          <Link className="button button-soft" href="/support">Get support</Link>
+          {tweeterVisible ? <Link className="button button-primary" href="/tweeter">See what people are saying</Link> : null}
+          {supportVisible ? <Link className="button button-soft" href="/support">Get support</Link> : null}
         </div>
       </section>
     </main>

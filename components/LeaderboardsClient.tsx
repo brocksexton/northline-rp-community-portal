@@ -9,6 +9,7 @@ import { relativeFromDate } from '@/lib/format';
 type Props = {
   summary: LeaderboardSummary;
   boards: LeaderboardBoard[];
+  playersVisible?: boolean;
 };
 
 const categoryOrder: LeaderboardCategory[] = ['Economy', 'Activity', 'Stats', 'Property', 'Tweeter', 'Learning'];
@@ -31,7 +32,7 @@ function medal(rank: number) {
   return `#${rank}`;
 }
 
-export function LeaderboardsClient({ summary, boards }: Props) {
+export function LeaderboardsClient({ summary, boards, playersVisible = true }: Props) {
   const fallbackBoard: LeaderboardBoard = boards[0] ?? {
     id: 'tweetPosts',
     label: 'Tweeter posts',
@@ -70,7 +71,7 @@ export function LeaderboardsClient({ summary, boards }: Props) {
           </p>
           <div className="leaderboard-hero-actions">
             <Link className="button button-primary" href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Manage my profile</Link>
-            <Link className="button button-soft" href="/players"><i className="fa-solid fa-users" aria-hidden="true" /> Citizen board</Link>
+            {playersVisible ? <Link className="button button-soft" href="/players"><i className="fa-solid fa-users" aria-hidden="true" /> Citizen board</Link> : null}
           </div>
         </div>
         <div className="leaderboard-summary-panel" aria-label="Leaderboard summary">

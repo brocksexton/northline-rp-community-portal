@@ -20,6 +20,7 @@ import { getCommunityProfile, getStatusUpdates } from '@/lib/community-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
+import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 
@@ -79,7 +80,7 @@ function signedInFacts({
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: Promise<PageSearchParams> }) {
-  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs] = await Promise.all([
+  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs, featureSettings] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     searchParams ?? Promise.resolve({} as PageSearchParams),
@@ -92,13 +93,23 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
     getCityOverview(),
     getDeathSummary(),
     getAllDamageLogs(),
+    getSiteFeatureSettings(),
   ]);
 
   const [player, communityProfile, steamProfile, role, guideProgress] = steamId
     ? await Promise.all([getPlayer(steamId), getCommunityProfile(steamId), getSteamProfile(steamId), getRoleForSteamId(steamId), getGuideProgress(steamId)])
     : [null, null, null, 'Guest', null] as const;
 
-  const latestTweets = tweets.slice(0, 3);
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const statusVisible = enabledFeatures.has('status');
+  const tweeterVisible = enabledFeatures.has('tweeter');
+  const playersVisible = enabledFeatures.has('players');
+  const leaderboardsVisible = enabledFeatures.has('leaderboards');
+  const dailyDropsVisible = enabledFeatures.has('dailyDrops');
+  const guidesVisible = enabledFeatures.has('guides');
+  const bansVisible = enabledFeatures.has('bans');
+  const supportVisible = enabledFeatures.has('support');
+  const latestTweets = tweeterVisible ? tweets.slice(0, 3) : [];
   const tweetSteamIds = [...new Set(latestTweets.map((tweet) => String(tweet.AuthorSteamId)))];
   const steamProfiles = await getSteamProfiles(tweetSteamIds);
   const loginFailed = getSingleParam(params.login) === 'failed';
@@ -144,21 +155,21 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
           <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline. Come hang out.'}</h1>
           <p>
             {hasSignedIn
-              ? `Your ${role} profile is connected. Check your character, catch up on city nonsense, or jump into Tweeter before heading in-game.`
-              : 'A relaxed companion site for the Northline community: live city stats, public profiles, guides, status, and enough chaos to make checking in worth it.'}
+              ? `Your ${role} profile is connected. Check your character, tune your profile, and catch up on the city before heading in-game.`
+              : 'A relaxed companion site for the Northline community: city tools, public profiles, guides, and enough chaos to make checking in worth it.'}
           </p>
 
           <div className="community-hero-actions">
             {hasSignedIn ? (
               <>
                 <Link className="button button-primary community-main-button" href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /> Open your dashboard</Link>
-                <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Browse Tweeter</Link>
-                <Link className="button button-ghost" href={`/tweeter/profile/${steamId}`}>Public profile</Link>
+                {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Browse Tweeter</Link> : null}
+                {tweeterVisible ? <Link className="button button-ghost" href={`/tweeter/profile/${steamId}`}>Public profile</Link> : null}
               </>
             ) : (
               <>
                 <a className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
-                <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link>
+                {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link> : null}
                 <a className="button button-ghost" href={config.server.discordUrl}>Join Northline Discord</a>
               </>
             )}
@@ -195,7 +206,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               <span>Start with Steam if you already play here, or hop into Discord if you are still checking the place out.</span>
               <div>
                 <a href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in</a>
-                <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Guides</Link>
+                {guidesVisible ? <Link href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Guides</Link> : null}
               </div>
             </div>
           )}
@@ -210,33 +221,43 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
           </div>
         </div>
         <div className="community-feature-grid">
-          <Link className="community-feature-card primary" href="/cases">
-            <span className="feature-card-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></span>
-            <div>
-              <strong>{hasSignedIn ? 'Claim your daily case' : 'Daily cases'}</strong>
-              <p>{hasSignedIn ? 'Check in once a day, stash cases, and open them whenever you feel lucky.' : 'Sign in with Steam to start collecting free daily cases. No payment, no nonsense.'}</p>
-            </div>
-          </Link>
-          <Link className="community-feature-card" href="/leaderboards">
-            <span className="feature-card-icon"><i className="fa-solid fa-ranking-star" aria-hidden="true" /></span>
-            <div><strong>Leaderboards</strong><p>See public rankings for citizens who chose to show up on the boards.</p></div>
-          </Link>
-          <Link className="community-feature-card" href="/players">
-            <span className="feature-card-icon"><i className="fa-solid fa-users" aria-hidden="true" /></span>
-            <div><strong>Public citizens</strong><p>Find claimed profiles, Tweeter pages, and the people you keep running into.</p></div>
-          </Link>
-          <Link className="community-feature-card" href="/guides">
-            <span className="feature-card-icon"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /></span>
-            <div><strong>Getting settled</strong><p>Need a nudge? Guides can show your next useful step.</p></div>
-          </Link>
-          <Link className="community-feature-card" href="/support">
-            <span className="feature-card-icon"><i className="fa-solid fa-life-ring" aria-hidden="true" /></span>
-            <div><strong>Need help?</strong><p>Support links for bugs, account trouble, moderation questions, and Discord.</p></div>
-          </Link>
+          {dailyDropsVisible ? (
+            <Link className="community-feature-card primary" href="/cases">
+              <span className="feature-card-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></span>
+              <div>
+                <strong>{hasSignedIn ? 'Claim your daily drop' : 'Daily drops'}</strong>
+                <p>{hasSignedIn ? 'Check in once a day, stash cases, and open them whenever you feel lucky.' : 'Sign in with Steam to start collecting free daily drops. No payment, no nonsense.'}</p>
+              </div>
+            </Link>
+          ) : null}
+          {leaderboardsVisible ? (
+            <Link className="community-feature-card" href="/leaderboards">
+              <span className="feature-card-icon"><i className="fa-solid fa-ranking-star" aria-hidden="true" /></span>
+              <div><strong>Leaderboards</strong><p>See public rankings for citizens who chose to show up on the boards.</p></div>
+            </Link>
+          ) : null}
+          {playersVisible ? (
+            <Link className="community-feature-card" href="/players">
+              <span className="feature-card-icon"><i className="fa-solid fa-users" aria-hidden="true" /></span>
+              <div><strong>Public citizens</strong><p>Find claimed profiles and the people you keep running into.</p></div>
+            </Link>
+          ) : null}
+          {guidesVisible ? (
+            <Link className="community-feature-card" href="/guides">
+              <span className="feature-card-icon"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /></span>
+              <div><strong>Getting settled</strong><p>Need a nudge? Guides can show your next useful step.</p></div>
+            </Link>
+          ) : null}
+          {supportVisible ? (
+            <Link className="community-feature-card" href="/support">
+              <span className="feature-card-icon"><i className="fa-solid fa-life-ring" aria-hidden="true" /></span>
+              <div><strong>Need help?</strong><p>Support links for bugs, account trouble, moderation questions, and Discord.</p></div>
+            </Link>
+          ) : null}
         </div>
       </section>
 
-      <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} />
+      <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} featureVisibility={{ players: playersVisible, guides: guidesVisible, status: statusVisible, tweeter: tweeterVisible }} />
 
       <section className="community-card ape-tavern-callout">
         <div className="ape-tavern-callout-inner">
@@ -257,7 +278,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
 
           <div className="ape-tavern-actions">
             <a className="button button-primary" href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northbound RP Discord</a>
-            <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link>
+            {guidesVisible ? <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link> : null}
           </div>
         </div>
       </section>
@@ -285,6 +306,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
       ) : null}
 
       <section className="community-lower-grid">
+        {tweeterVisible ? (
         <article className="community-card tweeter-preview-card">
           <div className="community-section-heading inline">
             <div>
@@ -312,6 +334,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             }) : <div className="community-empty"><strong>No posts yet</strong><span>In-game Tweeter posts will appear here once citizens start talking.</span></div>}
           </div>
         </article>
+        ) : null}
 
         <article className="community-card neighborhood-card">
           <div className="community-section-heading">
@@ -331,11 +354,13 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               <span>Citizens are decorating apartments, building shops, and saving their favorite setups.</span>
               <small>{overview.propertyProps.toLocaleString()} saved props</small>
             </div>
-            <div>
-              <strong>{overview.bans.active.toLocaleString()} active public ban record{overview.bans.active === 1 ? '' : 's'}</strong>
-              <span>View the public ban records to see recent moderation actions and their status.</span>
-              <small><Link href="/bans">View ban list</Link></small>
-            </div>
+            {bansVisible ? (
+              <div>
+                <strong>{overview.bans.active.toLocaleString()} active public ban record{overview.bans.active === 1 ? '' : 's'}</strong>
+                <span>View the public ban records to see recent moderation actions and their status.</span>
+                <small><Link href="/bans">View ban list</Link></small>
+              </div>
+            ) : null}
           </div>
         </article>
       </section>

@@ -3,17 +3,27 @@ import { getCitizenName, getDataHealth, getPermissionsForSteamId, getPlayer, get
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
+import { enabledFeatureIds, getSiteFeatureSettings, type SiteFeatureId } from '@/lib/site-features-data';
 import { getSteamProfile } from '@/lib/steam-openid';
 
-const nav = [
-  { href: '/status', label: 'Status', icon: 'fa-solid fa-signal', description: 'Server state and activity' },
-  { href: '/tweeter', label: 'Tweeter', icon: 'fa-brands fa-twitter', description: 'In-character chatter' },
-  { href: '/players', label: 'Players', icon: 'fa-solid fa-users', description: 'Public citizen profiles' },
-  { href: '/leaderboards', label: 'Boards', icon: 'fa-solid fa-ranking-star', description: 'Public rankings and brag boards' },
-  { href: '/cases', label: 'Cases', icon: 'fa-solid fa-gift', description: 'Daily free check-in cases' },
-  { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips' },
-  { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun' },
-  { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records' },
+type HeaderNavItem = {
+  href: string;
+  label: string;
+  icon: string;
+  description: string;
+  featureId: SiteFeatureId;
+};
+
+const nav: HeaderNavItem[] = [
+  { href: '/status', label: 'Status', icon: 'fa-solid fa-signal', description: 'Server state and activity', featureId: 'status' },
+  { href: '/tweeter', label: 'Tweeter', icon: 'fa-brands fa-twitter', description: 'In-character chatter', featureId: 'tweeter' },
+  { href: '/players', label: 'Players', icon: 'fa-solid fa-users', description: 'Public citizen profiles', featureId: 'players' },
+  { href: '/leaderboards', label: 'Boards', icon: 'fa-solid fa-ranking-star', description: 'Public rankings and brag boards', featureId: 'leaderboards' },
+  { href: '/cases', label: 'Daily Drops', icon: 'fa-solid fa-gift', description: 'Daily free check-in cases', featureId: 'dailyDrops' },
+  { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips', featureId: 'guides' },
+  { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun', featureId: 'rules' },
+  { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records', featureId: 'bans' },
+  { href: '/shop', label: 'Shop', icon: 'fa-solid fa-store', description: 'Supporter shop', featureId: 'shop' },
 ];
 
 function canSeeStaff(role: string, permissions: string[]) {
@@ -28,12 +38,21 @@ function statusPillLabel(state: string, onlineCount: number | null) {
 }
 
 export async function Header() {
-  const [steamId, population, config, health] = await Promise.all([
+  const [steamId, population, config, health, featureSettings] = await Promise.all([
     getSessionSteamId(),
     getPopulationSummary(),
     getSiteConfig(),
     getDataHealth(),
+    getSiteFeatureSettings(),
   ]);
+  const enabled = enabledFeatureIds(featureSettings);
+  const statusVisible = enabled.has('status');
+  const tweeterVisible = enabled.has('tweeter');
+  const dailyDropsVisible = enabled.has('dailyDrops');
+  const guidesVisible = enabled.has('guides');
+  const leaderboardsVisible = enabled.has('leaderboards');
+  const supportVisible = enabled.has('support');
+
   const runtime = await getServerRuntimeStatus({
     health,
     population,
@@ -59,11 +78,22 @@ export async function Header() {
   const staff = steamId ? canSeeStaff(role, permissions) : false;
   const displayName = steamId ? getCitizenName(player, steamId) : 'Guest';
   const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null;
+  const profileHref = steamId ? `/tweeter/profile/${steamId}` : '/dashboard';
+  const accountLinks = [
+    { href: '/dashboard', label: 'Profile studio', icon: 'fa-solid fa-sliders' },
+    ...(tweeterVisible ? [{ href: profileHref, label: 'My profile', icon: 'fa-brands fa-twitter' }] : []),
+    ...(dailyDropsVisible ? [{ href: '/cases', label: 'Daily Drops', icon: 'fa-solid fa-gift' }] : []),
+    ...(leaderboardsVisible ? [{ href: '/leaderboards', label: 'Leaderboards', icon: 'fa-solid fa-ranking-star' }] : []),
+    ...(guidesVisible ? [{ href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader' }] : []),
+  ];
 
   return (
     <HeaderNavClient
-      navItems={nav}
+      navItems={nav.filter((item) => enabled.has(item.featureId)).map(({ featureId: _featureId, ...item }) => item)}
       staff={staff}
+      supportVisible={supportVisible}
+      statusVisible={statusVisible}
+      accountLinks={accountLinks}
       onlineCount={visibleOnlineCount}
       statusState={runtime.state}
       statusLabel={statusPillLabel(runtime.state, visibleOnlineCount)}

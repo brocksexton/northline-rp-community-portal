@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -48,7 +49,10 @@ const termsSections = [
 ];
 
 export default async function TermsPage() {
-  const config = await getSiteConfig();
+  const [config, featureSettings] = await Promise.all([getSiteConfig(), getSiteFeatureSettings()]);
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const rulesVisible = enabledFeatures.has('rules');
+  const supportVisible = enabledFeatures.has('support');
 
   return (
     <main className="page-shell policy-page policy-page-v2 terms-page-v2">
@@ -61,8 +65,8 @@ export default async function TermsPage() {
             and make sure future features stay fair.
           </p>
           <div className="policy-hero-actions-v2">
-            <Link className="button button-primary" href="/rules"><i className="fa-solid fa-scale-balanced" aria-hidden="true" /> Read server rules</Link>
-            <Link className="button button-soft" href="/support"><i className="fa-solid fa-circle-question" aria-hidden="true" /> Need help?</Link>
+            {rulesVisible ? <Link className="button button-primary" href="/rules"><i className="fa-solid fa-scale-balanced" aria-hidden="true" /> Read server rules</Link> : null}
+            {supportVisible ? <Link className="button button-soft" href="/support"><i className="fa-solid fa-circle-question" aria-hidden="true" /> Need help?</Link> : null}
           </div>
         </div>
         <aside className="policy-note-v2">

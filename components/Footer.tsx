@@ -1,23 +1,27 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
+import { enabledFeatureIds, getSiteFeatureSettings, type SiteFeatureId } from '@/lib/site-features-data';
 
-const footerGroups = [
+type FooterLink = { label: string; href: string | null; icon: string; featureId?: SiteFeatureId };
+
+const footerGroups: Array<{ title: string; links: FooterLink[] }> = [
   {
     title: 'Explore',
     links: [
-      { label: 'Status', href: '/status', icon: 'fa-solid fa-signal' },
-      { label: 'Tweeter', href: '/tweeter', icon: 'fa-brands fa-twitter' },
-      { label: 'Players', href: '/players', icon: 'fa-solid fa-users' },
-      { label: 'Leaderboards', href: '/leaderboards', icon: 'fa-solid fa-ranking-star' },
-      { label: 'Cases', href: '/cases', icon: 'fa-solid fa-gift' },
+      { label: 'Status', href: '/status', icon: 'fa-solid fa-signal', featureId: 'status' },
+      { label: 'Tweeter', href: '/tweeter', icon: 'fa-brands fa-twitter', featureId: 'tweeter' },
+      { label: 'Players', href: '/players', icon: 'fa-solid fa-users', featureId: 'players' },
+      { label: 'Leaderboards', href: '/leaderboards', icon: 'fa-solid fa-ranking-star', featureId: 'leaderboards' },
+      { label: 'Daily Drops', href: '/cases', icon: 'fa-solid fa-gift', featureId: 'dailyDrops' },
+      { label: 'Shop', href: '/shop', icon: 'fa-solid fa-store', featureId: 'shop' },
     ],
   },
   {
     title: 'Help',
     links: [
-      { label: 'Guides', href: '/guides', icon: 'fa-solid fa-book-open-reader' },
-      { label: 'Rules', href: '/rules', icon: 'fa-solid fa-scale-balanced' },
-      { label: 'Bans', href: '/bans', icon: 'fa-solid fa-gavel' },
+      { label: 'Guides', href: '/guides', icon: 'fa-solid fa-book-open-reader', featureId: 'guides' },
+      { label: 'Rules', href: '/rules', icon: 'fa-solid fa-scale-balanced', featureId: 'rules' },
+      { label: 'Bans', href: '/bans', icon: 'fa-solid fa-gavel', featureId: 'bans' },
     ],
   },
   {
@@ -25,7 +29,7 @@ const footerGroups = [
     links: [
       { label: 'Discord', href: null, icon: 'fa-brands fa-discord' },
       { label: 'Northbound RP', href: 'https://discord.gg/VExsvp4PXT', icon: 'fa-solid fa-gamepad' },
-      { label: 'Support', href: '/support', icon: 'fa-solid fa-life-ring' },
+      { label: 'Support', href: '/support', icon: 'fa-solid fa-life-ring', featureId: 'support' },
     ],
   },
 ];
@@ -39,7 +43,8 @@ function FooterWordmark() {
 }
 
 export async function Footer() {
-  const config = await getSiteConfig();
+  const [config, featureSettings] = await Promise.all([getSiteConfig(), getSiteFeatureSettings()]);
+  const enabled = enabledFeatureIds(featureSettings);
   const discordUrl = config.server.discordUrl || 'https://discord.gg/VExsvp4PXT';
 
   return (
@@ -61,21 +66,25 @@ export async function Footer() {
         </section>
 
         <nav className="footer-links-v3" aria-label="Footer navigation">
-          {footerGroups.map((group) => (
-            <div key={group.title}>
-              <strong>{group.title}</strong>
-              {group.links.map((link) => {
-                const href = link.href ?? discordUrl;
-                const external = href.startsWith('http');
-                const content = <><i className={link.icon} aria-hidden="true" /> {link.label}</>;
-                return external ? (
-                  <a href={href} target="_blank" rel="noreferrer" key={`${group.title}-${link.label}`}>{content}</a>
-                ) : (
-                  <Link href={href} key={`${group.title}-${link.label}`}>{content}</Link>
-                );
-              })}
-            </div>
-          ))}
+          {footerGroups.map((group) => {
+            const links = group.links.filter((link) => !link.featureId || enabled.has(link.featureId));
+            if (!links.length) return null;
+            return (
+              <div key={group.title}>
+                <strong>{group.title}</strong>
+                {links.map((link) => {
+                  const href = link.href ?? discordUrl;
+                  const external = href.startsWith('http');
+                  const content = <><i className={link.icon} aria-hidden="true" /> {link.label}</>;
+                  return external ? (
+                    <a href={href} target="_blank" rel="noreferrer" key={`${group.title}-${link.label}`}>{content}</a>
+                  ) : (
+                    <Link href={href} key={`${group.title}-${link.label}`}>{content}</Link>
+                  );
+                })}
+              </div>
+            );
+          })}
           <div>
             <strong>Small print</strong>
             <Link href="/legal/privacy"><i className="fa-solid fa-shield-halved" aria-hidden="true" /> Privacy</Link>

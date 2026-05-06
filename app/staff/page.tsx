@@ -3,6 +3,10 @@ import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamI
 import { duration, fullDate } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
+import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
+import { getDailyDropsAdminState } from '@/lib/cases-data';
+import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
+import { DailyDropsAdminPanel } from '@/components/DailyDropsAdminPanel';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Staff' };
@@ -29,7 +33,7 @@ export default async function StaffPage() {
     );
   }
 
-  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings] = await Promise.all([
+  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings, featureSettings, dailyDropsState] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
@@ -40,7 +44,15 @@ export default async function StaffPage() {
     getRecentChatLogs(15),
     getRecentDamageLogs(15),
     getMaintenanceSettings(),
+    getSiteFeatureSettings(),
+    getDailyDropsAdminState(),
   ]);
+
+  const canManageSiteFeatures = role.toLowerCase() === 'developer';
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const statusVisible = enabledFeatures.has('status');
+  const bansVisible = enabledFeatures.has('bans');
+  const tweeterVisible = enabledFeatures.has('tweeter');
 
   return (
     <main className="page-shell staff-page staff-command-page">
@@ -50,10 +62,10 @@ export default async function StaffPage() {
           <h1>City operations at a glance</h1>
           <p>Review server health, player volume, and recent moderation signals from one readable staff dashboard.</p>
           <div className="staff-hero-actions">
-            <Link className="button button-primary" href="/status">Public status</Link>
+            {statusVisible ? <Link className="button button-primary" href="/status">Public status</Link> : null}
             <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Status diagnostics</Link>
-            <Link className="button button-soft" href="/bans">Ban list</Link>
-            <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link>
+            {bansVisible ? <Link className="button button-soft" href="/bans">Ban list</Link> : null}
+            {tweeterVisible ? <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link> : null}
           </div>
         </div>
         <aside className="staff-identity-card">
@@ -71,6 +83,13 @@ export default async function StaffPage() {
         <article><span>Mutes</span><strong>{overview.mutes}</strong><p>Voice/chat controls</p></article>
       </section>
 
+
+
+
+      <section className="staff-dashboard-admin-grid">
+        <SiteFeaturesAdminPanel initialSettings={featureSettings} canManage={canManageSiteFeatures} />
+        <DailyDropsAdminPanel initialState={dailyDropsState} canManage={canManageSiteFeatures} />
+      </section>
 
       <section className="staff-command-grid maintenance-command-grid">
         <article className="staff-panel maintenance-control-card">
@@ -107,7 +126,7 @@ export default async function StaffPage() {
             <div><strong>Soft ban</strong><span>Leaves the profile visible but disables social actions.</span><small>Likes, follows, DMs, and profile edits are locked.</small></div>
             <div><strong>Full ban</strong><span>Hides the account and locks Tweeter features entirely.</span><small>Active in-game bans also show notices on profiles.</small></div>
           </div>
-          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link></div>
+          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but developer visibility can be changed above.</span>}</div>
         </article>
       </section>
 

@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { notFound } from 'next/navigation';
+import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -112,7 +114,14 @@ const reportChecklist = [
   'What you need staff to review',
 ];
 
-export default function RulesPage() {
+export default async function RulesPage() {
+  if (!(await isSiteFeatureEnabled('rules'))) notFound();
+  const featureSettings = await getSiteFeatureSettings();
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const bansVisible = enabledFeatures.has('bans');
+  const supportVisible = enabledFeatures.has('support');
+  const guidesVisible = enabledFeatures.has('guides');
+
   return (
     <main className="page-shell rules-page rules-handbook-page">
       <section className="rules-hero-card">
@@ -248,10 +257,12 @@ export default function RulesPage() {
           <ul className="report-checklist">
             {reportChecklist.map((item) => <li key={item}>{item}</li>)}
           </ul>
-          <div className="rules-report-actions">
-            <Link className="button button-primary" href="/bans">View bans</Link>
-            <Link className="button button-soft" href="/support">Community support</Link>
-          </div>
+          {(bansVisible || supportVisible) ? (
+            <div className="rules-report-actions">
+              {bansVisible ? <Link className="button button-primary" href="/bans">View bans</Link> : null}
+              {supportVisible ? <Link className="button button-soft" href="/support">Community support</Link> : null}
+            </div>
+          ) : null}
         </aside>
       </section>
 
@@ -261,7 +272,7 @@ export default function RulesPage() {
           <h2>Would this make a good story for everyone involved?</h2>
           <p>If the answer is no, slow down, give the other side something to work with, or ask staff before the scene turns into a mess.</p>
         </div>
-        <Link className="button button-primary" href="/guides">Read the guides</Link>
+        {guidesVisible ? <Link className="button button-primary" href="/guides">Read the guides</Link> : null}
       </section>
     </main>
   );

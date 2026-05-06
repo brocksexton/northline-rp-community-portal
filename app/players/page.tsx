@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { PlayersDirectory, type PlayerDirectoryEntry } from '@/components/PlayersDirectory';
 import {
   getCitizenName,
@@ -15,6 +16,7 @@ import { playerTitle } from '@/lib/format';
 import { getProfileCoverPreset } from '@/lib/profile-customization';
 import { getTweeterRestrictionMap } from '@/lib/tweeter-moderation-data';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
@@ -53,7 +55,9 @@ function publicModuleCount(showcase: { economy?: boolean; inventory?: boolean; s
 }
 
 export default async function PlayersPage() {
-  const [sessionSteamId, players, roles, roleDefs, profiles, population, events, tweeter] = await Promise.all([
+  if (!(await isSiteFeatureEnabled('players'))) notFound();
+
+  const [sessionSteamId, players, roles, roleDefs, profiles, population, events, tweeter, featureSettings] = await Promise.all([
     getSessionSteamId(),
     getPlayers(),
     getRoleAssignments(),
@@ -62,7 +66,12 @@ export default async function PlayersPage() {
     getPopulationSummary(),
     getConnectionEvents(),
     getTweeterData(),
+    getSiteFeatureSettings(),
   ]);
+
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const tweeterVisible = enabledFeatures.has('tweeter');
+  const supportVisible = enabledFeatures.has('support');
 
   const playerBySteam = new Map(players.map((player) => [String(player.SteamId), player]));
   const defaultRole = roleDefs.find((role) => role.IsDefault)?.Name ?? 'User';
@@ -72,7 +81,7 @@ export default async function PlayersPage() {
   for (const event of events) lastSeenBySteam.set(String(event.SteamId), event.Timestamp);
 
   const tweetCounts = new Map<string, number>();
-  for (const tweet of tweeter.Tweets) {
+  if (tweeterVisible) for (const tweet of tweeter.Tweets) {
     const steamId = String(tweet.AuthorSteamId);
     tweetCounts.set(steamId, (tweetCounts.get(steamId) ?? 0) + 1);
   }
@@ -144,6 +153,8 @@ export default async function PlayersPage() {
         currentUserListed={Boolean(sessionSteamId && entries.some((entry) => entry.steamId === sessionSteamId))}
         currentUserPrivate={currentProfile?.privacy === 'private'}
         currentUserRestricted={Boolean(sessionSteamId && !isAllowedOnPublicDirectory(sessionSteamId))}
+        tweeterVisible={tweeterVisible}
+        supportVisible={supportVisible}
       />
     </main>
   );

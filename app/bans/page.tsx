@@ -1,6 +1,8 @@
 import { BanListClient } from '@/components/BanListClient';
 import { getBanRecords, getBanSummary } from '@/lib/ape-data';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { notFound } from 'next/navigation';
+import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -10,6 +12,9 @@ export async function generateMetadata() {
   });
 }
 export default async function BansPage() {
-  const [records, summary] = await Promise.all([getBanRecords(), getBanSummary()]);
-  return <BanListClient initialData={{ generatedAt: new Date().toISOString(), records, summary }} />;
+  if (!(await isSiteFeatureEnabled('bans'))) notFound();
+
+  const [records, summary, featureSettings] = await Promise.all([getBanRecords(), getBanSummary(), getSiteFeatureSettings()]);
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  return <BanListClient initialData={{ generatedAt: new Date().toISOString(), records, summary }} tweeterVisible={enabledFeatures.has('tweeter')} />;
 }

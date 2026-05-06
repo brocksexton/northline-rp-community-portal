@@ -5,6 +5,8 @@ import { duration, relativeFromDate } from '@/lib/format';
 import { getSiteConfig } from '@/lib/site-config';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 import { getOperationalMetrics } from '@/lib/host-metrics';
+import { notFound } from 'next/navigation';
+import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -133,6 +135,12 @@ function QuickCard({ icon, label, value, detail }: { icon: string; label: string
 }
 
 export default async function StatusPage() {
+  if (!(await isSiteFeatureEnabled('status'))) notFound();
+  const featureSettings = await getSiteFeatureSettings();
+  const enabledFeatures = enabledFeatureIds(featureSettings);
+  const tweeterVisible = enabledFeatures.has('tweeter');
+  const supportVisible = enabledFeatures.has('support');
+
   const [config, health, serverConfig, population, updates, overview, metrics] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
@@ -180,7 +188,7 @@ export default async function StatusPage() {
               <i className={state.primaryAction === 'Check Discord' ? 'fa-brands fa-discord' : 'fa-solid fa-gamepad'} aria-hidden="true" /> {state.primaryAction}
             </a>
             <a className="button button-soft" href={config.server.discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Discord</a>
-            <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter</Link>
+            {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter</Link> : null}
           </div>
         </div>
 
@@ -254,7 +262,7 @@ export default async function StatusPage() {
               <span className="kicker">City board</span>
               <h2>Important notices</h2>
             </div>
-            <Link href="/support">Need help?</Link>
+            {supportVisible ? <Link href="/support">Need help?</Link> : null}
           </div>
           <div className="status-ops-list">
             {notices.length ? notices.map((update) => (
