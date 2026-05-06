@@ -22,6 +22,7 @@ const footerGroups: Array<{ title: string; links: FooterLink[] }> = [
       { label: 'Guides', href: '/guides', icon: 'fa-solid fa-book-open-reader', featureId: 'guides' },
       { label: 'Rules', href: '/rules', icon: 'fa-solid fa-scale-balanced', featureId: 'rules' },
       { label: 'Bans', href: '/bans', icon: 'fa-solid fa-gavel', featureId: 'bans' },
+      { label: 'Dev Blog', href: '/dev-blog', icon: 'fa-solid fa-newspaper', featureId: 'devBlog' },
     ],
   },
   {

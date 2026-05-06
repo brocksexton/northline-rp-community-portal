@@ -23,6 +23,7 @@ const nav: HeaderNavItem[] = [
   { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips', featureId: 'guides' },
   { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun', featureId: 'rules' },
   { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records', featureId: 'bans' },
+  { href: '/dev-blog', label: 'Dev Blog', icon: 'fa-solid fa-newspaper', description: 'Release notes and updates', featureId: 'devBlog' },
   { href: '/shop', label: 'Shop', icon: 'fa-solid fa-store', description: 'Supporter shop', featureId: 'shop' },
 ];
 

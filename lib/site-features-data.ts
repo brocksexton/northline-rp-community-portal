@@ -11,6 +11,7 @@ export type SiteFeatureId =
   | 'rules'
   | 'bans'
   | 'support'
+  | 'devBlog'
   | 'shop';
 
 export type SiteFeatureDefinition = {
@@ -45,6 +46,7 @@ export const SITE_FEATURE_DEFINITIONS: SiteFeatureDefinition[] = [
   { id: 'rules', label: 'Rules', href: '/rules', icon: 'fa-solid fa-scale-balanced', description: 'Community rules and roleplay expectations.', area: 'navigation' },
   { id: 'bans', label: 'Bans', href: '/bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records.', area: 'navigation' },
   { id: 'support', label: 'Support', href: '/support', icon: 'fa-solid fa-life-ring', description: 'Help links and issue reporting.', area: 'navigation' },
+  { id: 'devBlog', label: 'Dev Blog', href: '/dev-blog', icon: 'fa-solid fa-newspaper', description: 'Release notes and portal development updates.', area: 'navigation' },
   { id: 'shop', label: 'Shop', href: '/shop', icon: 'fa-solid fa-store', description: 'Future supporter shop and cosmetic perks.', area: 'commerce' },
 ];
 
@@ -58,6 +60,7 @@ const DEFAULT_ENABLED: Record<SiteFeatureId, boolean> = {
   rules: true,
   bans: true,
   support: true,
+  devBlog: true,
   shop: false,
 };
 
