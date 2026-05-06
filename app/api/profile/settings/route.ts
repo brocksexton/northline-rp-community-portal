@@ -10,6 +10,7 @@ import {
 import { getRoleForSteamId } from '@/lib/ape-data';
 import { canUseCustomProfileCover, isLikelyImageUrl } from '@/lib/profile-customization';
 import { getSessionSteamId, getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders, verifyProfileEditToken } from '@/lib/session';
+import { getTweeterProfileCustomizeLock } from '@/lib/tweeter-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,11 @@ export async function POST(request: NextRequest) {
 
   if (!steamId) {
     return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
+  }
+
+  const customizeLockReason = await getTweeterProfileCustomizeLock(steamId);
+  if (customizeLockReason) {
+    return NextResponse.json({ error: customizeLockReason }, { status: 403, headers: noStoreHeaders() });
   }
 
   const role = await getRoleForSteamId(steamId);

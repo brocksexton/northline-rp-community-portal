@@ -3,17 +3,20 @@ import { buildTweeterUser } from '@/lib/tweeter-view';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getConversation, getConversationSummaries, sendDirectMessage } from '@/lib/tweeter-social-data';
 import { getSessionSteamIdFromRequest, noStoreHeaders, jsonWithSession } from '@/lib/session';
-import { GAME_SERVER_IDENTITY_MESSAGE, hasGameServerIdentity } from '@/lib/tweeter-access';
+import { hasGameServerIdentity, getTweeterActorActionLock, getTweeterTargetMessageLock } from '@/lib/tweeter-access';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   if (!sessionSteamId) return NextResponse.json({ error: 'Sign in with Steam to view messages.' }, { status: 401, headers: noStoreHeaders() });
-  if (!(await hasGameServerIdentity(sessionSteamId))) return NextResponse.json({ error: GAME_SERVER_IDENTITY_MESSAGE }, { status: 403, headers: noStoreHeaders() });
+  const actorLockReason = await getTweeterActorActionLock(sessionSteamId);
+  if (actorLockReason) return NextResponse.json({ error: actorLockReason }, { status: 403, headers: noStoreHeaders() });
 
   const withSteamId = request.nextUrl.searchParams.get('with');
   if (withSteamId) {
+    const targetLockReason = await getTweeterTargetMessageLock(withSteamId);
+    if (targetLockReason) return NextResponse.json({ error: targetLockReason }, { status: 403, headers: noStoreHeaders() });
     const [messages, otherUser] = await Promise.all([
       getConversation(sessionSteamId, withSteamId, true),
       buildTweeterUser(withSteamId),
@@ -29,7 +32,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   if (!sessionSteamId) return NextResponse.json({ error: 'Sign in with Steam to send messages.' }, { status: 401, headers: noStoreHeaders() });
-  if (!(await hasGameServerIdentity(sessionSteamId))) return NextResponse.json({ error: GAME_SERVER_IDENTITY_MESSAGE }, { status: 403, headers: noStoreHeaders() });
+  const actorLockReason = await getTweeterActorActionLock(sessionSteamId);
+  if (actorLockReason) return NextResponse.json({ error: actorLockReason }, { status: 403, headers: noStoreHeaders() });
 
   let body: Record<string, unknown> = {};
   try { body = await request.json(); } catch { body = {}; }
@@ -37,6 +41,8 @@ export async function POST(request: NextRequest) {
 
   if (!(await hasGameServerIdentity(toSteamId))) return NextResponse.json({ error: 'That account needs to join the game server before messages are available.' }, { status: 400, headers: noStoreHeaders() });
   if (!(await getCommunityProfile(toSteamId))) return NextResponse.json({ error: 'That citizen has not signed into the website yet, so website DMs are locked for now.' }, { status: 400, headers: noStoreHeaders() });
+  const targetLockReason = await getTweeterTargetMessageLock(toSteamId);
+  if (targetLockReason) return NextResponse.json({ error: targetLockReason }, { status: 403, headers: noStoreHeaders() });
 
   try {
     const message = await sendDirectMessage(sessionSteamId, toSteamId, body.body);

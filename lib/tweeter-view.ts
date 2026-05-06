@@ -3,6 +3,7 @@ import { getCommunityProfiles, getTweeterWebLikeState } from '@/lib/community-da
 import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
 import { canUseCustomProfileCover, DEFAULT_PROFILE_COVER_PRESET, DEFAULT_PROFILE_THEME, normalizeProfileCoverPreset, normalizeProfileTheme, type ProfileTheme } from '@/lib/profile-customization';
+import { getTweeterRestriction, getTweeterRestrictionMap, type TweeterAccountRestriction, type TweeterModerationNotice } from '@/lib/tweeter-moderation-data';
 
 const ZERO_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -46,6 +47,15 @@ export type TweeterUserView = {
   title?: string | null;
   tweetCount?: number;
   likeCount?: number;
+  moderationStatus?: TweeterAccountRestriction['status'];
+  moderationNotices?: TweeterModerationNotice[];
+  hiddenFromTweeter?: boolean;
+  canAppearInSuggestions?: boolean;
+  canReceiveFollow?: boolean;
+  canReceiveMessage?: boolean;
+  actionLockReason?: string;
+  targetFollowLockReason?: string;
+  targetMessageLockReason?: string;
 };
 
 export type TweeterPayload = {
@@ -92,7 +102,10 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
     .filter(([steamId, profile]) => steamId !== sessionSteamId && profile.privacy === 'public')
     .map(([steamId]) => steamId)
     .sort((a, b) => Number(playersById.get(b)?.TotalPlaytimeSeconds ?? 0) - Number(playersById.get(a)?.TotalPlaytimeSeconds ?? 0));
-  const suggestionSteamIds = publicClaimedSteamIds.slice(0, 10);
+  const moderationIds = [...new Set([...authorIds, ...publicClaimedSteamIds, ...(sessionSteamId ? [sessionSteamId] : [])])];
+  const restrictionMap = await getTweeterRestrictionMap(moderationIds);
+  const visiblePublicClaimedSteamIds = publicClaimedSteamIds.filter((steamId) => restrictionMap[steamId]?.canAppearInSuggestions !== false);
+  const suggestionSteamIds = visiblePublicClaimedSteamIds.slice(0, 10);
   const steamProfiles = await getSteamProfiles([...new Set([...authorIds, ...suggestionSteamIds, ...(sessionSteamId ? [sessionSteamId] : [])])]);
 
   const gameLikedTweetIds = new Set(
@@ -116,7 +129,9 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
     if (retweetOfId) retweetCounts.set(retweetOfId, (retweetCounts.get(retweetOfId) ?? 0) + 1);
   }
 
-  const tweets = tweeter.Tweets.map((tweet) => {
+  const tweets = tweeter.Tweets
+    .filter((tweet) => !restrictionMap[String(tweet.AuthorSteamId)]?.hiddenFromTweeter)
+    .map((tweet) => {
     const steamId = String(tweet.AuthorSteamId);
     const player = playersById.get(steamId);
     const steamProfile = steamProfiles.get(steamId);
@@ -158,7 +173,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
   const currentRole = sessionSteamId ? await getRoleForSteamId(sessionSteamId) : 'Guest';
   const currentDisplayName = currentPlayer?.RpDisplayName || currentPlayer?.LastKnownDisplayName || currentSteam?.personaName || (sessionSteamId ? `Citizen ${sessionSteamId.slice(-8)}` : 'Guest');
 
-  const candidateSuggestionIds = publicClaimedSteamIds.slice(0, 6);
+  const candidateSuggestionIds = visiblePublicClaimedSteamIds.slice(0, 6);
 
   const suggestions = await Promise.all(candidateSuggestionIds.map(async (steamId) => buildTweeterUser(steamId, tweets)));
 
@@ -184,6 +199,15 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       title: currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : null,
       tweetCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).length,
       likeCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).reduce((sum, tweet) => sum + tweet.likeCount, 0),
+      moderationStatus: restrictionMap[sessionSteamId]?.status ?? 'none',
+      moderationNotices: restrictionMap[sessionSteamId]?.notices ?? [],
+      hiddenFromTweeter: restrictionMap[sessionSteamId]?.hiddenFromTweeter ?? false,
+      canAppearInSuggestions: restrictionMap[sessionSteamId]?.canAppearInSuggestions ?? true,
+      canReceiveFollow: restrictionMap[sessionSteamId]?.canReceiveFollow ?? true,
+      canReceiveMessage: restrictionMap[sessionSteamId]?.canReceiveMessage ?? true,
+      actionLockReason: restrictionMap[sessionSteamId]?.actionLockReason ?? '',
+      targetFollowLockReason: restrictionMap[sessionSteamId]?.targetFollowLockReason ?? '',
+      targetMessageLockReason: restrictionMap[sessionSteamId]?.targetMessageLockReason ?? '',
     } : null,
     tweets,
     trends: [...tags.entries()]
@@ -199,7 +223,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
 }
 
 export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): Promise<TweeterUserView> {
-  const [playersById, communityProfiles] = await Promise.all([getPlayersBySteamId(), getCommunityProfiles()]);
+  const [playersById, communityProfiles, restriction] = await Promise.all([getPlayersBySteamId(), getCommunityProfiles(), getTweeterRestriction(steamId)]);
   const player = playersById.get(steamId);
   const steamProfiles = await getSteamProfiles([steamId]);
   const steamProfile = steamProfiles.get(steamId);
@@ -226,5 +250,14 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     title: player?.DisplayTitle ? playerTitle(player.DisplayTitle) : null,
     tweetCount: authoredTweets.length,
     likeCount: authoredTweets.reduce((sum, tweet) => sum + tweet.likeCount, 0),
+    moderationStatus: restriction?.status ?? 'none',
+    moderationNotices: restriction?.notices ?? [],
+    hiddenFromTweeter: restriction?.hiddenFromTweeter ?? false,
+    canAppearInSuggestions: restriction?.canAppearInSuggestions ?? true,
+    canReceiveFollow: restriction?.canReceiveFollow ?? true,
+    canReceiveMessage: restriction?.canReceiveMessage ?? true,
+    actionLockReason: restriction?.actionLockReason ?? '',
+    targetFollowLockReason: restriction?.targetFollowLockReason ?? '',
+    targetMessageLockReason: restriction?.targetMessageLockReason ?? '',
   };
 }

@@ -52,6 +52,7 @@ export default async function StaffPage() {
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/status">Public status</Link>
             <Link className="button button-soft" href="/bans">Ban list</Link>
+            <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link>
           </div>
         </div>
         <aside className="staff-identity-card">
@@ -87,6 +88,16 @@ export default async function StaffPage() {
             <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
             <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
+        </article>
+
+        <article className="staff-panel maintenance-help-panel">
+          <div className="section-heading"><span className="kicker">Tweeter moderation</span><h2>Social account controls</h2><p>Hide Tweeter profiles, soft-ban website actions, or fully ban an account from Tweeter without changing game save data.</p></div>
+          <div className="stack-list compact-stack">
+            <div><strong>Hide profile</strong><span>Removes a profile from public Tweeter views and discovery.</span><small>Useful for cleanup or privacy issues.</small></div>
+            <div><strong>Soft ban</strong><span>Leaves the profile visible but disables social actions.</span><small>Likes, follows, DMs, and profile edits are locked.</small></div>
+            <div><strong>Full ban</strong><span>Hides the account and locks Tweeter features entirely.</span><small>Active in-game bans also show notices on profiles.</small></div>
+          </div>
+          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link></div>
         </article>
       </section>
 

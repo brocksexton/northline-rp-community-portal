@@ -100,7 +100,12 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
     if (!steamId || serverLocked) return;
     try {
       const response = await fetch(`/api/tweeter/social/messages?with=${encodeURIComponent(steamId)}`, { cache: 'no-store', credentials: 'same-origin' });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({})) as { error?: string };
+        setNotice(data.error || 'That conversation is not available right now.');
+        setMessages([]);
+        return;
+      }
       const data = await response.json() as { messages: DirectMessage[]; otherUser: TweeterUser };
       setMessages(data.messages);
       setUsers((current) => ({ ...current, [data.otherUser.steamId]: data.otherUser }));

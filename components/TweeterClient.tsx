@@ -38,6 +38,11 @@ type Suggestion = {
   hasPlayedInServer?: boolean;
   hasClaimedProfile?: boolean;
   isPublicProfile?: boolean;
+  hiddenFromTweeter?: boolean;
+  actionLockReason?: string;
+  targetFollowLockReason?: string;
+  targetMessageLockReason?: string;
+  moderationNotices?: Array<{ kind: 'website' | 'game'; level: 'info' | 'warning' | 'danger'; title: string; message: string }>;
 };
 
 type TweeterPayload = {
@@ -53,6 +58,11 @@ type TweeterPayload = {
     hasPlayedInServer?: boolean;
     hasClaimedProfile?: boolean;
     isPublicProfile?: boolean;
+    hiddenFromTweeter?: boolean;
+    actionLockReason?: string;
+    targetFollowLockReason?: string;
+    targetMessageLockReason?: string;
+    moderationNotices?: Array<{ kind: 'website' | 'game'; level: 'info' | 'warning' | 'danger'; title: string; message: string }>;
   } | null;
   tweets: TweetRow[];
   trends: Array<{ tag: string; count: number }>;
@@ -174,7 +184,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
   const engagement = useMemo(() => totalEngagement(data.tweets), [data.tweets]);
   const hasSteamSession = !!data.sessionSteamId;
   const currentUserHasPlayed = !!data.currentUser?.hasPlayedInServer || !!data.currentUser?.joinedAt;
-  const socialLockReason = hasSteamSession && !currentUserHasPlayed ? 'Log in to the Northline game server once before using Tweeter social actions.' : '';
+  const socialLockReason = hasSteamSession && !currentUserHasPlayed ? 'Log in to the Northline game server once before using Tweeter social actions.' : (data.currentUser?.actionLockReason ?? '');
   const composePlaceholder = socialLockReason ? 'Log in to the game server first.' : "What's happening?";
 
   return (
@@ -268,9 +278,20 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <section className="tweeter-server-lock-banner">
               <i className="fa-solid fa-lock" aria-hidden="true" />
               <div>
-                <strong>Game server login required</strong>
-                <p>Your Steam account is signed in, but this account has no server join date yet. Join Northline RP in S&box once to unlock likes, follows, messages, and web profile actions.</p>
+                <strong>{currentUserHasPlayed ? 'Tweeter access limited' : 'Game server login required'}</strong>
+                <p>{currentUserHasPlayed ? socialLockReason : 'Your Steam account is signed in, but this account has no server join date yet. Join Northline RP in S&box once to unlock likes, follows, messages, and web profile actions.'}</p>
               </div>
+            </section>
+          ) : null}
+
+          {data.currentUser?.moderationNotices?.length ? (
+            <section className="tweeter-moderation-stack compact" aria-label="Account notices">
+              {data.currentUser.moderationNotices.map((notice) => (
+                <article className={`tweeter-moderation-notice ${notice.level}`} key={`${notice.kind}-${notice.title}`}>
+                  <i className={notice.kind === 'game' ? 'fa-solid fa-gavel' : 'fa-solid fa-shield-halved'} aria-hidden="true" />
+                  <div><strong>{notice.title}</strong><p>{notice.message}</p></div>
+                </article>
+              ))}
             </section>
           ) : null}
 

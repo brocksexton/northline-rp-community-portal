@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { TweeterMessagesClient } from '@/components/TweeterMessagesClient';
-import { getPlayer } from '@/lib/ape-data';
 import { buildTweeterPayload, buildTweeterUser } from '@/lib/tweeter-view';
 import { getConversationSummaries } from '@/lib/tweeter-social-data';
 import { getSessionSteamId } from '@/lib/session';
+import { getTweeterActorActionLock } from '@/lib/tweeter-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,19 +17,13 @@ function cleanSteamId(value: unknown): string | null {
   return /^\d{15,20}$/.test(clean) ? clean : null;
 }
 
-function hasValidJoinDate(value: unknown) {
-  if (!value) return false;
-  return Number.isFinite(new Date(String(value)).getTime());
-}
-
 export default async function TweeterMessagesPage({ searchParams }: Params) {
   const steamId = await getSessionSteamId();
   if (!steamId) redirect('/api/auth/steam?returnTo=/tweeter/messages');
 
-  const player = await getPlayer(steamId);
-  const hasServerIdentity = hasValidJoinDate(player?.FirstJoinedUtc);
+  const actorLockReason = await getTweeterActorActionLock(steamId);
 
-  if (!hasServerIdentity) {
+  if (actorLockReason) {
     return <TweeterMessagesClient initialData={{
       currentSteamId: steamId,
       summaries: [],
@@ -37,7 +31,9 @@ export default async function TweeterMessagesPage({ searchParams }: Params) {
       selectedSteamId: null,
       suggestions: [],
       serverLocked: true,
-      lockReason: 'Your Steam account is signed in, but the website cannot find a Northline server join date yet. Join the game server once to unlock website DMs.',
+      lockReason: actorLockReason === 'Join the Northline game server once before using Tweeter social actions.'
+        ? 'Your Steam account is signed in, but the website cannot find a Northline server join date yet. Join the game server once to unlock website DMs.'
+        : actorLockReason,
     }} />;
   }
 

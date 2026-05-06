@@ -221,10 +221,39 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
   const profileHasServerIdentity = !!user.hasPlayedInServer || !!user.joinedAt;
   const profileHasClaimedSiteProfile = Boolean(communityProfile);
   const viewerNeedsGameLogin = !!sessionSteamId && !(payload.currentUser?.hasPlayedInServer || payload.currentUser?.joinedAt);
-  const viewerSocialLockReason = viewerNeedsGameLogin ? 'Log in to the Northline game server once before using Tweeter social actions.' : '';
-  const targetMessageLockReason = profileHasClaimedSiteProfile ? '' : 'This citizen has not signed into the website yet, so website DMs are locked for now.';
+  const viewerModerationLockReason = payload.currentUser?.actionLockReason ?? '';
+  const viewerSocialLockReason = viewerNeedsGameLogin ? 'Log in to the Northline game server once before using Tweeter social actions.' : viewerModerationLockReason;
+  const targetFollowLockReason = user.targetFollowLockReason ?? '';
+  const targetMessageClaimLockReason = profileHasClaimedSiteProfile ? '' : 'This citizen has not signed into the website yet, so website DMs are locked for now.';
+  const targetMessageLockReason = targetMessageClaimLockReason || user.targetMessageLockReason || '';
+  const followActionLockReason = viewerSocialLockReason || targetFollowLockReason;
   const messageActionLockReason = viewerSocialLockReason || targetMessageLockReason;
-  const sidebarSuggestions = payload.suggestions.filter((suggestion) => suggestion.steamId !== steamId).slice(0, 3);
+  const ownerEditLockReason = !profileHasServerIdentity ? 'Join the Northline game server once before editing your Tweeter profile.' : (user.actionLockReason ?? '');
+  const sidebarSuggestions = payload.suggestions.filter((suggestion) => suggestion.steamId !== steamId && !suggestion.hiddenFromTweeter).slice(0, 3);
+
+  if (user.hiddenFromTweeter && !isOwner) {
+    return (
+      <main className="tweeter-shell">
+        <div className="tweeter-detail-grid compact-private-profile">
+          <section className="tweeter-main-column">
+            <header className="tweeter-topbar">
+              <div className="tweeter-title-row">
+                <Link href="/tweeter" aria-label="Back to Tweeter">←</Link>
+                <div><h1>Profile unavailable</h1><small>This account is not available on Tweeter</small></div>
+              </div>
+            </header>
+            <section className="tweeter-private-profile-card moderated">
+              <UserAvatar src={user.avatarUrl ?? null} name={user.displayName || 'Unavailable profile'} size="xl" />
+              <span className="tweeter-badge danger">Restricted profile</span>
+              <h1>This profile is currently hidden.</h1>
+              <p>Staff has limited this Tweeter profile. Existing links may remain valid, but profile details, DMs, follows, and public discovery are unavailable.</p>
+              <Link className="button button-primary" href="/tweeter">Return to Tweeter</Link>
+            </section>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   if (privateForViewer) {
     return (
@@ -266,7 +295,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
-                {isOwner ? (profileHasServerIdentity ? <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}>{tweeterFallbackEditor ? 'Lite Edit' : 'Edit profile'}</Link> : <button type="button" disabled title="Join the Northline game server once before editing your Tweeter profile.">Join game first</button>) : <TweeterFollowButton targetSteamId={steamId} signedIn={!!sessionSteamId} initialFollowing={followStates[steamId]?.following ?? false} initialFollowerCount={followStates[steamId]?.followerCount ?? 0} disabledReason={viewerSocialLockReason} />}
+                {isOwner ? (ownerEditLockReason ? <button type="button" disabled title={ownerEditLockReason}>Locked</button> : <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}>{tweeterFallbackEditor ? 'Lite Edit' : 'Edit profile'}</Link>) : <TweeterFollowButton targetSteamId={steamId} signedIn={!!sessionSteamId} initialFollowing={followStates[steamId]?.following ?? false} initialFollowerCount={followStates[steamId]?.followerCount ?? 0} disabledReason={followActionLockReason} />}
               </div>
             </div>
             <div className="tweeter-profile-copy">
@@ -292,6 +321,20 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
               </div>
             </div>
           </section>
+
+          {user.moderationNotices?.length ? (
+            <section className="tweeter-moderation-stack" aria-label="Account notices">
+              {user.moderationNotices.map((notice) => (
+                <article className={`tweeter-moderation-notice ${notice.level}`} key={`${notice.kind}-${notice.title}`}>
+                  <i className={notice.kind === 'game' ? 'fa-solid fa-gavel' : 'fa-solid fa-shield-halved'} aria-hidden="true" />
+                  <div>
+                    <strong>{notice.title}</strong>
+                    <p>{notice.message}</p>
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : null}
 
           {!profileHasServerIdentity ? (
             <section className="tweeter-server-lock-banner profile">
@@ -347,7 +390,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </div>
             <div className="tweeter-profile-mini-links">
               <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a>
-              {isOwner ? (profileHasServerIdentity ? <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}><i className="fa-solid fa-palette" aria-hidden="true" /> {tweeterFallbackEditor ? 'Lite Edit' : 'Customize'}</Link> : <button type="button" disabled title="Join the Northline game server once before customizing your Tweeter profile."><i className="fa-solid fa-lock" aria-hidden="true" /> Join game first</button>) : <TweeterMessageButton targetSteamId={steamId} targetName={user.displayName} signedIn={!!sessionSteamId} disabledReason={messageActionLockReason} />}
+              {isOwner ? (ownerEditLockReason ? <button type="button" disabled title={ownerEditLockReason}><i className="fa-solid fa-lock" aria-hidden="true" /> Locked</button> : <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}><i className="fa-solid fa-palette" aria-hidden="true" /> {tweeterFallbackEditor ? 'Lite Edit' : 'Customize'}</Link>) : <TweeterMessageButton targetSteamId={steamId} targetName={user.displayName} signedIn={!!sessionSteamId} disabledReason={messageActionLockReason} />}
             </div>
             <details className="tweeter-profile-details-menu">
               <summary>
