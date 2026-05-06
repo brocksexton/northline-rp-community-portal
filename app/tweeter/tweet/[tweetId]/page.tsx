@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
+import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, type TweetView } from '@/lib/tweeter-view';
 
@@ -12,13 +13,6 @@ type Params = { params: Promise<{ tweetId: string }> };
 function formatFullTime(seconds: number) {
   if (!seconds) return 'Unknown time';
   return new Date(seconds * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-function splitHashtags(body: string) {
-  const parts = body.split(/(#[a-z0-9_]+)/gi);
-  return parts.map((part, index) => part.startsWith('#')
-    ? <span className="tweeter-hashtag" key={`${part}-${index}`}>{part}</span>
-    : <span key={`${part}-${index}`}>{part}</span>);
 }
 
 function verifiedBadge(kind: string) {
@@ -37,7 +31,8 @@ function MiniTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetView;
             <span>{tweet.handle}</span><span>·</span><span>{formatFullTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
-        <Link href={`/tweeter/tweet/${tweet.id}`} className="tweet-card-text">{splitHashtags(tweet.body)}</Link>
+        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
+        <TweeterFilterNotice text={tweet.body} compact />
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
           <button type="button"><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
@@ -95,10 +90,11 @@ export default async function TweetDetailPage({ params }: Params) {
             </div>
 
             {tweet.isRetweet && tweet.retweetOfBody ? (
-              <blockquote className="tweet-quoted-card">{tweet.retweetOfAuthorDisplayName}: {tweet.retweetOfBody}</blockquote>
+              <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote>
             ) : null}
 
-            <div className="tweet-detail-text">{splitHashtags(tweet.body)}</div>
+            <div className="tweet-detail-text"><TweeterFilteredText text={tweet.body} /></div>
+            <TweeterFilterNotice text={tweet.body} />
             <div className="tweet-detail-time">{formatFullTime(tweet.postedAtTimeSeconds)} · Northline Tweeter</div>
             <div className="tweet-detail-stats">
               <span><strong>{tweet.retweetCount.toLocaleString()}</strong> Reposts</span>

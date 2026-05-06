@@ -7,6 +7,7 @@ import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFollowButton } from '@/components/TweeterFollowButton';
 import { TweeterMessageButton } from '@/components/TweeterMessageButton';
 import { TweeterMaintenanceProfileEditor } from '@/components/TweeterMaintenanceProfileEditor';
+import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
 import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-view';
@@ -52,13 +53,6 @@ function formatTweetTime(seconds: number) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-function splitHashtags(body: string) {
-  const parts = body.split(/(#[a-z0-9_]+)/gi);
-  return parts.map((part, index) => part.startsWith('#')
-    ? <span className="tweeter-hashtag" key={`${part}-${index}`}>{part}</span>
-    : <span key={`${part}-${index}`}>{part}</span>);
-}
-
 function verifiedBadge(kind?: string) {
   if (!kind || kind === 'None') return null;
   return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
@@ -95,8 +89,9 @@ function ProfileTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetVi
             <span>{tweet.handle}</span><span>·</span><span>{formatTweetTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
-        {tweet.isRetweet && tweet.retweetOfBody ? <blockquote className="tweet-quoted-card">{tweet.retweetOfAuthorDisplayName}: {tweet.retweetOfBody}</blockquote> : null}
-        <Link href={`/tweeter/tweet/${tweet.id}`} className="tweet-card-text">{splitHashtags(tweet.body)}</Link>
+        {tweet.isRetweet && tweet.retweetOfBody ? <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote> : null}
+        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
+        <TweeterFilterNotice text={tweet.body} compact />
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
           <button type="button" disabled title="Reposts require the future game bridge."><span>↻</span><small>{tweet.retweetCount || ''}</small></button>

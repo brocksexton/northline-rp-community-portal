@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFollowButton } from '@/components/TweeterFollowButton';
+import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
 
 type TweetRow = {
   id: string;
@@ -88,18 +89,6 @@ function formatTweetTime(seconds: number, nowMs: number) {
   if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m`;
   if (diff < day) return `${Math.max(1, Math.floor(diff / hour))}h`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-
-function renderTweetText(body: string) {
-  const parts = body.split(/(https?:\/\/[^\s]+|#[a-z0-9_]+|@[a-z0-9_]+)/gi);
-  return parts.map((part, index) => {
-    if (/^https?:\/\//i.test(part)) {
-      return <a className="tweeter-link" href={part} key={`${part}-${index}`} rel="noreferrer" target="_blank">{part}</a>;
-    }
-    if (part.startsWith('#')) return <span className="tweeter-hashtag" key={`${part}-${index}`}>{part}</span>;
-    if (part.startsWith('@')) return <span className="tweeter-mention" key={`${part}-${index}`}>{part}</span>;
-    return <span key={`${part}-${index}`}>{part}</span>;
-  });
 }
 
 function verifiedBadge(kind?: string) {
@@ -367,10 +356,11 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   </div>
 
                   {tweet.isRetweet && tweet.retweetOfBody ? (
-                    <blockquote className="tweet-quoted-card">{tweet.retweetOfAuthorDisplayName}: {tweet.retweetOfBody}</blockquote>
+                    <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote>
                   ) : null}
 
-                  <div className="tweet-card-text">{renderTweetText(tweet.body)}</div>
+                  <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
+                  <TweeterFilterNotice text={tweet.body} compact />
 
                   <footer className="tweet-actions-row">
                     <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Open replies"><Icon className="fa-regular fa-comment" /><small>{actionCount(tweet.replyCount)}</small></Link>
