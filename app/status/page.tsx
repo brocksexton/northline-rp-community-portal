@@ -7,6 +7,8 @@ import { buildPageMetadata } from '@/lib/embed-metadata';
 import { getOperationalMetrics } from '@/lib/host-metrics';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -42,11 +44,9 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       label: 'Offline',
       tone: 'danger',
       headline: 'Server offline.',
-      body: runtime.source === 'server_query'
-        ? 'The game server did not answer the configured query. It may be stopped, restarting, firewalled, or temporarily unreachable.'
-        : runtime.lastSignalAt
-          ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
-          : 'The portal cannot see a fresh server signal right now. Check Discord for restart or maintenance updates.',
+      body: runtime.lastSignalAt
+        ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
+        : 'The portal cannot confirm the server is reachable right now. Check Discord for restart or maintenance updates.',
       primaryAction: 'Check Discord',
     };
   }
@@ -66,11 +66,9 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       label: runtime.state === 'quiet' ? 'Online, quiet' : 'Online',
       tone: 'neutral',
       headline: 'Online, but quiet.',
-      body: runtime.source === 'server_query'
-        ? 'The server answered directly, but nobody is connected right now.'
-        : latestEventAt
-          ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
-          : 'The game server appears online, but nobody is showing as connected.',
+      body: latestEventAt
+        ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
+        : 'The game server appears online, but nobody is showing as connected.',
       primaryAction: 'Join through s&box',
     };
   }
@@ -93,16 +91,6 @@ function noticeTone(tone: string) {
 
 function eventLabel(isConnection: boolean) {
   return isConnection ? 'joined' : 'left';
-}
-
-function sourceLabel(source: ServerRuntimeStatus['source']) {
-  switch (source) {
-    case 'server_status.json': return 'Heartbeat file';
-    case 'server_query': return 'Direct server query';
-    case 'connection_logs': return 'Connection logs';
-    case 'data_path': return 'Data path';
-    default: return 'Portal check';
-  }
 }
 
 function metricText(value: number | null, suffix = '%') {
@@ -162,6 +150,8 @@ export default async function StatusPage() {
     serverHost: config.status.serverHost,
     serverPort: config.status.serverPort,
     queryTimeoutMs: config.status.queryTimeoutMs,
+    fallbackQueryHosts: config.status.fallbackQueryHosts,
+    processNames: config.status.processNames,
   });
 
   const visiblePlayerCount = runtime.state === 'offline' || runtime.state === 'data_missing'
@@ -206,8 +196,8 @@ export default async function StatusPage() {
           <p>{visiblePlayerCount === null ? 'Server is not currently reachable.' : visiblePlayerCount === 1 ? '1 player connected.' : `${visiblePlayerCount} players connected.`}</p>
           <div className="status-ops-meter" aria-hidden="true"><i style={{ width: `${capacityPercent}%` }} /></div>
           <dl className="status-ops-current-meta">
-            <div><dt>Source</dt><dd>{sourceLabel(runtime.source)}</dd></div>
             <div><dt>Signal</dt><dd>{signalLabel}</dd></div>
+            <div><dt>Status</dt><dd>{state.label}</dd></div>
           </dl>
         </aside>
       </section>
@@ -242,10 +232,10 @@ export default async function StatusPage() {
             detail={`${mbToGbLabel(metrics.webProcess.rssMb)} web process memory.`}
           />
           <MetricCard
-            icon="fa-solid fa-wifi"
-            label="Query source"
-            value={sourceLabel(runtime.source)}
-            detail={runtime.source === 'server_query' ? `UDP query to ${config.status.serverHost ?? 'configured host'}:${config.status.serverPort ?? 27015}.` : 'Using local server data first.'}
+            icon="fa-solid fa-clock"
+            label="Last checked"
+            value={relativeFromDate(metrics.checkedAt)}
+            detail="The public status refreshes with the live portal data."
           />
         </div>
       </section>

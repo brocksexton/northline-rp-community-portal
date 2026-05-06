@@ -51,6 +51,7 @@ export default async function StaffPage() {
           <p>Review server health, player volume, and recent moderation signals from one readable staff dashboard.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/status">Public status</Link>
+            <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Status diagnostics</Link>
             <Link className="button button-soft" href="/bans">Ban list</Link>
             <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link>
           </div>
@@ -88,6 +89,15 @@ export default async function StaffPage() {
             <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
             <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
+        </article>
+
+        <article className="staff-panel maintenance-help-panel">
+          <div className="section-heading"><span className="kicker">Status diagnostics</span><h2>Server reachability</h2><p>See heartbeat freshness, query hosts, local process checks, and host metrics without exposing technical details on the public status page.</p></div>
+          <div className="stack-list compact-stack">
+            <div><strong>Network checks</strong><span>Compare configured public host and local fallback hosts.</span><small>Useful when UDP queries are blocked or hairpin routing fails.</small></div>
+            <div><strong>Process fallback</strong><span>Confirms whether the game process appears to be running on the same host.</span><small>Only staff can see these details.</small></div>
+          </div>
+          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Open diagnostics</Link></div>
         </article>
 
         <article className="staff-panel maintenance-help-panel">

@@ -54,6 +54,8 @@ export type SiteConfig = {
     serverHost?: string;
     serverPort?: number;
     queryTimeoutMs?: number;
+    fallbackQueryHosts?: string[];
+    processNames?: string[];
   };
   legal: {
     lastModified: string;
@@ -117,6 +119,8 @@ const fallbackConfig: SiteConfig = {
     serverHost: '203.0.113.10',
     serverPort: 27015,
     queryTimeoutMs: 1200,
+    fallbackQueryHosts: ['127.0.0.1', 'localhost'],
+    processNames: ['sbox.exe', 'sbox-server.exe', 'sbox-dev.exe', 'sbox_server.exe', 'sbox-game.exe', 'sbox', 'sbox-server', 'sbox_server', 's&box'],
   },
   legal: {
     lastModified: '2026-05-03',

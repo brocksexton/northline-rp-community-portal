@@ -41,6 +41,8 @@ export async function Header() {
     serverHost: config.status.serverHost,
     serverPort: config.status.serverPort,
     queryTimeoutMs: config.status.queryTimeoutMs,
+    fallbackQueryHosts: config.status.fallbackQueryHosts,
+    processNames: config.status.processNames,
   });
   const visibleOnlineCount = runtime.state === 'offline' || runtime.state === 'data_missing'
     ? null

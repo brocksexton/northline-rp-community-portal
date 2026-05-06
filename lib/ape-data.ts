@@ -1,9 +1,13 @@
 import { readFile, readdir, stat } from 'fs/promises';
 import { createSocket } from 'node:dgram';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import path from 'path';
 import os from 'os';
 import { getSteamProfiles } from './steam-openid';
 import { getSiteConfig } from './site-config';
+
+const execFileAsync = promisify(execFile);
 
 export type ApeItem = {
   PrefabResourcePath?: string | null;
@@ -86,13 +90,37 @@ export type ServerRuntimeStatus = {
   state: ServerRuntimeState;
   label: string;
   message: string;
-  source: 'server_status.json' | 'server_query' | 'connection_logs' | 'data_path';
+  source: 'server_status.json' | 'server_query' | 'process_check' | 'connection_logs' | 'data_path';
   online: boolean | null;
   playerCount: number | null;
   maxPlayers: number | null;
   lastSignalAt: string | null;
   signalAgeSeconds: number | null;
   staleAfterSeconds: number;
+  diagnostics?: {
+    query?: {
+      hosts: string[];
+      port: number;
+      timeoutMs: number;
+      answered: boolean;
+      selectedHost?: string | null;
+      checkedAt: string;
+      error?: string | null;
+      serverName?: string | null;
+      mapName?: string | null;
+      attempts?: Array<{ host: string; online: boolean; playerCount: number | null; maxPlayers: number | null; error?: string | null; checkedAt: string }>;
+    };
+    process?: {
+      checked: boolean;
+      running: boolean | null;
+      processNames: string[];
+      matchedName?: string | null;
+      matchedLine?: string | null;
+      error?: string | null;
+      checkedAt: string | null;
+      platform: string;
+    };
+  };
 };
 
 export type ChatLog = {
@@ -267,7 +295,28 @@ type SourceServerQueryResult = {
   serverName?: string | null;
   mapName?: string | null;
   checkedAt: string;
+  host: string;
+  port: number;
+  timeoutMs: number;
   error?: string;
+};
+
+type SourceServerQueryBundle = {
+  selected: SourceServerQueryResult;
+  attempts: SourceServerQueryResult[];
+  hosts: string[];
+  port: number;
+  timeoutMs: number;
+};
+
+type ServerProcessCheckResult = {
+  running: boolean | null;
+  processNames: string[];
+  matchedName?: string | null;
+  matchedLine?: string | null;
+  error?: string | null;
+  checkedAt: string;
+  platform: string;
 };
 
 function configuredServerHost(configured?: string) {
@@ -284,6 +333,38 @@ function configuredServerQueryTimeoutMs(configured?: number) {
   const raw = process.env.NORTHLINE_SERVER_QUERY_TIMEOUT_MS?.trim() || process.env.SBOX_SERVER_QUERY_TIMEOUT_MS?.trim() || String(configured ?? 1200);
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? Math.max(250, Math.min(5000, Math.round(parsed))) : 1200;
+}
+
+function splitConfigList(value: string | undefined | null): string[] {
+  return String(value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function configuredFallbackServerHosts(configured?: string[]) {
+  const envHosts = splitConfigList(process.env.NORTHLINE_SERVER_QUERY_FALLBACK_HOSTS || process.env.SBOX_SERVER_QUERY_FALLBACK_HOSTS);
+  const configuredHosts = Array.isArray(configured) ? configured.map((host) => String(host).trim()).filter(Boolean) : [];
+  return envHosts.length ? envHosts : configuredHosts.length ? configuredHosts : ['127.0.0.1', 'localhost'];
+}
+
+function configuredServerProcessNames(configured?: string[]) {
+  const envNames = splitConfigList(process.env.NORTHLINE_SERVER_PROCESS_NAMES || process.env.SBOX_SERVER_PROCESS_NAMES);
+  const configuredNames = Array.isArray(configured) ? configured.map((name) => String(name).trim()).filter(Boolean) : [];
+  return envNames.length ? envNames : configuredNames.length ? configuredNames : ['sbox.exe', 'sbox-server.exe', 'sbox-dev.exe', 'sbox', 'sbox-server'];
+}
+
+function uniqueValues(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const clean = value.trim();
+    const key = clean.toLowerCase();
+    if (!clean || seen.has(key)) continue;
+    seen.add(key);
+    result.push(clean);
+  }
+  return result;
 }
 
 function sourceInfoPacket(challenge?: Buffer) {
@@ -303,9 +384,9 @@ function readCString(buffer: Buffer, start: number) {
   };
 }
 
-function parseSourceInfoResponse(buffer: Buffer): SourceServerQueryResult {
-  const checkedAt = new Date().toISOString();
-  if (buffer.length < 6) return { online: true, playerCount: null, maxPlayers: null, checkedAt };
+function parseSourceInfoResponse(buffer: Buffer, meta: { host: string; port: number; timeoutMs: number; checkedAt: string }): SourceServerQueryResult {
+  const checkedAt = meta.checkedAt;
+  if (buffer.length < 6) return { online: true, playerCount: null, maxPlayers: null, checkedAt, host: meta.host, port: meta.port, timeoutMs: meta.timeoutMs };
 
   let offset = 5;
   if (buffer[offset] !== undefined) offset += 1; // protocol byte
@@ -331,6 +412,9 @@ function parseSourceInfoResponse(buffer: Buffer): SourceServerQueryResult {
     serverName: name.value || null,
     mapName: map.value || null,
     checkedAt,
+    host: meta.host,
+    port: meta.port,
+    timeoutMs: meta.timeoutMs,
   };
 }
 
@@ -354,17 +438,17 @@ async function querySourceServerStatus(options?: { host?: string; port?: number;
     };
 
     const timer = setTimeout(() => {
-      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: `Timed out querying ${host}:${port}` });
+      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, host, port, timeoutMs, error: `Timed out querying ${host}:${port}` });
     }, timeoutMs);
 
     const sendQuery = (challenge?: Buffer) => {
       socket.send(sourceInfoPacket(challenge), port, host, (error) => {
-        if (error) finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: error.message });
+        if (error) finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, host, port, timeoutMs, error: error.message });
       });
     };
 
     socket.on('error', (error) => {
-      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: error.message });
+      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, host, port, timeoutMs, error: error.message });
     });
 
     socket.on('message', (message) => {
@@ -376,22 +460,92 @@ async function querySourceServerStatus(options?: { host?: string; port?: number;
         return;
       }
       if (responseType === 0x49) {
-        finish(parseSourceInfoResponse(message));
+        finish(parseSourceInfoResponse(message, { host, port, timeoutMs, checkedAt }));
         return;
       }
-      finish({ online: true, playerCount: null, maxPlayers: null, checkedAt });
+      finish({ online: true, playerCount: null, maxPlayers: null, checkedAt, host, port, timeoutMs });
     });
 
     sendQuery();
   });
 }
 
-function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds: number): ServerRuntimeStatus {
+function queryDiagnostics(bundle: SourceServerQueryBundle) {
+  const selected = bundle.selected;
+  return {
+    hosts: bundle.hosts,
+    port: bundle.port,
+    timeoutMs: bundle.timeoutMs,
+    answered: selected.online,
+    selectedHost: selected.online ? selected.host : null,
+    checkedAt: selected.checkedAt,
+    error: selected.online ? null : bundle.attempts.map((attempt) => `${attempt.host}: ${attempt.error ?? 'no answer'}`).join('; '),
+    serverName: selected.serverName ?? null,
+    mapName: selected.mapName ?? null,
+    attempts: bundle.attempts.map((attempt) => ({
+      host: attempt.host,
+      online: attempt.online,
+      playerCount: attempt.playerCount,
+      maxPlayers: attempt.maxPlayers,
+      error: attempt.error ?? null,
+      checkedAt: attempt.checkedAt,
+    })),
+  };
+}
+
+async function queryReachableSourceServerStatus(options?: { host?: string; port?: number; timeoutMs?: number; fallbackHosts?: string[] }): Promise<SourceServerQueryBundle> {
+  const primaryHost = configuredServerHost(options?.host);
+  const port = configuredServerPort(options?.port);
+  const timeoutMs = configuredServerQueryTimeoutMs(options?.timeoutMs);
+  const hosts = uniqueValues([primaryHost, ...configuredFallbackServerHosts(options?.fallbackHosts)]);
+  const attempts = await Promise.all(hosts.map((host) => querySourceServerStatus({ host, port, timeoutMs })));
+  const selected = attempts.find((attempt) => attempt.online) ?? attempts[0] ?? { online: false, playerCount: null, maxPlayers: null, checkedAt: new Date().toISOString(), host: primaryHost, port, timeoutMs, error: 'No query attempts were made' };
+  return { selected, attempts, hosts, port, timeoutMs };
+}
+
+async function checkServerProcess(options?: { processNames?: string[] }): Promise<ServerProcessCheckResult> {
+  const processNames = configuredServerProcessNames(options?.processNames);
+  const checkedAt = new Date().toISOString();
+  const platform = process.platform;
+  const lowerNames = processNames.map((name) => name.toLowerCase());
+
+  try {
+    const command = platform === 'win32' ? 'tasklist' : 'ps';
+    const args = platform === 'win32' ? ['/FO', 'CSV', '/NH'] : ['-eo', 'comm,args'];
+    const { stdout } = await execFileAsync(command, args, { timeout: 1500, windowsHide: true, maxBuffer: 1024 * 1024 });
+    const lines = String(stdout || '').split(/\r?\n/).filter(Boolean);
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      const matchedIndex = lowerNames.findIndex((name) => lower.includes(name));
+      if (matchedIndex >= 0) {
+        return { running: true, processNames, matchedName: processNames[matchedIndex], matchedLine: line.slice(0, 240), checkedAt, platform };
+      }
+    }
+    return { running: false, processNames, matchedName: null, matchedLine: null, checkedAt, platform };
+  } catch (error) {
+    return { running: null, processNames, matchedName: null, matchedLine: null, checkedAt, platform, error: error instanceof Error ? error.message : 'Process check failed' };
+  }
+}
+
+function processDiagnostics(result: ServerProcessCheckResult) {
+  return {
+    checked: true,
+    running: result.running,
+    processNames: result.processNames,
+    matchedName: result.matchedName ?? null,
+    matchedLine: result.matchedLine ?? null,
+    error: result.error ?? null,
+    checkedAt: result.checkedAt,
+    platform: result.platform,
+  };
+}
+
+function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds: number, diagnostics?: ServerRuntimeStatus['diagnostics']): ServerRuntimeStatus {
   if (!query.online) {
     return {
       state: 'offline',
       label: stateLabel('offline'),
-      message: 'The game server did not answer its server query, so the portal is treating it as offline.',
+      message: 'The portal could not confirm the game server is reachable, so it is treating it as offline.',
       source: 'server_query',
       online: false,
       playerCount: null,
@@ -399,6 +553,7 @@ function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds
       lastSignalAt: query.checkedAt,
       signalAgeSeconds: 0,
       staleAfterSeconds,
+      diagnostics,
     };
   }
 
@@ -407,8 +562,8 @@ function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds
     state,
     label: stateLabel(state),
     message: state === 'online'
-      ? 'The game server answered its query and players are connected.'
-      : 'The game server answered its query, but nobody is connected right now.',
+      ? 'The game server is reachable and players are connected.'
+      : 'The game server appears reachable, but nobody is connected right now.',
     source: 'server_query',
     online: true,
     playerCount: query.playerCount ?? 0,
@@ -416,6 +571,45 @@ function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds
     lastSignalAt: query.checkedAt,
     signalAgeSeconds: 0,
     staleAfterSeconds,
+    diagnostics,
+  };
+}
+
+function statusFromFreshPopulation(population: PopulationSummary, staleAfterSeconds: number, diagnostics?: ServerRuntimeStatus['diagnostics']): ServerRuntimeStatus | null {
+  const latestAge = signalAgeSeconds(population.latestEventAt);
+  if (population.onlineCount <= 0 || latestAge === null || latestAge > staleAfterSeconds) return null;
+  return {
+    state: 'online',
+    label: stateLabel('online'),
+    message: 'Recent connection data shows players connected, so the portal is treating the server as online.',
+    source: 'connection_logs',
+    online: true,
+    playerCount: population.onlineCount,
+    maxPlayers: null,
+    lastSignalAt: population.latestEventAt,
+    signalAgeSeconds: latestAge,
+    staleAfterSeconds,
+    diagnostics,
+  };
+}
+
+function statusFromProcessCheck(processCheck: ServerProcessCheckResult, population: PopulationSummary, staleAfterSeconds: number, diagnostics?: ServerRuntimeStatus['diagnostics']): ServerRuntimeStatus | null {
+  if (processCheck.running !== true) return null;
+  const state: ServerRuntimeState = population.onlineCount > 0 ? 'online' : 'quiet';
+  return {
+    state,
+    label: stateLabel(state),
+    message: state === 'online'
+      ? 'The game server appears online and connection data shows players connected.'
+      : 'The game server appears online, but nobody is showing as connected right now.',
+    source: 'process_check',
+    online: true,
+    playerCount: population.onlineCount,
+    maxPlayers: null,
+    lastSignalAt: processCheck.checkedAt,
+    signalAgeSeconds: 0,
+    staleAfterSeconds,
+    diagnostics,
   };
 }
 
@@ -436,6 +630,8 @@ export async function getServerRuntimeStatus(options?: {
   serverHost?: string;
   serverPort?: number;
   queryTimeoutMs?: number;
+  fallbackQueryHosts?: string[];
+  processNames?: string[];
 }): Promise<ServerRuntimeStatus> {
   const staleAfterSeconds = Math.max(60, Math.round(Number(options?.staleAfterMinutes ?? 30) * 60));
   const [health, population] = await Promise.all([
@@ -475,18 +671,19 @@ export async function getServerRuntimeStatus(options?: {
     const isFresh = age === null || age <= staleAfterSeconds;
 
     let state: ServerRuntimeState = 'unknown';
-    if (!isFresh) state = 'offline';
-    else if (explicitOnline === false) state = 'offline';
-    else if (explicitOnline === true && (playerCount ?? population.onlineCount) > 0) state = 'online';
-    else if (explicitOnline === true) state = 'quiet';
-    else if ((playerCount ?? population.onlineCount) > 0) state = 'online';
+    if (isFresh) {
+      if (explicitOnline === false) state = 'offline';
+      else if (explicitOnline === true && (playerCount ?? population.onlineCount) > 0) state = 'online';
+      else if (explicitOnline === true) state = 'quiet';
+      else if ((playerCount ?? population.onlineCount) > 0) state = 'online';
+    }
 
-    if (state !== 'unknown') {
+    if (isFresh && state !== 'unknown' && state !== 'offline') {
       return {
         state,
         label: stateLabel(state),
         message: state === 'offline'
-          ? 'The latest server status says the game server is not online.'
+          ? 'The latest fresh server status says the game server is not online.'
           : state === 'online'
             ? 'The game server is online and players are connected.'
             : 'The game server is online, but nobody is connected right now.',
@@ -502,12 +699,24 @@ export async function getServerRuntimeStatus(options?: {
   }
 
   const siteConfig = await getSiteConfig();
-  const queryStatus = await querySourceServerStatus({
+  const queryBundle = await queryReachableSourceServerStatus({
     host: options?.serverHost ?? siteConfig.status.serverHost,
     port: options?.serverPort ?? siteConfig.status.serverPort,
     timeoutMs: options?.queryTimeoutMs ?? siteConfig.status.queryTimeoutMs,
+    fallbackHosts: options?.fallbackQueryHosts ?? siteConfig.status.fallbackQueryHosts,
   });
-  return statusFromServerQuery(queryStatus, staleAfterSeconds);
+  const queryDiag = queryDiagnostics(queryBundle);
+  if (queryBundle.selected.online) return statusFromServerQuery(queryBundle.selected, staleAfterSeconds, { query: queryDiag });
+
+  const connectionStatus = statusFromFreshPopulation(population, staleAfterSeconds, { query: queryDiag });
+  if (connectionStatus) return connectionStatus;
+
+  const processCheck = await checkServerProcess({ processNames: options?.processNames ?? siteConfig.status.processNames });
+  const processDiag = processDiagnostics(processCheck);
+  const processStatus = statusFromProcessCheck(processCheck, population, staleAfterSeconds, { query: queryDiag, process: processDiag });
+  if (processStatus) return processStatus;
+
+  return statusFromServerQuery(queryBundle.selected, staleAfterSeconds, { query: queryDiag, process: processDiag });
 }
 
 export async function getDataHealth(): Promise<DataHealth> {

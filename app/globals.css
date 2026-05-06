@@ -15916,3 +15916,48 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-filter-wor
     flex-direction: column;
   }
 }
+
+/* Staff status diagnostics */
+.staff-status-page .staff-signal-grid article p { overflow-wrap: anywhere; }
+.staff-diagnostic-panel { display: grid; gap: 1rem; align-content: start; }
+.staff-diagnostic-list { display: grid; gap: .65rem; }
+.staff-diagnostic-row {
+  display: grid;
+  gap: .2rem;
+  padding: .75rem .85rem;
+  border: 1px solid var(--site-line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.58);
+}
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-row { background: rgba(15,23,42,.45); }
+.staff-diagnostic-row span { color: var(--site-muted); font-size: .68rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+.staff-diagnostic-row strong { overflow-wrap: anywhere; line-height: 1.15; }
+.staff-diagnostic-row small { color: var(--site-muted); overflow-wrap: anywhere; }
+.staff-diagnostic-attempts { display: grid; gap: .6rem; }
+.staff-diagnostic-attempts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .25rem .7rem;
+  align-items: center;
+  padding: .75rem .85rem;
+  border: 1px solid var(--site-line);
+  border-radius: 16px;
+  background: var(--site-surface);
+}
+.staff-diagnostic-attempts > div.success { border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
+.staff-diagnostic-attempts > div.danger { border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.08); }
+.staff-diagnostic-attempts strong { overflow-wrap: anywhere; }
+.staff-diagnostic-attempts span { font-size: .72rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+.staff-diagnostic-attempts small { grid-column: 1 / -1; color: var(--site-muted); overflow-wrap: anywhere; }
+.staff-diagnostic-pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: .85rem;
+  border: 1px solid var(--site-line);
+  border-radius: 16px;
+  background: rgba(15,23,42,.06);
+  color: var(--site-muted);
+  font-size: .82rem;
+}
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { background: rgba(255,255,255,.06); }
