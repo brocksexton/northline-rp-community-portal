@@ -27,7 +27,6 @@ export function MaintenancePage({ settings }: { settings: MaintenanceSettings })
           <a className="button button-primary" href="/api/auth/steam?returnTo=/staff"><i className="fa-brands fa-steam" aria-hidden="true" /> Developer sign-in</a>
           {settings.showDiscordButton ? <a className="button button-soft" href={settings.discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Discord updates</a> : null}
         </div>
-        <small>Developers can still sign in and view the site while maintenance mode is active.</small>
       </section>
     </main>
   );

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-northline-pathname', request.nextUrl.pathname);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Cloudflare / browser caches should never reuse logged-out HTML for a signed-in user,
   // or vice versa. Most pages render from live server files and signed cookies.

@@ -1,8 +1,6 @@
 # Maintenance Mode
 
-Developer accounts can turn maintenance mode on from `/staff`.
-
-When enabled, normal visitors see a custom maintenance page instead of the website. Developer accounts still bypass the page after signing in through Steam, so the site can be checked before reopening it.
+Developer accounts can manage maintenance mode from `/staff`.
 
 Settings are stored in:
 
@@ -16,7 +14,11 @@ or, if configured:
 NORTHLINE_DATA_PATH/site-maintenance.json
 ```
 
-Available options:
+## Main website maintenance
+
+When main website maintenance is enabled, regular visitors see the custom maintenance page. Developer accounts can still sign in through Steam and view the site.
+
+Main website options:
 
 - enabled / disabled
 - headline
@@ -26,5 +28,17 @@ Available options:
 - accent color
 - Discord/update button toggle
 - Discord/update URL
+- whether Tweeter should stay open while the main site is closed
 
-The maintenance page does not change game data and does not modify player saves.
+## Tweeter maintenance
+
+Tweeter can also be paused on its own without closing the rest of the website. This shows a Tweeter-styled maintenance page only on `/tweeter` routes.
+
+Tweeter options:
+
+- enabled / disabled
+- custom Tweeter headline
+- custom Tweeter message
+- optional Tweeter countdown time
+
+Maintenance mode only affects the website view. It does not modify game data or player saves.

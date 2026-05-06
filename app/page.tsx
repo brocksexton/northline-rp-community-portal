@@ -194,7 +194,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             <span className="community-kicker">Around the portal</span>
             <h2 id="community-feature-hub-title">Pick what you need.</h2>
           </div>
-          <span className="feature-hub-note">Most-used stops are up top; the bigger shortcuts live here.</span>
+          <span className="feature-hub-note">Quick stops for checking in, catching up, or finding help.</span>
         </div>
         <div className="community-feature-grid">
           <Link className="community-feature-card primary" href="/cases">
@@ -206,19 +206,19 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
           </Link>
           <Link className="community-feature-card" href="/leaderboards">
             <span className="feature-card-icon"><i className="fa-solid fa-ranking-star" aria-hidden="true" /></span>
-            <div><strong>Leaderboards</strong><p>See who opted into public bragging rights for money, time, posts, progress, and more.</p></div>
+            <div><strong>Leaderboards</strong><p>See public rankings for citizens who chose to show up on the boards.</p></div>
           </Link>
           <Link className="community-feature-card" href="/players">
             <span className="feature-card-icon"><i className="fa-solid fa-users" aria-hidden="true" /></span>
-            <div><strong>Public citizens</strong><p>Browse the people who claimed a profile and chose to show up on the board.</p></div>
+            <div><strong>Public citizens</strong><p>Find claimed profiles, Tweeter pages, and the people you keep running into.</p></div>
           </Link>
           <Link className="community-feature-card" href="/guides">
             <span className="feature-card-icon"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /></span>
-            <div><strong>Getting settled</strong><p>Not sure what to do next? The guide page tracks your onboarding path.</p></div>
+            <div><strong>Getting settled</strong><p>Need a nudge? Guides can show your next useful step.</p></div>
           </Link>
           <Link className="community-feature-card" href="/support">
             <span className="feature-card-icon"><i className="fa-solid fa-life-ring" aria-hidden="true" /></span>
-            <div><strong>Need help?</strong><p>Find Discord, bug-report, appeal, privacy, and account help without digging around.</p></div>
+            <div><strong>Need help?</strong><p>Support links for bugs, account trouble, moderation questions, and Discord.</p></div>
           </Link>
         </div>
       </section>
@@ -240,17 +240,11 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
               Northline is a community-run companion for a gamemode we genuinely enjoy. Huge respect to Ape Tavern for the work they keep putting into
               Northbound RP and the wider S&box scene.
             </p>
-            <div className="ape-tavern-pills" aria-label="Ape Tavern highlights">
-              <span>Northbound RP</span>
-              <span>S&box creators</span>
-              <span>Community-driven</span>
-            </div>
           </div>
 
           <div className="ape-tavern-actions">
             <a className="button button-primary" href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northbound RP Discord</a>
             <Link className="button button-soft" href="/guides"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /> Learn the basics</Link>
-            <small>Made with appreciation for the team building the game we all goof around in.</small>
           </div>
         </div>
       </section>
@@ -318,15 +312,15 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
                 <span>{update.body}</span>
                 <small>{relativeFromDate(update.createdAt)} by {update.createdByName}</small>
               </div>
-            )) : <div><strong>No staff notices posted</strong><span>When something important happens, it will land here.</span><small>Quiet is good sometimes.</small></div>}
+            )) : <div><strong>No staff notices posted</strong><span>Nothing major has been posted yet.</span><small>Enjoy the quiet while it lasts.</small></div>}
             <div>
               <strong>{overview.propertyLayouts.toLocaleString()} saved property layouts</strong>
-              <span>Citizens are already decorating, building storefronts, or committing interior design crimes.</span>
+              <span>Citizens are decorating apartments, building shops, and saving their favorite setups.</span>
               <small>{overview.propertyProps.toLocaleString()} saved props</small>
             </div>
             <div>
               <strong>{overview.bans.active.toLocaleString()} active public ban record{overview.bans.active === 1 ? '' : 's'}</strong>
-              <span>Public ban records are visible so people can see what happened without needing to ask around.</span>
+              <span>View the public ban records to see recent moderation actions and their status.</span>
               <small><Link href="/bans">View ban list</Link></small>
             </div>
           </div>

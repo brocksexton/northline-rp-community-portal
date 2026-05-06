@@ -12,6 +12,11 @@ export type MaintenanceSettings = {
   accentColor: string;
   showDiscordButton: boolean;
   discordUrl: string;
+  allowTweeterDuringMaintenance: boolean;
+  tweeterMaintenanceEnabled: boolean;
+  tweeterMaintenanceHeadline: string;
+  tweeterMaintenanceMessage: string;
+  tweeterMaintenanceCountdownEndsAt: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
 };
@@ -25,6 +30,11 @@ const DEFAULT_SETTINGS: MaintenanceSettings = {
   accentColor: '#0ea5e9',
   showDiscordButton: true,
   discordUrl: 'https://discord.gg/VExsvp4PXT',
+  allowTweeterDuringMaintenance: false,
+  tweeterMaintenanceEnabled: false,
+  tweeterMaintenanceHeadline: 'Tweeter is taking a quick break.',
+  tweeterMaintenanceMessage: 'The feed is paused while staff works on it. Check back soon.',
+  tweeterMaintenanceCountdownEndsAt: null,
   updatedAt: null,
   updatedBy: null,
 };
@@ -84,6 +94,11 @@ export function normalizeMaintenanceSettings(input: Partial<MaintenanceSettings>
     accentColor: sanitizeAccent(input.accentColor),
     showDiscordButton: input.showDiscordButton === undefined ? DEFAULT_SETTINGS.showDiscordButton : Boolean(input.showDiscordButton),
     discordUrl: sanitizeUrl(input.discordUrl),
+    allowTweeterDuringMaintenance: input.allowTweeterDuringMaintenance === undefined ? DEFAULT_SETTINGS.allowTweeterDuringMaintenance : Boolean(input.allowTweeterDuringMaintenance),
+    tweeterMaintenanceEnabled: input.tweeterMaintenanceEnabled === undefined ? DEFAULT_SETTINGS.tweeterMaintenanceEnabled : Boolean(input.tweeterMaintenanceEnabled),
+    tweeterMaintenanceHeadline: shortText(input.tweeterMaintenanceHeadline, DEFAULT_SETTINGS.tweeterMaintenanceHeadline, 90),
+    tweeterMaintenanceMessage: shortText(input.tweeterMaintenanceMessage, DEFAULT_SETTINGS.tweeterMaintenanceMessage, 280),
+    tweeterMaintenanceCountdownEndsAt: sanitizeCountdown(input.tweeterMaintenanceCountdownEndsAt),
     updatedAt: input.updatedAt ? String(input.updatedAt) : new Date().toISOString(),
     updatedBy: updatedBy ?? (input.updatedBy ? String(input.updatedBy) : null),
   };
@@ -113,4 +128,8 @@ export async function saveMaintenanceSettings(input: Partial<MaintenanceSettings
 
 export function isMaintenanceActive(settings: MaintenanceSettings): boolean {
   return settings.enabled;
+}
+
+export function isTweeterMaintenanceActive(settings: MaintenanceSettings): boolean {
+  return settings.tweeterMaintenanceEnabled;
 }

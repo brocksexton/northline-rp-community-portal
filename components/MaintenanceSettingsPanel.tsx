@@ -21,6 +21,7 @@ function toLocalInputValue(value: string | null) {
 export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initialSettings: MaintenanceSettings; canManage: boolean }) {
   const [settings, setSettings] = useState(initialSettings);
   const [countdown, setCountdown] = useState(toLocalInputValue(initialSettings.countdownEndsAt));
+  const [tweeterCountdown, setTweeterCountdown] = useState(toLocalInputValue(initialSettings.tweeterMaintenanceCountdownEndsAt));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -35,6 +36,7 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initi
         body: JSON.stringify({
           ...settings,
           countdownEndsAt: countdown ? new Date(countdown).toISOString() : null,
+          tweeterMaintenanceCountdownEndsAt: tweeterCountdown ? new Date(tweeterCountdown).toISOString() : null,
         }),
       });
       const payload = await response.json();
@@ -52,7 +54,7 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initi
       <div className="section-heading">
         <span className="kicker">Website access</span>
         <h2>Maintenance mode</h2>
-        <p>Temporarily close the website to everyone except Developer accounts. Use this when you are deploying or changing data-heavy features.</p>
+        <p>Close the main site while you work on things, or pause Tweeter by itself if the feed needs attention.</p>
       </div>
 
       {!canManage ? (
@@ -62,7 +64,7 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initi
       <div className="maintenance-toggle-row">
         <div>
           <strong>{settings.enabled ? 'Maintenance is on' : 'Maintenance is off'}</strong>
-          <span>{settings.enabled ? 'Regular visitors will see the maintenance page.' : 'Everyone can browse the website normally.'}</span>
+          <span>{settings.enabled ? 'The main website shows your maintenance page.' : 'The main website is open.'}</span>
         </div>
         <button className={`maintenance-toggle ${settings.enabled ? 'enabled' : ''}`} disabled={!canManage} type="button" onClick={() => setSettings((current) => ({ ...current, enabled: !current.enabled }))}>
           <span>{settings.enabled ? 'On' : 'Off'}</span>
@@ -106,6 +108,32 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initi
         <span>Show Discord/update button on the maintenance page</span>
       </label>
 
+      <div className="maintenance-split-settings">
+        <label className="maintenance-checkbox">
+          <input disabled={!canManage} type="checkbox" checked={settings.allowTweeterDuringMaintenance} onChange={(event) => setSettings((current) => ({ ...current, allowTweeterDuringMaintenance: event.target.checked }))} />
+          <span>Keep Tweeter open while the main website is in maintenance mode</span>
+        </label>
+        <label className="maintenance-checkbox">
+          <input disabled={!canManage} type="checkbox" checked={settings.tweeterMaintenanceEnabled} onChange={(event) => setSettings((current) => ({ ...current, tweeterMaintenanceEnabled: event.target.checked }))} />
+          <span>Put Tweeter in its own maintenance mode</span>
+        </label>
+      </div>
+
+      <div className="maintenance-form-grid tweeter-maintenance-settings">
+        <label>
+          <span>Tweeter headline</span>
+          <input disabled={!canManage} value={settings.tweeterMaintenanceHeadline} maxLength={90} onChange={(event) => setSettings((current) => ({ ...current, tweeterMaintenanceHeadline: event.target.value }))} />
+        </label>
+        <label>
+          <span>Tweeter return time</span>
+          <input disabled={!canManage} type="datetime-local" value={tweeterCountdown} onChange={(event) => setTweeterCountdown(event.target.value)} />
+        </label>
+        <label className="wide">
+          <span>Tweeter message</span>
+          <textarea disabled={!canManage} value={settings.tweeterMaintenanceMessage} maxLength={280} rows={3} onChange={(event) => setSettings((current) => ({ ...current, tweeterMaintenanceMessage: event.target.value }))} />
+        </label>
+      </div>
+
       <div className={`maintenance-mini-preview maintenance-theme-${settings.theme}`} style={{ ['--maintenance-accent' as string]: settings.accentColor }}>
         <span>Preview</span>
         <strong>{settings.headline}</strong>
@@ -114,7 +142,8 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage }: { initi
 
       <div className="maintenance-save-row">
         <button className="button button-primary" disabled={!canManage || saving} type="button" onClick={save}><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> {saving ? 'Saving…' : 'Save maintenance settings'}</button>
-        {countdown ? <button className="button button-soft" disabled={!canManage || saving} type="button" onClick={() => setCountdown('')}>Clear countdown</button> : null}
+        {countdown ? <button className="button button-soft" disabled={!canManage || saving} type="button" onClick={() => setCountdown('')}>Clear site countdown</button> : null}
+        {tweeterCountdown ? <button className="button button-soft" disabled={!canManage || saving} type="button" onClick={() => setTweeterCountdown('')}>Clear Tweeter countdown</button> : null}
         {message ? <span>{message}</span> : null}
       </div>
     </article>

@@ -74,10 +74,10 @@ export default async function StaffPage() {
       <section className="staff-command-grid maintenance-command-grid">
         <MaintenanceSettingsPanel initialSettings={maintenanceSettings} canManage={role.toLowerCase() === 'developer'} />
         <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">How it works</span><h2>Safe deploy switch</h2><p>When maintenance mode is enabled, public pages show a custom downtime screen. Developer accounts can still sign in and browse normally.</p></div>
+          <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Close the main site, leave Tweeter open during a main-site update, or pause Tweeter by itself when the feed needs work.</p></div>
           <div className="stack-list compact-stack">
-            <div><strong>Good for updates</strong><span>Use it before deployments, data migrations, or visual rebuilds.</span><small>Visitors get a friendly message instead of a broken page.</small></div>
-            <div><strong>Countdown optional</strong><span>Add an estimated return time when you have one.</span><small>Leave it blank for open-ended work.</small></div>
+            <div><strong>Main-site updates</strong><span>Use this before deployments, layout work, or data-heavy changes.</span><small>Visitors get a clean update page instead of a half-finished site.</small></div>
+            <div><strong>Tweeter can be separate</strong><span>Keep Tweeter open during a main-site update, or give Tweeter its own downtime screen.</span><small>Useful when you are only working on one part of the site.</small></div>
             <div><strong>Themeable</strong><span>Pick a look and accent color to match the kind of update.</span><small>This only affects the maintenance screen.</small></div>
           </div>
         </article>
