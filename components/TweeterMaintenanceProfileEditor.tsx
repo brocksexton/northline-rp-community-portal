@@ -79,7 +79,7 @@ export function TweeterMaintenanceProfileEditor({ profile, role, displayName }: 
       }
 
       setState('saved');
-      setMessage('Saved. Refresh the profile if the new look does not show immediately.');
+      setMessage('Saved. Refresh the profile if the new look does not show right away.');
     } catch {
       setState('error');
       setMessage('Could not reach the server. Try again in a moment.');
@@ -87,17 +87,23 @@ export function TweeterMaintenanceProfileEditor({ profile, role, displayName }: 
   }
 
   return (
-    <section id="tweeter-profile-editor" className={`tweeter-maintenance-profile-editor profile-theme-preview-${profileTheme}`}>
-      <div className="tweeter-maintenance-editor-head">
-        <div>
-          <span className="tweeter-pill">Maintenance fallback</span>
-          <h2>Edit your Tweeter profile</h2>
-          <p>The full dashboard is closed with the rest of the site, but Tweeter profile basics can still be updated here.</p>
+    <details id="tweeter-lite-edit" className={`tweeter-maintenance-profile-editor profile-theme-preview-${profileTheme}`}>
+      <summary className="tweeter-lite-edit-summary">
+        <span><i className="fa-solid fa-palette" aria-hidden="true" /> Lite Edit</span>
+        <small>Tweeter profile basics are still available during maintenance.</small>
+        <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+      </summary>
+      <div className="tweeter-maintenance-editor-inner">
+        <div className="tweeter-maintenance-editor-head">
+          <div>
+            <span className="tweeter-pill">Lite Edit</span>
+            <h2>Edit your Tweeter profile</h2>
+            <p>The full dashboard is closed right now, but your Tweeter bio, banner, avatar, and theme can still be updated here.</p>
+          </div>
+          <span className="tweeter-maintenance-theme-chip">{themeSummary}</span>
         </div>
-        <span className="tweeter-maintenance-theme-chip">{themeSummary}</span>
-      </div>
 
-      <form onSubmit={submit}>
+        <form onSubmit={submit}>
         <div className="tweeter-quick-preview" style={previewStyle}>
           <div className="tweeter-quick-preview-cover" />
           <div className="tweeter-quick-preview-body">
@@ -179,10 +185,11 @@ export function TweeterMaintenanceProfileEditor({ profile, role, displayName }: 
         </div>
 
         <div className="tweeter-maintenance-editor-savebar">
-          <span className={state === 'error' ? 'error' : state === 'saved' ? 'success' : ''}>{message || 'Only Tweeter-facing profile options are available here during maintenance.'}</span>
+          <span className={state === 'error' ? 'error' : state === 'saved' ? 'success' : ''}>{message || 'Lite Edit only changes Tweeter-facing profile options.'}</span>
           <button type="submit" disabled={state === 'saving'}>{state === 'saving' ? 'Saving…' : 'Save Tweeter profile'}</button>
         </div>
-      </form>
-    </section>
+        </form>
+      </div>
+    </details>
   );
 }

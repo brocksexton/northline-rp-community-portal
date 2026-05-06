@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
+import { TweeterFollowButton } from '@/components/TweeterFollowButton';
 
 type TweetRow = {
   id: string;
@@ -171,7 +172,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
           <Link href="/tweeter"><Icon className="fa-solid fa-house" /> <span>Home</span></Link>
           <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /> <span>Explore</span></button>
           <button type="button" disabled><Icon className="fa-solid fa-bell" /> <span>Notifications</span></button>
-          <button type="button" disabled><Icon className="fa-regular fa-envelope" /> <span>Messages</span></button>
+          {data.currentUser ? <Link href="/tweeter/messages"><Icon className="fa-regular fa-envelope" /> <span>Messages</span></Link> : <a href="/api/auth/steam?returnTo=/tweeter/messages"><Icon className="fa-regular fa-envelope" /> <span>Messages</span></a>}
         </div>
         <Link href="/tweeter" className="tweeter-legacy-logo"><Icon className="fa-brands fa-twitter" /></Link>
         <div className="tweeter-legacy-right">
@@ -211,7 +212,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <button className="active" type="button"><Icon className="fa-solid fa-house" /><span>Home</span></button>
             <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /><span>Explore</span></button>
             <button disabled title="Notifications require the future game bridge." type="button"><Icon className="fa-solid fa-bell" /><span>Notifications</span></button>
-            <button disabled title="Messages are intentionally not mirrored from game data." type="button"><Icon className="fa-regular fa-envelope" /><span>Messages</span></button>
+            {data.currentUser ? <Link href="/tweeter/messages"><Icon className="fa-regular fa-envelope" /><span>Messages</span></Link> : <a href="/api/auth/steam?returnTo=/tweeter/messages"><Icon className="fa-regular fa-envelope" /><span>Messages</span></a>}
             <button disabled title="Bookmarks are planned for a later website-only pass." type="button"><Icon className="fa-regular fa-bookmark" /><span>Bookmarks</span></button>
             {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <button disabled title="Sign in with Steam to open your profile." type="button"><Icon className="fa-regular fa-user" /><span>Profile</span></button>}
             <a href="/"><Icon className="fa-solid fa-arrow-left" /><span>Back to Northline</span></a>
@@ -379,7 +380,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                       {suggestion.bio ? <small>{suggestion.bio}</small> : null}
                     </div>
                   </Link>
-                  <button disabled title="Follows are planned for a later website-only pass." type="button">Follow</button>
+                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!data.sessionSteamId} compact />
                 </div>
               ))}
             </div>

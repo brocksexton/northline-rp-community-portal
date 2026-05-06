@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { ProfileShowcasePanels } from '@/components/ProfileShowcasePanels';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
+import { TweeterFollowButton } from '@/components/TweeterFollowButton';
+import { TweeterMessageButton } from '@/components/TweeterMessageButton';
 import { TweeterMaintenanceProfileEditor } from '@/components/TweeterMaintenanceProfileEditor';
 import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
@@ -12,6 +14,7 @@ import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
 import { getProfileCoverPreset, PROFILE_THEMES } from '@/lib/profile-customization';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
+import { getFollowStates } from '@/lib/tweeter-social-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -182,13 +185,14 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
 
   const activeTab = cleanTab(resolvedSearchParams.tab);
   const payload = await buildTweeterPayload(sessionSteamId);
-  const [user, player, role, layouts, communityProfile, maintenance] = await Promise.all([
+  const [user, player, role, layouts, communityProfile, maintenance, followStates] = await Promise.all([
     buildTweeterUser(steamId, payload.tweets),
     getPlayer(steamId),
     getRoleForSteamId(steamId),
     getPropertyLayoutsForSteamId(steamId),
     getCommunityProfile(steamId),
     getMaintenanceSettings(),
+    getFollowStates(sessionSteamId, [steamId, ...payload.suggestions.map((suggestion) => suggestion.steamId)]),
   ]);
   const userTweets = payload.tweets
     .filter((tweet) => tweet.authorSteamId === steamId)
@@ -255,7 +259,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
-                {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-profile-editor' : '/dashboard'}>{tweeterFallbackEditor ? 'Quick edit' : 'Edit profile'}</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
+                {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}>{tweeterFallbackEditor ? 'Lite Edit' : 'Edit profile'}</Link> : <TweeterFollowButton targetSteamId={steamId} signedIn={!!sessionSteamId} initialFollowing={followStates[steamId]?.following ?? false} initialFollowerCount={followStates[steamId]?.followerCount ?? 0} />}
               </div>
             </div>
             <div className="tweeter-profile-copy">
@@ -273,6 +277,8 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
               </div>
               <div className="tweeter-profile-stats">
                 <span><strong>{userTweets.length.toLocaleString()}</strong> Posts</span>
+                <span><strong>{(followStates[steamId]?.followerCount ?? 0).toLocaleString()}</strong> Followers</span>
+                <span><strong>{(followStates[steamId]?.followingCount ?? 0).toLocaleString()}</strong> Following</span>
                 <span><strong>{(user.likeCount ?? 0).toLocaleString()}</strong> Likes earned</span>
                 <span><strong>{originalTweets.length.toLocaleString()}</strong> Originals</span>
                 <span><strong>{replyTweets.length.toLocaleString()}</strong> Replies</span>
@@ -306,7 +312,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </div>
             <div className="tweeter-profile-mini-links">
               <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a>
-              {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-profile-editor' : '/dashboard'}><i className="fa-solid fa-palette" aria-hidden="true" /> {tweeterFallbackEditor ? 'Quick edit' : 'Customize'}</Link> : null}
+              {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-lite-edit' : '/dashboard'}><i className="fa-solid fa-palette" aria-hidden="true" /> {tweeterFallbackEditor ? 'Lite Edit' : 'Customize'}</Link> : <TweeterMessageButton targetSteamId={steamId} targetName={user.displayName} signedIn={!!sessionSteamId} />}
             </div>
             <details className="tweeter-profile-details-menu">
               <summary>
@@ -320,6 +326,8 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
                 {user.playtimeHours ? <div><dt>Time in city</dt><dd>{user.playtimeHours.toLocaleString()}h</dd></div> : null}
                 <div><dt>Profile look</dt><dd>{profileThemeLabel(user.profileTheme)}</dd></div>
                 <div><dt>Posts</dt><dd>{userTweets.length.toLocaleString()}</dd></div>
+                <div><dt>Followers</dt><dd>{(followStates[steamId]?.followerCount ?? 0).toLocaleString()}</dd></div>
+                <div><dt>Following</dt><dd>{(followStates[steamId]?.followingCount ?? 0).toLocaleString()}</dd></div>
                 <div><dt>Likes earned</dt><dd>{(user.likeCount ?? 0).toLocaleString()}</dd></div>
               </dl>
               <div className="tweeter-profile-shared-strip">
@@ -340,7 +348,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
                     <div><strong>{suggestion.displayName} {verifiedBadge(suggestion.verifiedKind)}</strong><span>{suggestion.handle}</span></div>
                   </Link>
-                  <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>
+                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!sessionSteamId} initialFollowing={followStates[suggestion.steamId]?.following ?? false} initialFollowerCount={followStates[suggestion.steamId]?.followerCount ?? 0} compact />
                 </div>
               ))}
             </div>
