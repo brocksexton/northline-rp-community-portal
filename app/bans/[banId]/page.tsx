@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 import { getBanRecords, getModerationProfile, type BanRecord, type ModerationTimelineAction } from '@/lib/ape-data';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +70,11 @@ export async function generateMetadata({ params }: Params) {
   const { banId } = await params;
   const records = await getBanRecords();
   const ban = records.find((record) => record.id === decodeURIComponent(banId));
-  return { title: ban ? `${ban.playerName} ban record` : 'Ban record' };
+  return buildPageMetadata({
+    title: ban ? `${ban.playerName} ban record` : 'Ban record',
+    description: ban ? `Public Northline RP moderation record for ${ban.playerName}. Reason: ${ban.reason || 'No reason provided'}.` : 'Public Northline RP moderation record.',
+    path: `/bans/${encodeURIComponent(banId)}`,
+  });
 }
 
 export default async function BanDetailPage({ params }: Params) {

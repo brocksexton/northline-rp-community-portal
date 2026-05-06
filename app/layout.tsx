@@ -10,6 +10,7 @@ import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive
 import { getSessionSteamId } from '@/lib/session';
 import { headers } from 'next/headers';
 import { getSiteConfig } from '@/lib/site-config';
+import { buildMetadataFromConfig } from '@/lib/embed-metadata';
 import './globals.css';
 
 export const dynamic = 'force-dynamic';
@@ -18,13 +19,18 @@ export const fetchCache = 'force-no-store';
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();
+  const baseMetadata = buildMetadataFromConfig(config, {
+    title: config.brand.name,
+    description: config.brand.tagline,
+    path: '/',
+  });
+
   return {
+    ...baseMetadata,
     title: {
       default: config.brand.name,
       template: `%s · ${config.brand.name}`,
     },
-    description: config.brand.tagline,
-    metadataBase: new URL(config.brand.siteUrl),
   };
 }
 

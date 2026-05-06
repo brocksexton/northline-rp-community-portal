@@ -14,9 +14,16 @@ import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
 import { getProfileCoverPreset } from '@/lib/profile-customization';
 import { getTweeterRestrictionMap } from '@/lib/tweeter-moderation-data';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Players' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Players',
+    description: 'Public Northline RP citizen directory for claimed, discoverable community profiles.',
+    path: '/players',
+  });
+}
 
 function makeHandle(name: string, steamId: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9]+/g, '');

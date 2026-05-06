@@ -20,8 +20,18 @@ import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
 import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Northline RP',
+    description: 'Your city portal for Northbound RP: server status, Tweeter, public profiles, guides, rules, and community tools.',
+    path: '/',
+  });
+}
+
 
 type PageSearchParams = { login?: string | string[]; loggedOut?: string | string[]; [key: string]: string | string[] | undefined };
 

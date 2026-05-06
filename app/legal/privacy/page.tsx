@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata = { title: 'Privacy Policy' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Privacy Policy',
+    description: 'How the Northline RP portal uses Steam sign-in, public profiles, server files, and website-owned data.',
+    path: '/legal/privacy',
+  });
+}
 
 const privacyHighlights = [
   {

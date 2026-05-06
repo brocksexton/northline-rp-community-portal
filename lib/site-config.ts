@@ -13,6 +13,7 @@ export type SiteConfig = {
     accentColor: string;
     domain: string;
     siteUrl: string;
+    embedImageUrl?: string;
   };
   home: {
     eyebrow: string;
@@ -71,6 +72,7 @@ const fallbackConfig: SiteConfig = {
     accentColor: '#1194f0',
     domain: 'northline.lol',
     siteUrl: 'https://northline.lol',
+    embedImageUrl: 'https://media.discordapp.net/attachments/1500369066009825304/1501668755372118148/northline-banner.jpg?ex=69fce982&is=69fb9802&hm=2c606aedc3c7bb3fceed551b937ec67ce75f7dea9085c995d8b2aebaceb57903&=&format=webp&width=1521&height=856',
   },
   home: {
     eyebrow: 'Northline Roleplay Network',

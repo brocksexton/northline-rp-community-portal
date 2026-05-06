@@ -1,12 +1,15 @@
-import type { Metadata } from 'next';
 import { LeaderboardsClient } from '@/components/LeaderboardsClient';
 import { buildLeaderboardData } from '@/lib/leaderboard-data';
 import { getSessionSteamId } from '@/lib/session';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata: Metadata = {
-  title: 'Leaderboards',
-  description: 'Public Northline RP leaderboards for opted-in citizens.',
-};
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Leaderboards',
+    description: 'Public Northline RP leaderboards for opted-in citizens, playtime, progress, and city stats.',
+    path: '/leaderboards',
+  });
+}
 
 export default async function LeaderboardsPage() {
   const steamId = await getSessionSteamId();

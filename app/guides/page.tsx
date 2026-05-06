@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import { GUIDE_CATALOG, getGuideProgress } from '@/lib/ape-data';
 import { getSessionSteamId } from '@/lib/session';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Guides | Northline RP' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Guides',
+    description: 'Northline RP field guides for first steps, roleplay, money, property, Tweeter, and getting settled.',
+    path: '/guides',
+  });
+}
 
 const paths = [
   {

@@ -1,9 +1,16 @@
 import { TweeterClient } from '@/components/TweeterClient';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload } from '@/lib/tweeter-view';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Tweeter' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Tweeter',
+    description: 'Live city chatter from Northline RP: posts, profiles, replies, and public social activity from the server.',
+    path: '/tweeter',
+  });
+}
 
 export default async function TweeterPage() {
   const sessionSteamId = await getSessionSteamId();

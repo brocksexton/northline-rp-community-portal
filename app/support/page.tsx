@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata = { title: 'Support' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Support',
+    description: 'Get help with Northline RP account issues, bugs, moderation questions, server status, and community support.',
+    path: '/support',
+  });
+}
 
 const helpCards = [
   {

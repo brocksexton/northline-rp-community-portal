@@ -1,12 +1,15 @@
-import type { Metadata } from 'next';
 import { CasesHub } from '@/components/CasesHub';
 import { getCasesState } from '@/lib/cases-data';
 import { getSessionSteamId } from '@/lib/session';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata: Metadata = {
-  title: 'Cases',
-  description: 'Free daily check-in cases for Northline RP citizens.',
-};
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Cases',
+    description: 'Free daily check-in cases and website rewards for Northline RP citizens.',
+    path: '/cases',
+  });
+}
 
 export default async function CasesPage() {
   const steamId = await getSessionSteamId();

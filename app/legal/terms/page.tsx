@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata = { title: 'Terms and Conditions' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Terms and Conditions',
+    description: 'Northline RP website terms for community access, game data, acceptable use, and portal limitations.',
+    path: '/legal/terms',
+  });
+}
 
 const quickRules = [
   { icon: 'fa-solid fa-gamepad', title: 'The game comes first', body: 'Website data is helpful, but the live server is still the source of truth.' },

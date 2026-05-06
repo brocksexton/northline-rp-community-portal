@@ -6,10 +6,39 @@ import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFi
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, type TweetView } from '@/lib/tweeter-view';
 import type { TextFilterRule } from '@/lib/content-filter';
+import { buildPageMetadata, cleanMetaText } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
 
 type Params = { params: Promise<{ tweetId: string }> };
+
+export async function generateMetadata({ params }: Params) {
+  const { tweetId } = await params;
+  try {
+    const payload = await buildTweeterPayload(null);
+    const tweet = payload.tweets.find((item) => item.id === tweetId);
+    if (!tweet) {
+      return buildPageMetadata({
+        title: 'Tweeter Post',
+        description: 'View a Northline RP Tweeter post and its thread context.',
+        path: `/tweeter/tweet/${encodeURIComponent(tweetId)}`,
+      });
+    }
+
+    return buildPageMetadata({
+      title: `${tweet.authorDisplayName} on Tweeter`,
+      description: cleanMetaText(tweet.body || 'View this Northline RP Tweeter post.', 180),
+      path: `/tweeter/tweet/${tweet.id}`,
+    });
+  } catch {
+    return buildPageMetadata({
+      title: 'Tweeter Post',
+      description: 'View a Northline RP Tweeter post and its thread context.',
+      path: `/tweeter/tweet/${encodeURIComponent(tweetId)}`,
+    });
+  }
+}
+
 
 function formatFullTime(seconds: number) {
   if (!seconds) return 'Unknown time';

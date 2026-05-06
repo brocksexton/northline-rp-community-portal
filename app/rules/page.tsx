@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
-export const metadata = { title: 'Rules' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Rules',
+    description: 'Northline RP rules and community expectations for roleplay, conduct, moderation, and server safety.',
+    path: '/rules',
+  });
+}
 
 const quickStart = [
   { label: 'Stay in character', body: 'Treat Northline like a shared story. OOC chat is for clarification, not winning arguments.' },

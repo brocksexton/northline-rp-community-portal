@@ -3,9 +3,16 @@ import { getCityOverview, getDataHealth, getPopulationSummary, getServerConfig }
 import { getStatusUpdates } from '@/lib/community-data';
 import { duration, relativeFromDate } from '@/lib/format';
 import { getSiteConfig } from '@/lib/site-config';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Server Status' };
+export async function generateMetadata() {
+  return buildPageMetadata({
+    title: 'Server Status',
+    description: 'Live Northline RP server status, city activity, recent events, and operational notices.',
+    path: '/status',
+  });
+}
 
 type StatusTone = 'success' | 'warning' | 'neutral';
 

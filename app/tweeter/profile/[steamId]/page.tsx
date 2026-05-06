@@ -17,6 +17,7 @@ import { getProfileCoverPreset, PROFILE_THEMES } from '@/lib/profile-customizati
 import type { TextFilterRule } from '@/lib/content-filter';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getFollowStates } from '@/lib/tweeter-social-data';
+import { buildPageMetadata } from '@/lib/embed-metadata';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,35 @@ type Params = {
   params: Promise<{ steamId: string }>;
   searchParams?: Promise<SearchParams>;
 };
+
+
+export async function generateMetadata({ params }: Pick<Params, 'params'>) {
+  const { steamId } = await params;
+  if (!/^\d{15,20}$/.test(steamId)) {
+    return buildPageMetadata({
+      title: 'Tweeter Profile',
+      description: 'View a Northline RP Tweeter profile, public posts, and citizen information.',
+      path: '/tweeter',
+    });
+  }
+
+  try {
+    const user = await buildTweeterUser(steamId);
+    const handle = user.handle || `@${steamId.slice(-8)}`;
+    const postCount = user.tweetCount ?? 0;
+    return buildPageMetadata({
+      title: `${user.displayName} ${handle}`,
+      description: `${postCount.toLocaleString()} ${postCount === 1 ? 'post' : 'posts'} on Northline RP Tweeter. View public posts, profile details, and city activity.`,
+      path: `/tweeter/profile/${steamId}`,
+    });
+  } catch {
+    return buildPageMetadata({
+      title: 'Tweeter Profile',
+      description: 'View a Northline RP Tweeter profile, public posts, and citizen information.',
+      path: `/tweeter/profile/${steamId}`,
+    });
+  }
+}
 
 type ProfileTab = 'tweets' | 'replies' | 'info';
 
