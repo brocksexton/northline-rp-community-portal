@@ -26,7 +26,7 @@ function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }
         type="button"
         className="tweeter-filter-word is-revealed"
         onClick={() => setRevealed(false)}
-        title="Click to hide this word again"
+        aria-label="Filtered word revealed. Click to hide it again."
       >
         {text}
       </button>
@@ -37,7 +37,6 @@ function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }
     <button
       type="button"
       className="tweeter-filter-word"
-      title={`Hidden for ${reasonLabel}. Hover to peek or click to reveal.`}
       aria-label={`Hidden word obscured for ${reasonLabel}. Hover to peek or click to reveal.`}
       onClick={() => setRevealed(true)}
       onMouseEnter={() => setPeekActive(true)}
