@@ -678,17 +678,15 @@ export async function getServerRuntimeStatus(options?: {
       else if ((playerCount ?? population.onlineCount) > 0) state = 'online';
     }
 
-    if (isFresh && state !== 'unknown' && state !== 'offline') {
+    if (isFresh && (state === 'online' || state === 'quiet')) {
       return {
         state,
         label: stateLabel(state),
-        message: state === 'offline'
-          ? 'The latest fresh server status says the game server is not online.'
-          : state === 'online'
-            ? 'The game server is online and players are connected.'
-            : 'The game server is online, but nobody is connected right now.',
+        message: state === 'online'
+          ? 'The game server is online and players are connected.'
+          : 'The game server is online, but nobody is connected right now.',
         source: 'server_status.json',
-        online: state === 'offline' ? false : true,
+        online: true,
         playerCount: playerCount ?? population.onlineCount,
         maxPlayers,
         lastSignalAt: lastSignalAt ?? population.latestEventAt,

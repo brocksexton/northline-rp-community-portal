@@ -15680,7 +15680,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-filter-wor
 
 .status-ops-section-head {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: .9rem;
