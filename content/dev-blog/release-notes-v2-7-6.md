@@ -1,6 +1,6 @@
 ---
 title: "v2.7.6 — Ban Detail Polish + Homepage Death Copy"
-date: "2026-03-28"
+date: "2026-05-06T16:42:12Z"
 version: "2.7.6"
 ---
 

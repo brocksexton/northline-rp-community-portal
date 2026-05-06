@@ -1,6 +1,6 @@
 ---
 title: "v2.7.7 — Tweeter Profile Covers"
-date: "2026-03-29"
+date: "2026-05-06T16:42:12Z"
 version: "2.7.7"
 ---
 

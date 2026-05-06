@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 function formatPostDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Undated';
-  return date.toLocaleDateString([], { dateStyle: 'long' });
+  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 export async function generateMetadata() {
@@ -30,8 +30,8 @@ export default async function DevBlogPage() {
       <section className="dev-blog-hero">
         <div>
           <span className="nl-kicker"><i /> Dev Blog</span>
-          <h1>Release notes and build updates</h1>
-          <p>Every portal release note is now treated as a dated blog post, so staff and players can follow what changed without digging through files.</p>
+          <h1>Dev blog and release notes</h1>
+          <p>Readable portal updates for players and staff, with release notes sorted by their real publish time.</p>
         </div>
         <aside className="dev-blog-hero-card">
           <span>Latest release</span>
@@ -42,7 +42,7 @@ export default async function DevBlogPage() {
 
       <section className="dev-blog-toolbar">
         <div><strong>{posts.length}</strong><span>published update{posts.length === 1 ? '' : 's'}</span></div>
-        <p>Release notes are loaded from <code>content/dev-blog</code>.</p>
+        <p>Newest updates appear first. Open a post to read the full notes.</p>
       </section>
 
       {posts.length ? (
@@ -60,7 +60,7 @@ export default async function DevBlogPage() {
           ))}
         </section>
       ) : (
-        <section className="empty-card dev-blog-empty"><strong>No dev blog posts yet.</strong><p>Add markdown files to <code>content/dev-blog</code> to publish updates.</p></section>
+        <section className="empty-card dev-blog-empty"><strong>No dev blog posts yet.</strong><p>Add release-note markdown files to publish updates.</p></section>
       )}
     </main>
   );

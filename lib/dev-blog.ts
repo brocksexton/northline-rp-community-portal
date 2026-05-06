@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'fs/promises';
+import { readdir, readFile, stat } from 'fs/promises';
 import path from 'path';
 
 export type DevBlogPost = {
@@ -79,6 +79,14 @@ function formatExcerpt(markdown: string) {
     .trim();
   if (clean.length <= 180) return clean;
   return `${clean.slice(0, 177).trimEnd()}…`;
+}
+
+function resolvePostDate(rawDate: string | undefined, modifiedAt: Date) {
+  if (rawDate) {
+    const parsed = new Date(rawDate);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
+  }
+  return modifiedAt.toISOString();
 }
 
 function renderInline(value: string) {
@@ -184,11 +192,15 @@ export async function getDevBlogPosts(): Promise<DevBlogPost[]> {
     .filter((entry) => entry.toLowerCase().endsWith('.md'))
     .map(async (entry) => {
       const slug = slugFromFilename(entry);
-      const raw = await readFile(path.join(DEV_BLOG_DIR, entry), 'utf8');
+      const filePath = path.join(DEV_BLOG_DIR, entry);
+      const [raw, fileStats] = await Promise.all([
+        readFile(filePath, 'utf8'),
+        stat(filePath),
+      ]);
       const { data, body } = parseFrontmatter(raw);
       const version = data.version || versionFromSlug(slug);
       const title = data.title || body.split('\n').find((line) => line.startsWith('# '))?.replace(/^#\s+/, '').trim() || `Release notes v${version ?? ''}`.trim();
-      const date = data.date || '2026-05-06';
+      const date = resolvePostDate(data.date, fileStats.mtime);
       return {
         slug,
         title,

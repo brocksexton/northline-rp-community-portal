@@ -52,11 +52,13 @@ function configured(value: string | undefined): string | null {
   return raw || null;
 }
 
-function webhookUrl(kind: 'status' | 'registration' | 'audit'): string | null {
+function webhookUrl(kind: 'status' | 'registration' | 'audit' | 'webAction' | 'gameAction'): string | null {
   switch (kind) {
     case 'status': return configured(process.env.DISCORD_WEBHOOK_STATUS_NOTIFIER ?? process.env.DISCORD_WEBHOOK_STATUS);
     case 'registration': return configured(process.env.DISCORD_WEBHOOK_NEW_REGISTRATION ?? process.env.DISCORD_WEBHOOK_REGISTRATION);
     case 'audit': return configured(process.env.DISCORD_WEBHOOK_ADMIN_AUDIT ?? process.env.DISCORD_WEBHOOK_AUDIT);
+    case 'webAction': return configured(process.env.DISCORD_WEBHOOK_WEB_ACTION ?? process.env.DISCORD_WEBHOOK_SERVER_WEB_ACTION);
+    case 'gameAction': return configured(process.env.DISCORD_WEBHOOK_GAME_ACTION ?? process.env.DISCORD_WEBHOOK_SERVER_GAME_ACTION);
     default: return null;
   }
 }
@@ -112,7 +114,7 @@ async function commonVisuals() {
   };
 }
 
-async function postDiscordWebhook(kind: 'status' | 'registration' | 'audit', payload: WebhookPayload): Promise<void> {
+async function postDiscordWebhook(kind: 'status' | 'registration' | 'audit' | 'webAction' | 'gameAction', payload: WebhookPayload): Promise<void> {
   const url = webhookUrl(kind);
   if (!url) return;
   if (!isAllowedDiscordWebhook(url)) {
@@ -217,3 +219,71 @@ export async function notifyAdminAudit(input: AuditInput): Promise<void> {
 }
 
 export const discordAuditField = field;
+
+
+export async function notifyWebServerAction(input: {
+  action: string;
+  actor?: Actor;
+  targetSteamId?: string | null;
+  targetName?: string | null;
+  reason?: string | null;
+  command?: string | null;
+  result?: string | null;
+  status?: string | null;
+  severity?: 'info' | 'success' | 'warning' | 'danger';
+}): Promise<void> {
+  const [base, visuals] = await Promise.all([siteBaseUrl(), commonVisuals()]);
+  const actorLabel = input.actor?.name || input.actor?.steamId || 'Website staff';
+  await postDiscordWebhook('webAction', {
+    username: 'Northline Web Action',
+    embeds: [{
+      title: clean(input.action, 256),
+      description: input.reason ? clean(input.reason, 2048) : 'A server action was requested from the website staff panel.',
+      url: absoluteUrl(base, '/staff/server'),
+      color: colorForSeverity(input.severity ?? 'warning'),
+      timestamp: new Date().toISOString(),
+      image: visuals.imageUrl ? { url: visuals.imageUrl } : undefined,
+      fields: [
+        field('Actor', actorLabel, true),
+        ...(input.actor?.steamId ? [field('Actor SteamID', input.actor.steamId, true)] : []),
+        ...(input.targetName || input.targetSteamId ? [field('Target', `${input.targetName || 'Unknown'}${input.targetSteamId ? ` (${input.targetSteamId})` : ''}`, true)] : []),
+        ...(input.command ? [field('Command', input.command)] : []),
+        ...(input.status ? [field('Status', input.status, true)] : []),
+        ...(input.result ? [field('Result', input.result)] : []),
+      ].slice(0, 25),
+      footer: { text: `${visuals.name} web server action` },
+    }],
+  });
+}
+
+export async function notifyGameServerAction(input: {
+  action: string;
+  actor?: Actor;
+  targetSteamId?: string | null;
+  targetName?: string | null;
+  reason?: string | null;
+  occurredAt?: string | null;
+  source?: string | null;
+}): Promise<void> {
+  const [base, visuals] = await Promise.all([siteBaseUrl(), commonVisuals()]);
+  const actorLabel = input.actor?.name || input.actor?.steamId || 'In-game staff';
+  await postDiscordWebhook('gameAction', {
+    username: 'Northline Game Action',
+    embeds: [{
+      title: clean(input.action, 256),
+      description: input.reason ? clean(input.reason, 2048) : 'A kick/ban action was detected from in-game administration logs.',
+      url: absoluteUrl(base, '/staff/server'),
+      color: /ban/i.test(input.action) ? DISCORD_RED : DISCORD_GOLD,
+      timestamp: input.occurredAt || new Date().toISOString(),
+      image: visuals.imageUrl ? { url: visuals.imageUrl } : undefined,
+      fields: [
+        field('Actor', actorLabel, true),
+        ...(input.actor?.steamId ? [field('Actor SteamID', input.actor.steamId, true)] : []),
+        ...(input.targetName || input.targetSteamId ? [field('Target', `${input.targetName || 'Unknown'}${input.targetSteamId ? ` (${input.targetSteamId})` : ''}`, true)] : []),
+        ...(input.source ? [field('Source', input.source, true)] : []),
+        ...(input.reason ? [field('Reason', input.reason)] : []),
+      ].slice(0, 25),
+      footer: { text: `${visuals.name} in-game moderation action` },
+    }],
+  });
+}

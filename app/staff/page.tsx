@@ -64,6 +64,7 @@ export default async function StaffPage() {
           <div className="staff-hero-actions">
             {statusVisible ? <Link className="button button-primary" href="/status">Public status</Link> : null}
             <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Status diagnostics</Link>
+            <Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Server control</Link>
             {bansVisible ? <Link className="button button-soft" href="/bans">Ban list</Link> : null}
             {tweeterVisible ? <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link> : null}
           </div>
@@ -108,6 +109,16 @@ export default async function StaffPage() {
             <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
             <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
+        </article>
+
+
+        <article className="staff-panel maintenance-help-panel">
+          <div className="section-heading"><span className="kicker">Server control</span><h2>Live console and players</h2><p>Open the web control room to watch console output, see connected citizens, run kick/ban commands, and start, kill, restart, or update the server when permitted.</p></div>
+          <div className="stack-list compact-stack">
+            <div><strong>Player actions</strong><span>SteamID is filled automatically from the connected-player list.</span><small>Web actions are audited and can post Discord embeds.</small></div>
+            <div><strong>Game action watcher</strong><span>New in-game kicks and bans detected in admin logs can also notify Discord.</span><small>Configured from server-side environment variables.</small></div>
+          </div>
+          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Open server control</Link></div>
         </article>
 
         <article className="staff-panel maintenance-help-panel">

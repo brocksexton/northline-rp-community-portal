@@ -11,7 +11,7 @@ type Params = { params: Promise<{ slug: string }> };
 function formatPostDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Undated';
-  return date.toLocaleDateString([], { dateStyle: 'long' });
+  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 export async function generateStaticParams() {

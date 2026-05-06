@@ -1,6 +1,6 @@
 ---
 title: "v2.7.4 - Ban detail context"
-date: "2026-03-26"
+date: "2026-05-06T16:42:12Z"
 version: "2.7.4"
 ---
 
