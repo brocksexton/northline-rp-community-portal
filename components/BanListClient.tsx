@@ -178,7 +178,7 @@ export function BanListClient({ initialData, tweeterVisible = true }: { initialD
 
       <section className="ban-list-panel">
         <div className="ban-list-header"><div><h2>Moderation records</h2><p>{filtered.length} {filtered.length === 1 ? 'record' : 'records'} shown · open a record for player context</p></div><span>Auto-refreshes every 20s</span></div>
-        {filtered.length ? <div className="ban-list">{filtered.map((ban) => <BanCard key={ban.id} ban={ban} now={now} />)}</div> : <div className="ban-empty-state"><strong>No bans to show</strong><p>No matching records were found. Once staff issue account actions, they will appear here automatically.</p></div>}
+        {filtered.length ? <div className="ban-list">{filtered.map((ban) => <BanCard key={ban.id} ban={ban} now={now} tweeterVisible={tweeterVisible} />)}</div> : <div className="ban-empty-state"><strong>No bans to show</strong><p>No matching records were found. Once staff issue account actions, they will appear here automatically.</p></div>}
       </section>
     </main>
   );

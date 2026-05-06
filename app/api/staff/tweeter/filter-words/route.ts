@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { deleteTweeterContentFilterRule, listTweeterContentFilterRules, resetTweeterContentFilterRules, upsertTweeterContentFilterRule } from '@/lib/tweeter-content-filter-data';
+import { discordAuditField, notifyAdminAudit } from '@/lib/discord-webhooks';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,28 @@ export async function POST(request: NextRequest) {
   try {
     if (body?.action === 'reset') {
       const rules = await resetTweeterContentFilterRules();
+      await notifyAdminAudit({
+        action: 'Reset Tweeter filtered words',
+        actor: { steamId, name: access.role },
+        severity: 'warning',
+        url: '/staff/tweeter',
+        fields: [discordAuditField('Rules after reset', String(rules.length), true)],
+      });
       return jsonWithSession({ ok: true, rules }, { headers: noStoreHeaders() }, steamId, request);
     }
     const rule = await upsertTweeterContentFilterRule(body);
     const rules = await listTweeterContentFilterRules();
+    await notifyAdminAudit({
+      action: 'Updated Tweeter filtered word',
+      actor: { steamId, name: access.role },
+      target: rule.term,
+      severity: 'info',
+      url: '/staff/tweeter',
+      fields: [
+        discordAuditField('Reason', rule.reason, true),
+        discordAuditField('Match mode', rule.matchMode, true),
+      ],
+    });
     return jsonWithSession({ ok: true, rule, rules }, { headers: noStoreHeaders() }, steamId, request);
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'save_failed';
@@ -57,6 +76,14 @@ export async function DELETE(request: NextRequest) {
   try {
     await deleteTweeterContentFilterRule(body.id);
     const rules = await listTweeterContentFilterRules();
+    await notifyAdminAudit({
+      action: 'Removed Tweeter filtered word',
+      actor: { steamId, name: access.role },
+      target: String(body.id ?? '').trim() || 'Unknown rule',
+      severity: 'warning',
+      url: '/staff/tweeter',
+      fields: [discordAuditField('Rules remaining', String(rules.length), true)],
+    });
     return jsonWithSession({ ok: true, rules }, { headers: noStoreHeaders() }, steamId, request);
   } catch {
     return NextResponse.json({ error: 'Could not remove that filtered word.' }, { status: 400, headers: noStoreHeaders() });

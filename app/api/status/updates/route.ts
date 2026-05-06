@@ -3,6 +3,7 @@ import { getPlayer, getPermissionsForSteamId, getRoleForSteamId } from '@/lib/ap
 import { createStatusUpdate, deleteStatusUpdate, updateStatusUpdate, type StatusUpdateTone } from '@/lib/community-data';
 import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
+import { discordAuditField, notifyAdminAudit, notifyStatusUpdatePosted } from '@/lib/discord-webhooks';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,17 @@ export async function POST(request: NextRequest) {
     createdByName: staff.identity.displayName,
   });
 
+  await notifyStatusUpdatePosted(update, staff.identity);
+  await notifyAdminAudit({
+    action: 'Posted public status update',
+    actor: staff.identity,
+    target: update.title,
+    detail: update.body,
+    severity: update.tone === 'warning' || update.tone === 'maintenance' ? 'warning' : 'success',
+    url: '/status',
+    fields: [discordAuditField('Tone', update.tone, true)],
+  });
+
   return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
 }
 
@@ -100,6 +112,15 @@ export async function PATCH(request: NextRequest) {
   });
 
   if (!update) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
+  await notifyAdminAudit({
+    action: 'Edited public status update',
+    actor: staff.identity,
+    target: update.title,
+    detail: update.body,
+    severity: 'info',
+    url: '/status',
+    fields: [discordAuditField('Notice ID', update.id, true), discordAuditField('Tone', update.tone, true)],
+  });
   return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
 }
 
@@ -113,5 +134,12 @@ export async function DELETE(request: NextRequest) {
 
   const deleted = await deleteStatusUpdate(id);
   if (!deleted) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
+  await notifyAdminAudit({
+    action: 'Removed public status update',
+    actor: staff.identity,
+    target: id,
+    severity: 'warning',
+    url: '/status',
+  });
   return jsonWithSession({ ok: true, id }, undefined, staff.identity.steamId, request);
 }

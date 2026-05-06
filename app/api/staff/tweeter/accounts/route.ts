@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { listTweeterAccountModeration, setTweeterAccountModeration } from '@/lib/tweeter-moderation-data';
+import { discordAuditField, notifyAdminAudit } from '@/lib/discord-webhooks';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,19 @@ export async function POST(request: NextRequest) {
       staffName: access.role,
     });
     const accounts = await listTweeterAccountModeration();
+    const requestedStatus = String(body.status ?? 'none');
+    await notifyAdminAudit({
+      action: account ? 'Updated Tweeter account restriction' : 'Cleared Tweeter account restriction',
+      actor: { steamId, name: access.role },
+      target: String(account?.steamId ?? body.steamId ?? ''),
+      detail: String(account?.reason ?? body.reason ?? '').trim() || (account ? 'No public reason provided.' : 'Restriction cleared.'),
+      severity: account ? 'warning' : 'success',
+      url: '/staff/tweeter',
+      fields: [
+        discordAuditField('Status', String(account?.status ?? requestedStatus), true),
+        discordAuditField('Expires', String(account?.expiresAt ?? body.expiresAt ?? 'Never'), true),
+      ],
+    });
     return jsonWithSession({ ok: true, account, accounts }, { headers: noStoreHeaders() }, steamId, request);
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'save_failed';

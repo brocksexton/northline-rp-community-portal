@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getExternalOrigin, verifySteamCallback } from '@/lib/steam-openid';
+import { getExternalOrigin, getSteamProfile, verifySteamCallback } from '@/lib/steam-openid';
 import { authReturnToCookieName, setSessionCookie, withNoStoreHeaders } from '@/lib/session';
-import { claimCommunityProfile } from '@/lib/community-data';
+import { claimCommunityProfile, getCommunityProfile } from '@/lib/community-data';
+import { getPlayer } from '@/lib/ape-data';
+import { notifyNewWebRegistration } from '@/lib/discord-webhooks';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +18,20 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const existingProfile = await getCommunityProfile(steamId);
     await claimCommunityProfile(steamId);
+    if (!existingProfile) {
+      const [player, steamProfile] = await Promise.all([getPlayer(steamId), getSteamProfile(steamId)]);
+      await notifyNewWebRegistration({
+        steamId,
+        displayName: player?.RpDisplayName || player?.LastKnownDisplayName || steamProfile?.personaName || `Steam ${steamId.slice(-8)}`,
+        avatarUrl: steamProfile?.avatarFull || steamProfile?.avatarMedium || steamProfile?.avatar || null,
+        hasJoinedServer: Boolean(player),
+        firstJoinedAt: typeof player?.FirstJoinedUtc === 'string' ? player.FirstJoinedUtc : null,
+      });
+    }
   } catch {
-    // Authentication should still succeed if the local profile store is temporarily unavailable.
+    // Authentication should still succeed if the local profile store or Discord notifier is temporarily unavailable.
   }
 
   const response = withNoStoreHeaders(NextResponse.redirect(new URL(returnTo, origin)));
