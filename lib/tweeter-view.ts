@@ -4,6 +4,8 @@ import { getSteamProfiles } from '@/lib/steam-openid';
 import { playerTitle } from '@/lib/format';
 import { canUseCustomProfileCover, DEFAULT_PROFILE_COVER_PRESET, DEFAULT_PROFILE_THEME, normalizeProfileCoverPreset, normalizeProfileTheme, type ProfileTheme } from '@/lib/profile-customization';
 import { getTweeterRestriction, getTweeterRestrictionMap, type TweeterAccountRestriction, type TweeterModerationNotice } from '@/lib/tweeter-moderation-data';
+import { listTweeterContentFilterRules } from '@/lib/tweeter-content-filter-data';
+import type { TextFilterRule } from '@/lib/content-filter';
 
 const ZERO_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -65,6 +67,7 @@ export type TweeterPayload = {
   tweets: TweetView[];
   trends: Array<{ tag: string; count: number }>;
   suggestions: TweeterUserView[];
+  contentFilterRules: TextFilterRule[];
   stats: {
     tweetCount: number;
     authorCount: number;
@@ -95,6 +98,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
     getPlayers(),
     getCommunityProfiles(),
   ]);
+  const contentFilterRules = await listTweeterContentFilterRules();
 
   const tweetIds = tweeter.Tweets.map((tweet) => tweet.Id);
   const authorIds = [...new Set(tweeter.Tweets.map((tweet) => String(tweet.AuthorSteamId)))];
@@ -215,6 +219,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       .slice(0, 8)
       .map(([tag, count]) => ({ tag, count })),
     suggestions,
+    contentFilterRules,
     stats: {
       tweetCount: tweets.length,
       authorCount: new Set(tweets.map((tweet) => tweet.authorSteamId)).size,

@@ -3,13 +3,16 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import type { TweeterAccountModeration, TweeterAccountStatus } from '@/lib/tweeter-moderation-data';
+import type { TextFilterMatchMode, TextFilterReason, TextFilterRule } from '@/lib/content-filter';
 
 type Props = {
   initialAccounts: TweeterAccountModeration[];
+  initialFilterRules: TextFilterRule[];
   canManage: boolean;
 };
 
 type FilterStatus = TweeterAccountStatus | 'all';
+type RuleReasonFilter = TextFilterReason | 'all';
 
 const statusOptions: Array<{ value: TweeterAccountStatus; label: string; short: string; description: string; icon: string }> = [
   { value: 'none', label: 'Clear', short: 'Visible', description: 'Remove website-only Tweeter restrictions.', icon: 'fa-solid fa-circle-check' },
@@ -68,7 +71,15 @@ function statusCounts(accounts: TweeterAccountModeration[]) {
   };
 }
 
-export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
+function reasonLabel(reason: TextFilterReason) {
+  return reason === 'slur' ? 'Slur' : 'Profanity';
+}
+
+function matchModeLabel(mode?: TextFilterMatchMode) {
+  return mode === 'contains' ? 'Contains' : 'Whole word';
+}
+
+export function TweeterAdminPanel({ initialAccounts, initialFilterRules, canManage }: Props) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [steamId, setSteamId] = useState('');
   const [status, setStatus] = useState<TweeterAccountStatus>('soft_ban');
@@ -80,7 +91,22 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  const [filterRules, setFilterRules] = useState(initialFilterRules);
+  const [ruleId, setRuleId] = useState('');
+  const [ruleTerm, setRuleTerm] = useState('');
+  const [ruleReason, setRuleReason] = useState<TextFilterReason>('profanity');
+  const [ruleMatchMode, setRuleMatchMode] = useState<TextFilterMatchMode>('word');
+  const [ruleQuery, setRuleQuery] = useState('');
+  const [ruleReasonFilter, setRuleReasonFilter] = useState<RuleReasonFilter>('all');
+  const [ruleSaving, setRuleSaving] = useState(false);
+  const [ruleMessage, setRuleMessage] = useState('');
+
   const counts = useMemo(() => statusCounts(accounts), [accounts]);
+  const ruleCounts = useMemo(() => ({
+    total: filterRules.length,
+    slurs: filterRules.filter((rule) => rule.reason === 'slur').length,
+    profanity: filterRules.filter((rule) => rule.reason === 'profanity').length,
+  }), [filterRules]);
 
   const filtered = useMemo(() => {
     const clean = query.trim().toLowerCase();
@@ -91,6 +117,15 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
         .some((value) => value.toLowerCase().includes(clean));
     });
   }, [accounts, query, statusFilter]);
+
+  const visibleRules = useMemo(() => {
+    const clean = ruleQuery.trim().toLowerCase();
+    return filterRules.filter((rule) => {
+      if (ruleReasonFilter !== 'all' && rule.reason !== ruleReasonFilter) return false;
+      if (!clean) return true;
+      return [rule.term, rule.reason, rule.matchMode ?? 'word'].some((value) => value.toLowerCase().includes(clean));
+    });
+  }, [filterRules, ruleQuery, ruleReasonFilter]);
 
   function applyStatus(nextStatus: TweeterAccountStatus) {
     setStatus(nextStatus);
@@ -121,6 +156,22 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
     date.setDate(date.getDate() + days);
     const offset = date.getTimezoneOffset() * 60000;
     setExpiresAt(new Date(date.getTime() - offset).toISOString().slice(0, 16));
+  }
+
+  function editRule(rule: TextFilterRule) {
+    setRuleId(rule.id);
+    setRuleTerm(rule.term);
+    setRuleReason(rule.reason);
+    setRuleMatchMode(rule.matchMode === 'contains' ? 'contains' : 'word');
+    setRuleMessage('Loaded filtered word into the editor.');
+  }
+
+  function resetRuleForm(nextMessage = 'Filtered word editor cleared.') {
+    setRuleId('');
+    setRuleTerm('');
+    setRuleReason('profanity');
+    setRuleMatchMode('word');
+    setRuleMessage(nextMessage);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -158,6 +209,77 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
     }
   }
 
+  async function submitRule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canManage || ruleSaving) return;
+    setRuleSaving(true);
+    setRuleMessage('');
+    try {
+      const response = await fetch('/api/staff/tweeter/filter-words', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: ruleId || undefined, term: ruleTerm, reason: ruleReason, matchMode: ruleMatchMode }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string; rules?: TextFilterRule[] };
+      if (!response.ok) throw new Error(payload.error || 'Could not save filtered word.');
+      setFilterRules(payload.rules ?? []);
+      resetRuleForm(ruleId ? 'Filtered word updated.' : 'Filtered word added.');
+    } catch (error) {
+      setRuleMessage(error instanceof Error ? error.message : 'Could not save filtered word.');
+    } finally {
+      setRuleSaving(false);
+    }
+  }
+
+  async function deleteRule(rule: TextFilterRule) {
+    if (!canManage || ruleSaving) return;
+    setRuleSaving(true);
+    setRuleMessage('');
+    try {
+      const response = await fetch('/api/staff/tweeter/filter-words', {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: rule.id }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string; rules?: TextFilterRule[] };
+      if (!response.ok) throw new Error(payload.error || 'Could not remove filtered word.');
+      setFilterRules(payload.rules ?? []);
+      if (ruleId === rule.id) resetRuleForm('Filtered word removed.');
+      else setRuleMessage('Filtered word removed.');
+    } catch (error) {
+      setRuleMessage(error instanceof Error ? error.message : 'Could not remove filtered word.');
+    } finally {
+      setRuleSaving(false);
+    }
+  }
+
+  async function resetRules() {
+    if (!canManage || ruleSaving) return;
+    setRuleSaving(true);
+    setRuleMessage('');
+    try {
+      const response = await fetch('/api/staff/tweeter/filter-words', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'reset' }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string; rules?: TextFilterRule[] };
+      if (!response.ok) throw new Error(payload.error || 'Could not reset filtered words.');
+      setFilterRules(payload.rules ?? []);
+      resetRuleForm('Filtered words reset to defaults.');
+    } catch (error) {
+      setRuleMessage(error instanceof Error ? error.message : 'Could not reset filtered words.');
+    } finally {
+      setRuleSaving(false);
+    }
+  }
+
   return (
     <div className="tweeter-admin-workspace">
       <section className="tweeter-admin-overview" aria-label="Tweeter moderation summary">
@@ -177,9 +299,9 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
           <p>Fully blocked from Tweeter surfaces.</p>
         </article>
         <article>
-          <span>Temporary</span>
-          <strong>{counts.temporary.toLocaleString()}</strong>
-          <p>{counts.expiringSoon ? `${counts.expiringSoon} expiring soon.` : 'Expiry-backed actions.'}</p>
+          <span>Filtered words</span>
+          <strong>{ruleCounts.total.toLocaleString()}</strong>
+          <p>{ruleCounts.slurs.toLocaleString()} slur rules · {ruleCounts.profanity.toLocaleString()} profanity rules.</p>
         </article>
       </section>
 
@@ -250,6 +372,78 @@ export function TweeterAdminPanel({ initialAccounts, canManage }: Props) {
               </div>
             </div>
           </form>
+        </article>
+
+        <article className="staff-panel tweeter-admin-filter-words">
+          <div className="section-heading tweeter-admin-heading">
+            <span className="kicker">Content filter</span>
+            <h2>Banned words</h2>
+            <p>Manage the words Tweeter obscures with the sparkle blur. Changes apply to feed, profile, and thread rendering.</p>
+          </div>
+
+          {!canManage ? <div className="notice warning"><p>Read-only view. Developer access is required to add, edit, or remove filtered words.</p></div> : null}
+
+          <form className="tweeter-filter-word-form" onSubmit={submitRule}>
+            <label>
+              <span>Word or phrase</span>
+              <input value={ruleTerm} onChange={(event) => setRuleTerm(event.target.value)} placeholder="Enter a word to obscure" disabled={!canManage} />
+            </label>
+            <label>
+              <span>Reason</span>
+              <select value={ruleReason} onChange={(event) => setRuleReason(event.target.value as TextFilterReason)} disabled={!canManage}>
+                <option value="profanity">Profanity</option>
+                <option value="slur">Slur</option>
+              </select>
+            </label>
+            <label>
+              <span>Match</span>
+              <select value={ruleMatchMode} onChange={(event) => setRuleMatchMode(event.target.value as TextFilterMatchMode)} disabled={!canManage}>
+                <option value="word">Whole word</option>
+                <option value="contains">Contains</option>
+              </select>
+            </label>
+            <div className="tweeter-admin-actions compact-actions">
+              <span>{ruleMessage}</span>
+              <div>
+                <button type="button" className="secondary" onClick={resetRuleForm} disabled={!canManage || ruleSaving}>Clear</button>
+                <button type="submit" disabled={!canManage || ruleSaving || !ruleTerm.trim()}>{ruleSaving ? 'Saving…' : ruleId ? 'Update word' : 'Add word'}</button>
+              </div>
+            </div>
+          </form>
+
+          <div className="tweeter-admin-list-tools filter-word-tools">
+            <label className="tweeter-admin-search">
+              <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
+              <input value={ruleQuery} onChange={(event) => setRuleQuery(event.target.value)} placeholder="Search filtered words" />
+            </label>
+            <div className="tweeter-admin-filter-pills" aria-label="Filter words by reason">
+              {(['all', 'profanity', 'slur'] as RuleReasonFilter[]).map((filter) => (
+                <button key={filter} type="button" className={ruleReasonFilter === filter ? 'active' : ''} onClick={() => setRuleReasonFilter(filter)}>
+                  {filter === 'all' ? 'All' : reasonLabel(filter)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="tweeter-filter-word-list">
+            {visibleRules.length ? visibleRules.map((rule) => (
+              <div className={`tweeter-filter-word-row reason-${rule.reason}`} key={rule.id}>
+                <div>
+                  <strong>{rule.term}</strong>
+                  <span>{reasonLabel(rule.reason)} · {matchModeLabel(rule.matchMode)}</span>
+                </div>
+                <div>
+                  <button type="button" onClick={() => editRule(rule)} disabled={!canManage}>Edit</button>
+                  <button type="button" className="danger" onClick={() => deleteRule(rule)} disabled={!canManage || ruleSaving}>Remove</button>
+                </div>
+              </div>
+            )) : <div className="tweeter-admin-empty"><strong>No matching filtered words.</strong><p>Try clearing search or switching back to All.</p></div>}
+          </div>
+
+          <div className="tweeter-filter-word-footer">
+            <span>{filterRules.length.toLocaleString()} active filtered word{filterRules.length === 1 ? '' : 's'}</span>
+            <button type="button" className="secondary" onClick={resetRules} disabled={!canManage || ruleSaving}>Reset defaults</button>
+          </div>
         </article>
 
         <article className="staff-panel tweeter-admin-list">

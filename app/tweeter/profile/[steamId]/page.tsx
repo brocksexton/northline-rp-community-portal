@@ -14,6 +14,7 @@ import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-vi
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
 import { getProfileCoverPreset, PROFILE_THEMES } from '@/lib/profile-customization';
+import type { TextFilterRule } from '@/lib/content-filter';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getFollowStates } from '@/lib/tweeter-social-data';
 
@@ -78,7 +79,7 @@ function profileThemeLabel(value?: string | null) {
   return PROFILE_THEMES.find((theme) => theme.id === value)?.label ?? 'Clean';
 }
 
-function ProfileTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetView; signedIn: boolean; disabledReason?: string }) {
+function ProfileTweet({ tweet, signedIn, disabledReason = '', contentFilterRules }: { tweet: TweetView; signedIn: boolean; disabledReason?: string; contentFilterRules?: TextFilterRule[] }) {
   return (
     <article className="tweet-card-v2">
       <div className="tweet-card-avatar"><UserAvatar src={tweet.avatarUrl ?? null} name={tweet.authorDisplayName} size="md" /></div>
@@ -89,9 +90,9 @@ function ProfileTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetVi
             <span>{tweet.handle}</span><span>·</span><span>{formatTweetTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
-        {tweet.isRetweet && tweet.retweetOfBody ? <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote> : null}
-        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
-        <TweeterFilterNotice text={tweet.body} compact />
+        {tweet.isRetweet && tweet.retweetOfBody ? <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} rules={contentFilterRules} /></blockquote> : null}
+        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} rules={contentFilterRules} /></div>
+        <TweeterFilterNotice text={tweet.body} rules={contentFilterRules} compact />
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
           <button type="button" disabled title="Reposts require the future game bridge."><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
@@ -367,7 +368,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <ProfileInfoTab profile={publicProfile} user={user} posts={userTweets.length} originals={originalTweets.length} replies={replyTweets.length} />
           ) : (
             <section className="tweeter-feed-list">
-              {visibleTweets.length ? visibleTweets.map((tweet) => <ProfileTweet key={tweet.id} tweet={tweet} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} />) : (
+              {visibleTweets.length ? visibleTweets.map((tweet) => <ProfileTweet key={tweet.id} tweet={tweet} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} contentFilterRules={payload.contentFilterRules} />) : (
                 <div className="tweeter-empty-state"><strong>No {activeTab === 'replies' ? 'replies' : 'tweets'} yet</strong><p>This citizen has no visible {activeTab === 'replies' ? 'replies' : 'original tweets'} in the current server data.</p></div>
               )}
             </section>

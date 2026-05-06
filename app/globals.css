@@ -15115,3 +15115,145 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-status-gri
     background: rgba(125, 211, 252, 0.08);
   }
 }
+
+/* v2.9.16 Tweeter filter word administration */
+.tweeter-admin-filter-words {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,252,255,.80));
+  box-shadow: var(--site-shadow);
+}
+body[data-site-style='ops']:not(:has(.tweeter-mode)) .tweeter-admin-filter-words,
+body[data-site-style='glass']:not(:has(.tweeter-mode)) .tweeter-admin-filter-words {
+  background: rgba(15,23,42,.72);
+}
+.tweeter-admin-filter-words label {
+  display: grid;
+  gap: .45rem;
+}
+.tweeter-admin-filter-words label span {
+  color: var(--site-muted);
+  font-size: .7rem;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.tweeter-admin-filter-words input,
+.tweeter-admin-filter-words select {
+  width: 100%;
+  min-height: 48px;
+  padding: .8rem 1rem;
+  border: 1px solid var(--site-line);
+  border-radius: 16px;
+  background: var(--site-surface-solid);
+  color: var(--site-ink);
+  font-weight: 800;
+}
+.tweeter-filter-word-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr) minmax(150px, .55fr);
+  gap: .8rem;
+}
+.tweeter-filter-word-form .compact-actions {
+  grid-column: 1 / -1;
+}
+.filter-word-tools {
+  margin-top: 1rem;
+}
+.tweeter-filter-word-list {
+  display: grid;
+  gap: .65rem;
+  max-height: 520px;
+  overflow: auto;
+  padding-right: .15rem;
+}
+.tweeter-filter-word-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .75rem;
+  align-items: center;
+  padding: .85rem;
+  border: 1px solid var(--site-line);
+  border-radius: 18px;
+  background: var(--site-surface-solid);
+}
+.tweeter-filter-word-row strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+.tweeter-filter-word-row span {
+  display: block;
+  margin-top: .22rem;
+  color: var(--site-muted);
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.tweeter-filter-word-row > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  justify-content: flex-end;
+}
+.tweeter-filter-word-row button,
+.tweeter-filter-word-footer button {
+  min-height: 36px;
+  padding: 0 .75rem;
+  border: 1px solid var(--site-line);
+  border-radius: 999px;
+  background: var(--site-surface);
+  color: var(--site-ink);
+  font-weight: 900;
+  cursor: pointer;
+}
+.tweeter-filter-word-row button.danger {
+  border-color: rgba(239,68,68,.25);
+  background: #fff1f2;
+  color: #991b1b;
+}
+.tweeter-filter-word-row button:disabled,
+.tweeter-filter-word-footer button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.tweeter-filter-word-row.reason-slur {
+  border-color: rgba(239,68,68,.18);
+  background: linear-gradient(180deg, rgba(255,241,242,.72), var(--site-surface-solid));
+}
+.tweeter-filter-word-row.reason-profanity {
+  border-color: rgba(29,155,240,.16);
+}
+.tweeter-filter-word-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  align-items: center;
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--site-line);
+  color: var(--site-muted);
+  font-weight: 850;
+}
+@media (min-width: 1121px) {
+  .tweeter-admin-filter-words {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 760px) {
+  .tweeter-filter-word-form,
+  .tweeter-filter-word-row {
+    grid-template-columns: 1fr;
+  }
+  .tweeter-filter-word-row > div:last-child,
+  .tweeter-filter-word-footer {
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .tweeter-filter-word-row button,
+  .tweeter-filter-word-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+}

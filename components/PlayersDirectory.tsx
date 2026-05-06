@@ -30,7 +30,6 @@ type DirectoryStats = {
   listedProfiles: number;
   privateProfiles: number;
   unclaimedSaves: number;
-  moderatedProfiles?: number;
   onlineNow: number;
 };
 
@@ -114,11 +113,8 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       <section className="players-directory-hero">
         <div className="players-directory-copy">
           <span className="kicker">Citizen board</span>
-          <h1>Meet the locals who put their name on the door.</h1>
-          <p>
-            This is Northline’s public roll call: citizens who signed in, claimed a profile, and chose to be discoverable.
-            Everyone else gets to stay off the board unless they opt in.
-          </p>
+          <h1>Meet Northline’s public citizens.</h1>
+          <p>Browse claimed, discoverable profiles from citizens who chose to be on the board.</p>
           <div className="players-hero-actions">
             {signedIn ? (
               <Link className="button button-primary" href="/dashboard">
@@ -144,7 +140,6 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
             <div><strong>{stats.totalSaves.toLocaleString()}</strong><span>known citizens</span></div>
             <div><strong>{stats.privateProfiles.toLocaleString()}</strong><span>staying private</span></div>
             <div><strong>{stats.unclaimedSaves.toLocaleString()}</strong><span>not claimed yet</span></div>
-            {stats.moderatedProfiles ? <div><strong>{stats.moderatedProfiles.toLocaleString()}</strong><span>restricted</span></div> : null}
           </div>
         </aside>
       </section>

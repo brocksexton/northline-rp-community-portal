@@ -1,15 +1,17 @@
 'use client';
 
 import { Fragment, useMemo, useState, type CSSProperties } from 'react';
-import { buildTextFilterSegments, getTextFilterSummary, textFilterReasonLabel, type TextFilterReason } from '@/lib/content-filter';
+import { buildTextFilterSegments, getTextFilterSummary, textFilterReasonLabel, type TextFilterReason, type TextFilterRule } from '@/lib/content-filter';
 
 type TweeterFilteredTextProps = {
   text: string;
+  rules?: TextFilterRule[];
 };
 
 type TweeterFilterNoticeProps = {
   text: string;
   compact?: boolean;
+  rules?: TextFilterRule[];
 };
 
 function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }) {
@@ -65,7 +67,7 @@ function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }
   );
 }
 
-function renderToken(token: string, tokenIndex: number) {
+function renderToken(token: string, tokenIndex: number, rules?: TextFilterRule[]) {
   const match = token.match(/^(["'([{]*)(.*?)([.,!?;:)\]}"']*)$/s);
   const leading = match?.[1] ?? '';
   const core = match?.[2] ?? token;
@@ -85,7 +87,7 @@ function renderToken(token: string, tokenIndex: number) {
 
   const prefix = core.startsWith('#') || core.startsWith('@') ? core.slice(0, 1) : '';
   const bare = prefix ? core.slice(1) : core;
-  const segments = buildTextFilterSegments(bare);
+  const segments = buildTextFilterSegments(bare, rules);
   const styledClass = prefix === '#' ? 'tweeter-hashtag' : prefix === '@' ? 'tweeter-mention' : '';
 
   return (
@@ -106,7 +108,7 @@ function renderToken(token: string, tokenIndex: number) {
   );
 }
 
-export function TweeterFilteredText({ text }: TweeterFilteredTextProps) {
+export function TweeterFilteredText({ text, rules }: TweeterFilteredTextProps) {
   const lines = useMemo(() => String(text ?? '').split('\n'), [text]);
   return (
     <>
@@ -117,7 +119,7 @@ export function TweeterFilteredText({ text }: TweeterFilteredTextProps) {
             {tokens.map((token, tokenIndex) => {
               if (!token) return null;
               if (/^\s+$/s.test(token)) return <Fragment key={`space-${lineIndex}-${tokenIndex}`}>{token}</Fragment>;
-              return renderToken(token, lineIndex * 1000 + tokenIndex);
+              return renderToken(token, lineIndex * 1000 + tokenIndex, rules);
             })}
             {lineIndex < lines.length - 1 ? <br /> : null}
           </Fragment>
@@ -127,8 +129,8 @@ export function TweeterFilteredText({ text }: TweeterFilteredTextProps) {
   );
 }
 
-export function TweeterFilterNotice({ text, compact = false }: TweeterFilterNoticeProps) {
-  const summary = useMemo(() => getTextFilterSummary(text), [text]);
+export function TweeterFilterNotice({ text, compact = false, rules }: TweeterFilterNoticeProps) {
+  const summary = useMemo(() => getTextFilterSummary(text, rules), [text, rules]);
   if (!summary.containsFilteredText) return null;
 
   return (

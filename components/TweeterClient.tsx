@@ -6,6 +6,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFollowButton } from '@/components/TweeterFollowButton';
 import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
+import type { TextFilterRule } from '@/lib/content-filter';
 
 type TweetRow = {
   id: string;
@@ -68,6 +69,7 @@ type TweeterPayload = {
   tweets: TweetRow[];
   trends: Array<{ tag: string; count: number }>;
   suggestions: Suggestion[];
+  contentFilterRules?: TextFilterRule[];
   stats: {
     tweetCount: number;
     authorCount: number;
@@ -356,11 +358,11 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   </div>
 
                   {tweet.isRetweet && tweet.retweetOfBody ? (
-                    <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote>
+                    <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} rules={data.contentFilterRules} /></blockquote>
                   ) : null}
 
-                  <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
-                  <TweeterFilterNotice text={tweet.body} compact />
+                  <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} rules={data.contentFilterRules} /></div>
+                  <TweeterFilterNotice text={tweet.body} rules={data.contentFilterRules} compact />
 
                   <footer className="tweet-actions-row">
                     <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Open replies"><Icon className="fa-regular fa-comment" /><small>{actionCount(tweet.replyCount)}</small></Link>

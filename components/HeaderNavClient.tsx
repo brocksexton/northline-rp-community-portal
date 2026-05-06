@@ -40,7 +40,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
   const pathname = usePathname() || '/';
   const visibleItems = staff ? [...navItems, { href: '/staff', label: 'Staff', icon: 'fa-solid fa-shield-halved', description: 'Staff tools' }] : navItems;
   const supportItem: NavItem = { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' };
-  const primaryHrefs = new Set(['/status', '/tweeter', '/players', '/cases', '/leaderboards']);
+  const primaryHrefs = new Set(['/status', '/tweeter', '/players', '/rules', '/leaderboards']);
   const primaryItems = visibleItems.filter((item) => primaryHrefs.has(item.href));
   const moreItems = [...visibleItems.filter((item) => !primaryHrefs.has(item.href)), supportItem];
   const moreActive = moreItems.some((item) => isActive(pathname, item.href));

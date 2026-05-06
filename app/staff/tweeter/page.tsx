@@ -3,6 +3,7 @@ import { TweeterAdminPanel } from '@/components/TweeterAdminPanel';
 import { getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { getSessionSteamId } from '@/lib/session';
 import { listTweeterAccountModeration } from '@/lib/tweeter-moderation-data';
+import { listTweeterContentFilterRules } from '@/lib/tweeter-content-filter-data';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tweeter Administration' };
@@ -25,7 +26,7 @@ export default async function StaffTweeterPage() {
     );
   }
 
-  const accounts = await listTweeterAccountModeration();
+  const [accounts, filterRules] = await Promise.all([listTweeterAccountModeration(), listTweeterContentFilterRules()]);
   const canManage = role.toLowerCase() === 'developer';
 
   return (
@@ -48,7 +49,7 @@ export default async function StaffTweeterPage() {
         </aside>
       </section>
 
-      <TweeterAdminPanel initialAccounts={accounts} canManage={canManage} />
+      <TweeterAdminPanel initialAccounts={accounts} initialFilterRules={filterRules} canManage={canManage} />
     </main>
   );
 }

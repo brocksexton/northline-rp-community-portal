@@ -5,6 +5,7 @@ import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, type TweetView } from '@/lib/tweeter-view';
+import type { TextFilterRule } from '@/lib/content-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ function verifiedBadge(kind: string) {
   return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
 }
 
-function MiniTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetView; signedIn: boolean; disabledReason?: string }) {
+function MiniTweet({ tweet, signedIn, disabledReason = '', contentFilterRules }: { tweet: TweetView; signedIn: boolean; disabledReason?: string; contentFilterRules?: TextFilterRule[] }) {
   return (
     <article className="tweet-card-v2 thread-mini-card">
       <div className="tweet-card-avatar"><UserAvatar src={tweet.avatarUrl ?? null} name={tweet.authorDisplayName} size="md" /></div>
@@ -31,8 +32,8 @@ function MiniTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetView;
             <span>{tweet.handle}</span><span>·</span><span>{formatFullTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
-        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} /></div>
-        <TweeterFilterNotice text={tweet.body} compact />
+        <div className="tweet-card-text"><TweeterFilteredText text={tweet.body} rules={contentFilterRules} /></div>
+        <TweeterFilterNotice text={tweet.body} rules={contentFilterRules} compact />
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
           <button type="button"><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
@@ -76,7 +77,7 @@ export default async function TweetDetailPage({ params }: Params) {
 
           {ancestors.length ? (
             <section className="thread-ancestor-list">
-              {ancestors.map((ancestor) => <MiniTweet key={ancestor.id} tweet={ancestor} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} />)}
+              {ancestors.map((ancestor) => <MiniTweet key={ancestor.id} tweet={ancestor} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} contentFilterRules={payload.contentFilterRules} />)}
             </section>
           ) : null}
 
@@ -90,11 +91,11 @@ export default async function TweetDetailPage({ params }: Params) {
             </div>
 
             {tweet.isRetweet && tweet.retweetOfBody ? (
-              <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} /></blockquote>
+              <blockquote className="tweet-quoted-card"><span>{tweet.retweetOfAuthorDisplayName}: </span><TweeterFilteredText text={tweet.retweetOfBody} rules={payload.contentFilterRules} /></blockquote>
             ) : null}
 
-            <div className="tweet-detail-text"><TweeterFilteredText text={tweet.body} /></div>
-            <TweeterFilterNotice text={tweet.body} />
+            <div className="tweet-detail-text"><TweeterFilteredText text={tweet.body} rules={payload.contentFilterRules} /></div>
+            <TweeterFilterNotice text={tweet.body} rules={payload.contentFilterRules} />
             <div className="tweet-detail-time">{formatFullTime(tweet.postedAtTimeSeconds)} · Northline Tweeter</div>
             <div className="tweet-detail-stats">
               <span><strong>{tweet.retweetCount.toLocaleString()}</strong> Reposts</span>
@@ -111,7 +112,7 @@ export default async function TweetDetailPage({ params }: Params) {
 
           <section className="thread-replies">
             <h2>Replies</h2>
-            {replies.length ? replies.map((reply) => <MiniTweet key={reply.id} tweet={reply} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} />) : (
+            {replies.length ? replies.map((reply) => <MiniTweet key={reply.id} tweet={reply} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} contentFilterRules={payload.contentFilterRules} />) : (
               <div className="tweeter-empty-state"><strong>No replies yet</strong><p>This post does not have a visible thread in the server data.</p></div>
             )}
           </section>

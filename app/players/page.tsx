@@ -119,7 +119,6 @@ export default async function PlayersPage() {
     return a.localeCompare(b);
   });
   const privateProfiles = Object.entries(profiles).filter(([steamId, profile]) => profile.privacy === 'private' && playerBySteam.has(steamId) && isAllowedOnPublicDirectory(steamId)).length;
-  const moderatedProfiles = Object.keys(profiles).filter((steamId) => !isAllowedOnPublicDirectory(steamId)).length;
   const currentProfile = sessionSteamId ? profiles[sessionSteamId] ?? null : null;
 
   return (
@@ -132,7 +131,6 @@ export default async function PlayersPage() {
           listedProfiles: entries.length,
           privateProfiles,
           unclaimedSaves: Math.max(0, players.length - claimedSaveIds.size),
-          moderatedProfiles,
           onlineNow: population.onlineCount,
         }}
         signedIn={Boolean(sessionSteamId)}
