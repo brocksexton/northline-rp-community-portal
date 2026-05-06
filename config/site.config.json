@@ -83,7 +83,8 @@
   "status": {
     "defaultState": "operational",
     "knownIssueLabel": "No known city-wide issues",
-    "metricSampleMinutes": 30
+    "metricSampleMinutes": 30,
+    "offlineAfterMinutes": 30
   },
   "legal": {
     "lastModified": "2026-05-04",

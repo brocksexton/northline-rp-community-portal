@@ -10623,6 +10623,14 @@ body:not(:has(.tweeter-mode)) .desktop-nav-v3 a:hover {
     linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,251,235,.94));
 }
 
+.status-hero-v2.tone-danger {
+  border-color: rgba(244,63,94,.34);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(244,63,94,.20), transparent 19rem),
+    radial-gradient(circle at 88% 18%, rgba(100,116,139,.18), transparent 19rem),
+    linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,241,242,.94));
+}
+
 .status-hero-main-v2 {
   align-self: end;
   max-width: 55rem;
@@ -10661,6 +10669,11 @@ body:not(:has(.tweeter-mode)) .desktop-nav-v3 a:hover {
 .status-hero-v2.tone-neutral .status-live-chip-v2 i {
   background: #38bdf8;
   box-shadow: 0 0 0 5px rgba(56,189,248,.14);
+}
+
+.status-hero-v2.tone-danger .status-live-chip-v2 i {
+  background: #f43f5e;
+  box-shadow: 0 0 0 5px rgba(244,63,94,.14);
 }
 
 .status-hero-main-v2 h1 {
@@ -10722,6 +10735,12 @@ body:not(:has(.tweeter-mode)) .desktop-nav-v3 a:hover {
   color: #075985;
   background: rgba(224,242,254,.95);
   border-color: rgba(14,165,233,.22);
+}
+
+.status-hero-v2.tone-danger .status-pill-v2 {
+  color: #9f1239;
+  background: rgba(255,228,230,.95);
+  border-color: rgba(244,63,94,.24);
 }
 
 .status-now-card-v2 strong {

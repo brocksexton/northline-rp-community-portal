@@ -67,6 +67,32 @@ export type ConnectionEvent = {
   FirstJoinedUtc?: string;
 };
 
+export type PopulationSummary = {
+  onlineCount: number;
+  onlinePlayers: Array<{ steamId: string; name: string; since: string }>;
+  uniquePlayers: number;
+  totalSessions: number;
+  avgSessionSeconds: number;
+  totalSessionSeconds: number;
+  latestEventAt: string | null;
+  recentEvents: ConnectionEvent[];
+};
+
+export type ServerRuntimeState = 'online' | 'quiet' | 'offline' | 'unknown' | 'data_missing';
+
+export type ServerRuntimeStatus = {
+  state: ServerRuntimeState;
+  label: string;
+  message: string;
+  source: 'server_status.json' | 'connection_logs' | 'data_path';
+  online: boolean | null;
+  playerCount: number | null;
+  maxPlayers: number | null;
+  lastSignalAt: string | null;
+  signalAgeSeconds: number | null;
+  staleAfterSeconds: number;
+};
+
 export type ChatLog = {
   Timestamp: string;
   SenderSteamId: number | string;
@@ -173,6 +199,202 @@ async function getJsonFiles(folderName: string): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function firstRecordValue(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (key in record) return record[key];
+  }
+  return undefined;
+}
+
+function normalizedBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+  if (typeof value === 'string') {
+    const clean = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'online', 'live', 'running', 'up', 'available', 'open'].includes(clean)) return true;
+    if (['false', '0', 'no', 'offline', 'down', 'stopped', 'closed', 'unavailable'].includes(clean)) return false;
+  }
+  return null;
+}
+
+function normalizedNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function normalizedIsoTimestamp(value: unknown): string | null {
+  if (value instanceof Date && Number.isFinite(value.getTime())) return value.toISOString();
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const millis = value > 10_000_000_000 ? value : value * 1000;
+    const date = new Date(millis);
+    return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) return new Date(parsed).toISOString();
+  }
+  return null;
+}
+
+function signalAgeSeconds(timestamp: string | null) {
+  if (!timestamp) return null;
+  const parsed = Date.parse(timestamp);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.max(0, Math.round((Date.now() - parsed) / 1000));
+}
+
+function stateLabel(state: ServerRuntimeState) {
+  switch (state) {
+    case 'online': return 'Online';
+    case 'quiet': return 'Online, quiet';
+    case 'offline': return 'Offline';
+    case 'data_missing': return 'Data unavailable';
+    default: return 'Unknown';
+  }
+}
+
+export async function getServerRuntimeStatus(options?: {
+  health?: DataHealth;
+  population?: PopulationSummary;
+  staleAfterMinutes?: number;
+}): Promise<ServerRuntimeStatus> {
+  const staleAfterSeconds = Math.max(60, Math.round(Number(options?.staleAfterMinutes ?? 30) * 60));
+  const [health, population] = await Promise.all([
+    options?.health ?? getDataHealth(),
+    options?.population ?? getPopulationSummary(),
+  ]);
+
+  if (!health.exists) {
+    return {
+      state: 'data_missing',
+      label: stateLabel('data_missing'),
+      message: 'The website cannot read the game data folder right now.',
+      source: 'data_path',
+      online: null,
+      playerCount: null,
+      maxPlayers: null,
+      lastSignalAt: null,
+      signalAgeSeconds: null,
+      staleAfterSeconds,
+    };
+  }
+
+  const statusFile = await readJson<unknown>('server_status.json', null);
+  if (isPlainRecord(statusFile)) {
+    const statusText = firstRecordValue(statusFile, ['Status', 'status', 'State', 'state', 'ServerState', 'serverState']);
+    const explicitOnline = normalizedBoolean(firstRecordValue(statusFile, [
+      'IsOnline', 'isOnline', 'Online', 'online', 'ServerOnline', 'serverOnline', 'Running', 'running', 'IsRunning', 'isRunning', 'IsListening', 'isListening',
+    ])) ?? normalizedBoolean(statusText);
+    const playerCount = normalizedNumber(firstRecordValue(statusFile, [
+      'PlayerCount', 'playerCount', 'PlayersOnline', 'playersOnline', 'OnlineCount', 'onlineCount', 'CurrentPlayers', 'currentPlayers', 'ConnectedPlayers', 'connectedPlayers',
+    ]));
+    const maxPlayers = normalizedNumber(firstRecordValue(statusFile, ['MaxPlayers', 'maxPlayers', 'Slots', 'slots']));
+    const lastSignalAt = normalizedIsoTimestamp(firstRecordValue(statusFile, [
+      'Timestamp', 'timestamp', 'UpdatedAt', 'updatedAt', 'LastUpdatedUtc', 'lastUpdatedUtc', 'HeartbeatUtc', 'heartbeatUtc', 'LastHeartbeatUtc', 'lastHeartbeatUtc', 'LastSeenUtc', 'lastSeenUtc', 'GeneratedAt', 'generatedAt',
+    ]));
+    const age = signalAgeSeconds(lastSignalAt);
+    const isFresh = age === null || age <= staleAfterSeconds;
+
+    let state: ServerRuntimeState = 'unknown';
+    if (!isFresh) state = 'offline';
+    else if (explicitOnline === false) state = 'offline';
+    else if (explicitOnline === true && (playerCount ?? population.onlineCount) > 0) state = 'online';
+    else if (explicitOnline === true) state = 'quiet';
+    else if ((playerCount ?? population.onlineCount) > 0) state = 'online';
+
+    if (state !== 'unknown') {
+      return {
+        state,
+        label: stateLabel(state),
+        message: state === 'offline'
+          ? 'The latest server status says the game server is not online.'
+          : state === 'online'
+            ? 'The game server is online and players are connected.'
+            : 'The game server is online, but nobody is connected right now.',
+        source: 'server_status.json',
+        online: state === 'offline' ? false : state === 'unknown' ? null : true,
+        playerCount: playerCount ?? population.onlineCount,
+        maxPlayers,
+        lastSignalAt: lastSignalAt ?? population.latestEventAt,
+        signalAgeSeconds: age ?? signalAgeSeconds(population.latestEventAt),
+        staleAfterSeconds,
+      };
+    }
+  }
+
+  if (population.onlineCount > 0) {
+    return {
+      state: 'online',
+      label: stateLabel('online'),
+      message: 'Players are connected according to the latest connection logs.',
+      source: 'connection_logs',
+      online: true,
+      playerCount: population.onlineCount,
+      maxPlayers: null,
+      lastSignalAt: population.latestEventAt,
+      signalAgeSeconds: signalAgeSeconds(population.latestEventAt),
+      staleAfterSeconds,
+    };
+  }
+
+  const lastSignalAt = population.latestEventAt;
+  const age = signalAgeSeconds(lastSignalAt);
+  if (age !== null && age > staleAfterSeconds) {
+    return {
+      state: 'offline',
+      label: stateLabel('offline'),
+      message: 'No fresh server signal has been seen recently, so the portal is treating the game server as offline.',
+      source: 'connection_logs',
+      online: false,
+      playerCount: null,
+      maxPlayers: null,
+      lastSignalAt,
+      signalAgeSeconds: age,
+      staleAfterSeconds,
+    };
+  }
+
+  if (lastSignalAt) {
+    return {
+      state: 'quiet',
+      label: stateLabel('quiet'),
+      message: 'The latest signal is fresh, but nobody is connected right now.',
+      source: 'connection_logs',
+      online: true,
+      playerCount: 0,
+      maxPlayers: null,
+      lastSignalAt,
+      signalAgeSeconds: age,
+      staleAfterSeconds,
+    };
+  }
+
+  return {
+    state: 'unknown',
+    label: stateLabel('unknown'),
+    message: 'The portal can read the data folder, but there is not enough server activity data to know whether the game server is online.',
+    source: 'connection_logs',
+    online: null,
+    playerCount: null,
+    maxPlayers: null,
+    lastSignalAt: null,
+    signalAgeSeconds: null,
+    staleAfterSeconds,
+  };
 }
 
 export async function getDataHealth(): Promise<DataHealth> {
@@ -423,7 +645,7 @@ export async function getAllGuideProgress(): Promise<Map<string, GuideProgress>>
   return map;
 }
 
-export async function getPopulationSummary() {
+export async function getPopulationSummary(): Promise<PopulationSummary> {
   const events = await getConnectionEvents();
   const latestByPlayer = new Map<string, ConnectionEvent>();
   const sessions = events.filter((event) => event.IsConnection === false && typeof event.SessionDurationSeconds === 'number');

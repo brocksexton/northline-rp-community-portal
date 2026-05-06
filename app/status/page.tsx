@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getCityOverview, getDataHealth, getPopulationSummary, getServerConfig } from '@/lib/ape-data';
+import { getCityOverview, getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus, type ServerRuntimeStatus } from '@/lib/ape-data';
 import { getStatusUpdates } from '@/lib/community-data';
 import { duration, relativeFromDate } from '@/lib/format';
 import { getSiteConfig } from '@/lib/site-config';
@@ -14,10 +14,10 @@ export async function generateMetadata() {
   });
 }
 
-type StatusTone = 'success' | 'warning' | 'neutral';
+type StatusTone = 'success' | 'warning' | 'neutral' | 'danger';
 
-function inferPublicState(healthExists: boolean, onlineCount: number, latestEventAt: string | null) {
-  if (!healthExists) {
+function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, latestEventAt: string | null) {
+  if (runtime.state === 'data_missing') {
     return {
       label: 'Checking',
       tone: 'warning' as StatusTone,
@@ -26,7 +26,18 @@ function inferPublicState(healthExists: boolean, onlineCount: number, latestEven
       action: 'Check Discord',
     };
   }
-  if (onlineCount > 0) {
+  if (runtime.state === 'offline') {
+    return {
+      label: 'Offline',
+      tone: 'danger' as StatusTone,
+      headline: 'Northline looks offline.',
+      body: runtime.lastSignalAt
+        ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
+        : 'The portal cannot see a fresh server signal right now. Check Discord for restart or maintenance updates.',
+      action: 'Check Discord',
+    };
+  }
+  if (runtime.state === 'online' && onlineCount > 0) {
     return {
       label: 'Live',
       tone: 'success' as StatusTone,
@@ -35,21 +46,23 @@ function inferPublicState(healthExists: boolean, onlineCount: number, latestEven
       action: 'Join through s&box',
     };
   }
-  if (latestEventAt) {
+  if (runtime.state === 'quiet' || runtime.state === 'online') {
     return {
-      label: 'Quiet',
+      label: runtime.state === 'quiet' ? 'Quiet' : 'Online',
       tone: 'neutral' as StatusTone,
-      headline: 'The city is quiet right now.',
-      body: `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`,
-      action: 'Join anyway',
+      headline: 'Northline is online but quiet.',
+      body: latestEventAt
+        ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
+        : 'The game server is online, but nobody is showing online right now.',
+      action: 'Join through s&box',
     };
   }
   return {
-    label: 'Standing by',
-    tone: 'neutral' as StatusTone,
-    headline: 'Ready when people are.',
-    body: 'No recent public activity is showing yet. Be the first person to make the status page less boring.',
-    action: 'Join through s&box',
+    label: 'Unknown',
+    tone: 'warning' as StatusTone,
+    headline: 'Server status is unclear.',
+    body: 'The portal can read some data, but it cannot confidently tell whether the game server is online. Discord is the safest place to check.',
+    action: 'Check Discord',
   };
 }
 
@@ -74,12 +87,15 @@ export default async function StatusPage() {
     getCityOverview(),
   ]);
 
-  const state = inferPublicState(health.exists, population.onlineCount, population.latestEventAt);
-  const maxPlayers = serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
+  const state = inferPublicState(runtime, population.onlineCount, population.latestEventAt);
+  const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
   const notices = updates.slice(0, 3);
   const recentEvents = population.recentEvents.slice(0, 5);
   const onlinePlayers = population.onlinePlayers.slice(0, 8);
-  const capacityPercent = maxPlayers ? Math.min(100, Math.round((population.onlineCount / maxPlayers) * 100)) : 0;
+  const shownOnlineCount = runtime.state === 'offline' ? null : (runtime.playerCount ?? population.onlineCount);
+  const capacityPercent = maxPlayers && typeof shownOnlineCount === 'number' ? Math.min(100, Math.round((shownOnlineCount / maxPlayers) * 100)) : 0;
+  const primaryActionHref = state.action === 'Check Discord' ? config.server.discordUrl : config.server.joinUrl;
 
   return (
     <main className="page-shell status-page-v2">
@@ -89,15 +105,15 @@ export default async function StatusPage() {
           <h1>{state.headline}</h1>
           <p>{state.body}</p>
           <div className="status-hero-actions-v2">
-            <a className="button button-primary" href={config.server.joinUrl}><i className="fa-solid fa-gamepad" aria-hidden="true" /> {state.action}</a>
+            <a className="button button-primary" href={primaryActionHref} target={state.action === 'Check Discord' ? '_blank' : undefined} rel={state.action === 'Check Discord' ? 'noreferrer' : undefined}><i className={state.action === 'Check Discord' ? 'fa-brands fa-discord' : 'fa-solid fa-gamepad'} aria-hidden="true" /> {state.action}</a>
             <a className="button button-soft" href={config.server.discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Discord</a>
             <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter</Link>
           </div>
         </div>
         <aside className="status-now-card-v2" aria-label="Current player count">
           <span className="status-pill-v2">{state.label}</span>
-          <strong>{population.onlineCount}<small>/{maxPlayers}</small></strong>
-          <p>{population.onlineCount === 1 ? 'person online' : 'people online'}</p>
+          <strong>{shownOnlineCount === null ? 'Offline' : <>{shownOnlineCount}<small>/{maxPlayers}</small></>}</strong>
+          <p>{shownOnlineCount === null ? 'Server not currently reachable' : shownOnlineCount === 1 ? 'person online' : 'people online'}</p>
           <div className="status-capacity-track" aria-hidden="true"><i style={{ width: `${capacityPercent}%` }} /></div>
         </aside>
       </section>
@@ -106,14 +122,14 @@ export default async function StatusPage() {
         <article className="status-snapshot-card-v2 accent">
           <i className="fa-solid fa-door-open" aria-hidden="true" />
           <span>Join status</span>
-          <strong>{health.exists ? 'Available' : 'Checking'}</strong>
-          <p>{health.exists ? 'The website can see recent city info.' : 'Check Discord if the join button does not behave.'}</p>
+          <strong>{runtime.label}</strong>
+          <p>{runtime.message}</p>
         </article>
         <article className="status-snapshot-card-v2">
           <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" />
-          <span>Last activity</span>
-          <strong>{population.latestEventAt ? relativeFromDate(population.latestEventAt) : 'Nothing yet'}</strong>
-          <p>Last public connection signal seen by the portal.</p>
+          <span>Last signal</span>
+          <strong>{runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Nothing yet'}</strong>
+          <p>{runtime.source === 'server_status.json' ? 'Last server heartbeat seen by the portal.' : 'Last public connection signal seen by the portal.'}</p>
         </article>
         <article className="status-snapshot-card-v2">
           <i className="fa-solid fa-users" aria-hidden="true" />
@@ -166,7 +182,7 @@ export default async function StatusPage() {
           <article className="status-mini-panel-v2">
             <div className="status-mini-panel-head">
               <span className="kicker">Around town</span>
-              <strong>{onlinePlayers.length ? 'Currently online' : 'Nobody showing online'}</strong>
+              <strong>{runtime.state === 'offline' ? 'Server offline' : onlinePlayers.length ? 'Currently online' : 'Nobody showing online'}</strong>
             </div>
             {onlinePlayers.length ? (
               <div className="status-online-list-v2">
@@ -178,7 +194,7 @@ export default async function StatusPage() {
                 ))}
               </div>
             ) : (
-              <p>Looks empty from here. Great time to claim the title of “first person online.”</p>
+              <p>{runtime.state === 'offline' ? 'The server is not reporting as online right now. Check Discord for restart or maintenance updates.' : 'Looks empty from here. Great time to claim the title of “first person online.”'}</p>
             )}
           </article>
 

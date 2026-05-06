@@ -11,6 +11,7 @@ import {
   getPlayer,
   getPlayersBySteamId,
   getPopulationSummary,
+  getServerRuntimeStatus,
   getRoleForSteamId,
   getServerConfig,
   getTweets,
@@ -41,12 +42,13 @@ function getSingleParam(value: string | string[] | undefined): string | undefine
   return Array.isArray(value) ? value[0] : value;
 }
 
-function cityMood(online: number, latestEventAt: string | null, dataConnected: boolean) {
-  if (!dataConnected) return { label: 'The wires are crossed', body: 'The portal cannot read the city files right now.', icon: 'fa-solid fa-plug-circle-xmark', tone: 'danger' };
+function cityMood(status: Awaited<ReturnType<typeof getServerRuntimeStatus>>, online: number, latestEventAt: string | null, dataConnected: boolean) {
+  if (!dataConnected || status.state === 'data_missing') return { label: 'The wires are crossed', body: 'The portal cannot read the city files right now.', icon: 'fa-solid fa-plug-circle-xmark', tone: 'danger' };
+  if (status.state === 'offline') return { label: 'Server looks offline', body: status.lastSignalAt ? `Last visible signal was ${relativeFromDate(status.lastSignalAt)}.` : 'No fresh server signal is visible right now.', icon: 'fa-solid fa-power-off', tone: 'danger' };
   if (online >= 8) return { label: 'The city is loud', body: `${online} citizens are currently making questionable decisions.`, icon: 'fa-solid fa-volume-high', tone: 'success' };
   if (online > 0) return { label: 'People are outside', body: `${online} ${online === 1 ? 'citizen is' : 'citizens are'} online right now.`, icon: 'fa-solid fa-person-walking', tone: 'success' };
-  if (latestEventAt) return { label: 'The city is catching its breath', body: `Last activity was ${relativeFromDate(latestEventAt)}.`, icon: 'fa-solid fa-moon', tone: 'warning' };
-  return { label: 'Fresh city, fresh chaos', body: 'The portal is ready and waiting for the first new story.', icon: 'fa-solid fa-sparkles', tone: 'neutral' };
+  if (status.state === 'quiet' || status.state === 'online') return { label: 'Online but quiet', body: latestEventAt ? `Last activity was ${relativeFromDate(latestEventAt)}.` : 'The server is online, but nobody is showing online.', icon: 'fa-solid fa-moon', tone: 'warning' };
+  return { label: 'Status unclear', body: 'The portal cannot confidently confirm the game server state right now.', icon: 'fa-solid fa-circle-question', tone: 'warning' };
 }
 
 function compactPercent(value: number) {
@@ -109,7 +111,9 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const playtimeSeconds = Number(player?.TotalPlaytimeSeconds ?? 0);
   const level = Number(player?.Level ?? player?.TrackedStats?.level ?? 1);
   const hasSignedIn = Boolean(steamId);
-  const mood = cityMood(population.onlineCount, population.latestEventAt, health.exists);
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
+  const mood = cityMood(runtime, population.onlineCount, population.latestEventAt, health.exists);
+  const homeOnlineDisplay = runtime.state === 'offline' ? 'Offline' : (runtime.state === 'data_missing' || runtime.state === 'unknown') ? 'Checking' : String(runtime.playerCount ?? population.onlineCount);
   const recentFatal = damageLogs.find((log) => Boolean(log.IsFatal));
   const initialLiveSnapshot = {
     generatedAt: new Date().toISOString(),
@@ -173,10 +177,10 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             </div>
           </div>
           <div className="community-online-meter">
-            <div><strong>{population.onlineCount}</strong><span>online now</span></div>
+            <div><strong>{homeOnlineDisplay}</strong><span>{runtime.state === 'offline' || runtime.state === 'data_missing' || runtime.state === 'unknown' ? 'server status' : 'online now'}</span></div>
             <div><strong>{maxPlayers}</strong><span>slots</span></div>
           </div>
-          <div className="community-meter-bar"><span style={{ width: `${Math.min(100, maxPlayers ? (population.onlineCount / maxPlayers) * 100 : 0)}%` }} /></div>
+          <div className="community-meter-bar"><span style={{ width: `${runtime.state === 'offline' ? 0 : Math.min(100, maxPlayers ? ((runtime.playerCount ?? population.onlineCount) / maxPlayers) * 100 : 0)}%` }} /></div>
           {hasSignedIn ? (
             <div className="community-player-chip">
               <UserAvatar src={avatar} name={displayName} size="md" />

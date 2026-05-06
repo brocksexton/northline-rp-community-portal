@@ -1,21 +1,14 @@
 import { NextResponse } from 'next/server';
 import { noStoreHeaders } from '@/lib/session';
-import { getDataHealth, getPopulationSummary, getServerConfig } from '@/lib/ape-data';
+import { getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus } from '@/lib/ape-data';
 import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
+import { getSiteConfig } from '@/lib/site-config';
 
 export const dynamic = 'force-dynamic';
 
-function inferServerState(healthExists: boolean, onlineCount: number, latestEventAt: string | null) {
-  if (!healthExists) return 'data_missing';
-  if (onlineCount > 0) return 'online';
-  if (!latestEventAt) return 'unknown';
-  const ageMs = Date.now() - new Date(latestEventAt).getTime();
-  if (Number.isFinite(ageMs) && ageMs < 1000 * 60 * 20) return 'quiet';
-  return 'unknown';
-}
-
 export async function GET() {
-  const [health, serverConfig, population, sample, samples, updates] = await Promise.all([
+  const [config, health, serverConfig, population, sample, samples, updates] = await Promise.all([
+    getSiteConfig(),
     getDataHealth(),
     getServerConfig(),
     getPopulationSummary(),
@@ -24,17 +17,21 @@ export async function GET() {
     getStatusUpdates(8),
   ]);
 
-  const state = inferServerState(health.exists, population.onlineCount, population.latestEventAt);
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
 
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
-    state,
+    state: runtime.state,
+    runtime,
     health,
     server: {
       name: serverConfig.ServerName ?? 'Northline RP',
       subtitle: serverConfig.ServerSubtitle ?? 's&box roleplay server',
-      maxPlayers: serverConfig.MaxPlayers ?? null,
+      maxPlayers: runtime.maxPlayers ?? serverConfig.MaxPlayers ?? null,
       discordUrl: serverConfig.ServerDiscordUrl ?? null,
+      isOnline: runtime.online,
+      statusSource: runtime.source,
+      lastSignalAt: runtime.lastSignalAt,
     },
     population,
     current: sample,
@@ -42,6 +39,7 @@ export async function GET() {
     updates,
     notes: {
       metrics: 'CPU, RAM, disk, and process memory are sampled by the web process. True NIC bytes in/out can be added later with a Windows performance-counter collector.',
+      serverStatus: 'If APE_RP_DATA_PATH/server_status.json exists, it is treated as the preferred server heartbeat. Otherwise, the portal infers online/offline state from recent connection logs and config.status.offlineAfterMinutes.',
     },
   }, { headers: noStoreHeaders() });
 }

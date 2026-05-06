@@ -50,6 +50,7 @@ export type SiteConfig = {
     defaultState: string;
     knownIssueLabel: string;
     metricSampleMinutes: number;
+    offlineAfterMinutes: number;
   };
   legal: {
     lastModified: string;
@@ -109,6 +110,7 @@ const fallbackConfig: SiteConfig = {
     defaultState: 'operational',
     knownIssueLabel: 'No known city-wide issues',
     metricSampleMinutes: 30,
+    offlineAfterMinutes: 30,
   },
   legal: {
     lastModified: '2026-05-03',
