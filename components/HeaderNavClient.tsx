@@ -39,6 +39,12 @@ function Wordmark() {
 export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNavClientProps) {
   const pathname = usePathname() || '/';
   const visibleItems = staff ? [...navItems, { href: '/staff', label: 'Staff', icon: 'fa-solid fa-shield-halved', description: 'Staff tools' }] : navItems;
+  const supportItem: NavItem = { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' };
+  const primaryHrefs = new Set(['/status', '/tweeter', '/players', '/cases', '/leaderboards']);
+  const primaryItems = visibleItems.filter((item) => primaryHrefs.has(item.href));
+  const moreItems = [...visibleItems.filter((item) => !primaryHrefs.has(item.href)), supportItem];
+  const moreActive = moreItems.some((item) => isActive(pathname, item.href));
+  const mobileItems = [...visibleItems, supportItem];
   const profileHref = user ? `/tweeter/profile/${user.steamId}` : '/api/auth/steam?returnTo=/dashboard';
 
   return (
@@ -49,12 +55,27 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
         </Link>
 
         <nav className="desktop-nav desktop-nav-v3" aria-label="Primary navigation">
-          {visibleItems.map((item) => (
+          {primaryItems.map((item) => (
             <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
               <i className={item.icon} aria-hidden="true" />
               <span>{item.label}</span>
             </Link>
           ))}
+          <details className="nav-more-menu">
+            <summary className={moreActive ? 'active' : ''}>
+              <i className="fa-solid fa-ellipsis" aria-hidden="true" />
+              <span>More</span>
+              <i className="fa-solid fa-chevron-down nav-more-chevron" aria-hidden="true" />
+            </summary>
+            <div className="nav-more-panel">
+              {moreItems.map((item) => (
+                <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
+                  <i className={item.icon} aria-hidden="true" />
+                  <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                </Link>
+              ))}
+            </div>
+          </details>
         </nav>
 
         <div className="header-actions header-actions-v3">
@@ -99,7 +120,7 @@ export function HeaderNavClient({ navItems, staff, user, onlineCount }: HeaderNa
               <Link href="/" className="mobile-brand-link"><Wordmark /></Link>
               <div className="mobile-menu-status"><span className="city-status-dot" /> <strong>{onlineCount}</strong> players online</div>
               <nav aria-label="Mobile navigation">
-                {visibleItems.map((item) => (
+                {mobileItems.map((item) => (
                   <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>
                     <i className={item.icon} aria-hidden="true" />
                     <span><strong>{item.label}</strong><small>{item.description}</small></span>

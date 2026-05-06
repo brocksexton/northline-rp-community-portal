@@ -188,6 +188,41 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
         </aside>
       </section>
 
+      <section className="community-feature-hub" aria-labelledby="community-feature-hub-title">
+        <div className="community-section-heading inline">
+          <div>
+            <span className="community-kicker">Around the portal</span>
+            <h2 id="community-feature-hub-title">Pick what you need.</h2>
+          </div>
+          <span className="feature-hub-note">Most-used stops are up top; the bigger shortcuts live here.</span>
+        </div>
+        <div className="community-feature-grid">
+          <Link className="community-feature-card primary" href="/cases">
+            <span className="feature-card-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></span>
+            <div>
+              <strong>{hasSignedIn ? 'Claim your daily case' : 'Daily cases'}</strong>
+              <p>{hasSignedIn ? 'Check in once a day, stash cases, and open them whenever you feel lucky.' : 'Sign in with Steam to start collecting free daily cases. No payment, no nonsense.'}</p>
+            </div>
+          </Link>
+          <Link className="community-feature-card" href="/leaderboards">
+            <span className="feature-card-icon"><i className="fa-solid fa-ranking-star" aria-hidden="true" /></span>
+            <div><strong>Leaderboards</strong><p>See who opted into public bragging rights for money, time, posts, progress, and more.</p></div>
+          </Link>
+          <Link className="community-feature-card" href="/players">
+            <span className="feature-card-icon"><i className="fa-solid fa-users" aria-hidden="true" /></span>
+            <div><strong>Public citizens</strong><p>Browse the people who claimed a profile and chose to show up on the board.</p></div>
+          </Link>
+          <Link className="community-feature-card" href="/guides">
+            <span className="feature-card-icon"><i className="fa-solid fa-book-open-reader" aria-hidden="true" /></span>
+            <div><strong>Getting settled</strong><p>Not sure what to do next? The guide page tracks your onboarding path.</p></div>
+          </Link>
+          <Link className="community-feature-card" href="/support">
+            <span className="feature-card-icon"><i className="fa-solid fa-life-ring" aria-hidden="true" /></span>
+            <div><strong>Need help?</strong><p>Find Discord, bug-report, appeal, privacy, and account help without digging around.</p></div>
+          </Link>
+        </div>
+      </section>
+
       <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} />
 
       <section className="community-card ape-tavern-callout">

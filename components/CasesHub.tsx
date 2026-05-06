@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import type { getCasesState } from '@/lib/cases-data';
+import { useMemo, useState } from 'react';
+import type { CaseRewardDefinition, getCasesState } from '@/lib/cases-data';
 import { relativeFromDate } from '@/lib/format';
 
 type CasesState = Awaited<ReturnType<typeof getCasesState>>;
@@ -11,8 +11,17 @@ type Props = {
   signedIn: boolean;
 };
 
+type OpeningPhase = 'idle' | 'rolling' | 'revealed';
+
 function rarityLabel(value: string | undefined) {
   return value ? value[0]?.toUpperCase() + value.slice(1) : 'Reward';
+}
+
+function rewardStripe(pool: CaseRewardDefinition[], winningReward?: CaseRewardDefinition | null) {
+  if (!pool.length) return [] as CaseRewardDefinition[];
+  const repeated: CaseRewardDefinition[] = Array.from({ length: 30 }, (_, index) => pool[index % pool.length]);
+  if (winningReward && repeated.length > 18) repeated[18] = winningReward;
+  return repeated;
 }
 
 export function CasesHub({ initialState, signedIn }: Props) {
@@ -20,24 +29,66 @@ export function CasesHub({ initialState, signedIn }: Props) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [lastRewardId, setLastRewardId] = useState<string | null>(null);
+  const [openingPhase, setOpeningPhase] = useState<OpeningPhase>('idle');
+  const [openingCaseName, setOpeningCaseName] = useState('Daily case');
+  const [revealReward, setRevealReward] = useState<CaseRewardDefinition | null>(null);
 
-  async function mutate(action: 'claim' | 'open', caseItemId?: string) {
+  const reelRewards = useMemo(() => rewardStripe(state?.dailyCase.rewards ?? [], revealReward), [state?.dailyCase.rewards, revealReward]);
+
+  async function claimCase() {
     setBusy(true);
     setMessage('');
     try {
       const response = await fetch('/api/cases', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action, caseItemId }),
+        body: JSON.stringify({ action: 'claim' }),
       });
       const payload = await response.json();
       if (payload.state) setState(payload.state);
-      if (payload.reward) setLastRewardId(payload.reward.id);
-      setMessage(payload.ok ? (action === 'claim' ? 'Case claimed. Open it now or save it for later.' : 'Case opened. Reward saved to your website inventory.') : payload.message ?? 'That did not work. Try again.');
+      setMessage(payload.ok ? 'Case claimed. Open it now or save it for later.' : payload.message ?? 'That did not work. Try again.');
     } catch {
       setMessage('Could not reach the case system. Try again in a minute.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function openCase(caseItemId: string, caseName: string) {
+    setBusy(true);
+    setMessage('');
+    setOpeningCaseName(caseName);
+    setRevealReward(null);
+    setOpeningPhase('rolling');
+    const startedAt = Date.now();
+    try {
+      const response = await fetch('/api/cases', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'open', caseItemId }),
+      });
+      const payload = await response.json();
+      const minimumSpinMs = 2400;
+      const waitMs = Math.max(0, minimumSpinMs - (Date.now() - startedAt));
+      window.setTimeout(() => {
+        if (payload.state) setState(payload.state);
+        if (payload.reward) {
+          setRevealReward(payload.reward);
+          setLastRewardId(payload.reward.id);
+          setOpeningPhase('revealed');
+          setMessage('Case opened. Reward saved to your website inventory.');
+        } else {
+          setOpeningPhase('idle');
+          setMessage(payload.message ?? 'Could not open that case.');
+        }
+        setBusy(false);
+      }, waitMs);
+    } catch {
+      window.setTimeout(() => {
+        setOpeningPhase('idle');
+        setBusy(false);
+        setMessage('Could not reach the case system. Try again in a minute.');
+      }, 900);
     }
   }
 
@@ -57,6 +108,39 @@ export function CasesHub({ initialState, signedIn }: Props) {
 
   return (
     <>
+      {openingPhase !== 'idle' ? (
+        <div className="case-opening-overlay" role="dialog" aria-modal="true" aria-labelledby="case-opening-title">
+          <div className={`case-opening-modal ${openingPhase === 'revealed' ? 'revealed' : 'rolling'}`}>
+            <button className="case-opening-close" type="button" disabled={openingPhase === 'rolling'} onClick={() => setOpeningPhase('idle')} aria-label="Close case reveal"><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
+            <span className="kicker">Opening</span>
+            <h2 id="case-opening-title">{openingCaseName}</h2>
+            <div className="case-reel-window" aria-hidden="true">
+              <div className="case-reel-marker" />
+              <div className="case-reel-track">
+                {reelRewards.map((reward, index) => (
+                  <div className={`case-reel-prize rarity-${reward.rarity}`} key={`${reward.id}-${index}`}>
+                    <i className={reward.icon} aria-hidden="true" />
+                    <strong>{reward.label}</strong>
+                    <span>{rarityLabel(reward.rarity)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {openingPhase === 'rolling' ? (
+              <p className="case-opening-hint"><i className="fa-solid fa-dice" aria-hidden="true" /> Rolling your reward…</p>
+            ) : revealReward ? (
+              <div className={`case-reveal-card rarity-${revealReward.rarity}`}>
+                <i className={revealReward.icon} aria-hidden="true" />
+                <span>You got</span>
+                <strong>{revealReward.label}</strong>
+                <p>{revealReward.description}</p>
+                <button className="button button-primary" type="button" onClick={() => setOpeningPhase('idle')}>Nice</button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <section className="cases-hero">
         <div className="cases-hero-copy">
           <span className="kicker">Daily cases</span>
@@ -66,7 +150,7 @@ export function CasesHub({ initialState, signedIn }: Props) {
             rewards wait for staff or a safe game bridge before they touch the live server.
           </p>
           <div className="cases-hero-actions">
-            <button className="button button-primary" disabled={busy || !state.canClaim} type="button" onClick={() => mutate('claim')}>
+            <button className="button button-primary" disabled={busy || !state.canClaim} type="button" onClick={claimCase}>
               <i className="fa-solid fa-box-open" aria-hidden="true" /> {state.canClaim ? 'Claim daily case' : 'Daily case claimed'}
             </button>
             {!state.canClaim && state.claimAvailableAt ? <span>Next claim {relativeFromDate(state.claimAvailableAt)}</span> : null}
@@ -89,16 +173,19 @@ export function CasesHub({ initialState, signedIn }: Props) {
           </header>
           {unopened.length ? (
             <div className="case-inventory-grid">
-              {unopened.map((item) => (
-                <article className="case-card unopened" key={item.id}>
-                  <span className="case-card-icon"><i className="fa-solid fa-box" aria-hidden="true" /></span>
-                  <h3>{state.definitions.find((entry) => entry.id === item.caseId)?.label ?? 'Daily case'}</h3>
-                  <p>Claimed {relativeFromDate(item.claimedAt)}</p>
-                  <button className="button button-soft" disabled={busy} type="button" onClick={() => mutate('open', item.id)}>
-                    Open case
-                  </button>
-                </article>
-              ))}
+              {unopened.map((item) => {
+                const caseName = state.definitions.find((entry) => entry.id === item.caseId)?.label ?? 'Daily case';
+                return (
+                  <article className="case-card unopened" key={item.id}>
+                    <span className="case-card-icon"><i className="fa-solid fa-box" aria-hidden="true" /></span>
+                    <h3>{caseName}</h3>
+                    <p>Claimed {relativeFromDate(item.claimedAt)}</p>
+                    <button className="button button-soft" disabled={busy} type="button" onClick={() => openCase(item.id, caseName)}>
+                      <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> Open case
+                    </button>
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="cases-empty-box"><strong>No unopened cases.</strong><span>Claim one when your daily timer is ready.</span></div>

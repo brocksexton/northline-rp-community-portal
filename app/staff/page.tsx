@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { MaintenanceSettingsPanel } from '@/components/MaintenanceSettingsPanel';
 import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamId, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { duration, fullDate } from '@/lib/format';
+import { getMaintenanceSettings } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +14,8 @@ function bytesToGb(bytes: number): string {
 
 export default async function StaffPage() {
   const steamId = await getSessionSteamId();
-  const allowed = await hasPermission(steamId, 'ViewLogs');
+  const roleForAccess = steamId ? await getRoleForSteamId(steamId) : 'Guest';
+  const allowed = Boolean(steamId) && (roleForAccess.toLowerCase() === 'developer' || await hasPermission(steamId, 'ViewLogs'));
 
   if (!steamId || !allowed) {
     return (
@@ -27,16 +30,17 @@ export default async function StaffPage() {
     );
   }
 
-  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs] = await Promise.all([
+  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
     getPermissionsForSteamId(steamId),
-    getRoleForSteamId(steamId),
+    Promise.resolve(roleForAccess),
     getCityOverview(),
     getRecentAdminLogs(15),
     getRecentChatLogs(15),
     getRecentDamageLogs(15),
+    getMaintenanceSettings(),
   ]);
 
   return (
@@ -64,6 +68,19 @@ export default async function StaffPage() {
         <article><span>Known saves</span><strong>{overview.players}</strong><p>Saved citizens</p></article>
         <article><span>Warnings</span><strong>{overview.warnings}</strong><p>Moderation records</p></article>
         <article><span>Mutes</span><strong>{overview.mutes}</strong><p>Voice/chat controls</p></article>
+      </section>
+
+
+      <section className="staff-command-grid maintenance-command-grid">
+        <MaintenanceSettingsPanel initialSettings={maintenanceSettings} canManage={role.toLowerCase() === 'developer'} />
+        <article className="staff-panel maintenance-help-panel">
+          <div className="section-heading"><span className="kicker">How it works</span><h2>Safe deploy switch</h2><p>When maintenance mode is enabled, public pages show a custom downtime screen. Developer accounts can still sign in and browse normally.</p></div>
+          <div className="stack-list compact-stack">
+            <div><strong>Good for updates</strong><span>Use it before deployments, data migrations, or visual rebuilds.</span><small>Visitors get a friendly message instead of a broken page.</small></div>
+            <div><strong>Countdown optional</strong><span>Add an estimated return time when you have one.</span><small>Leave it blank for open-ended work.</small></div>
+            <div><strong>Themeable</strong><span>Pick a look and accent color to match the kind of update.</span><small>This only affects the maintenance screen.</small></div>
+          </div>
+        </article>
       </section>
 
       <section className="staff-command-grid">
