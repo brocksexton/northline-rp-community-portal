@@ -395,7 +395,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
               {data.trends.length ? data.trends.map((trend, index) => (
                 <button className={tag === trend.tag ? 'active' : ''} key={trend.tag} onClick={() => setTag(trend.tag)} type="button">
                   <small>{index + 1} · Trending in Northline</small>
-                  <strong>{trend.tag}</strong>
+                  <strong><TweeterFilteredText text={trend.tag} rules={data.contentFilterRules} /></strong>
                   <span>{trend.count} posts</span>
                 </button>
               )) : <div className="tweeter-panel-empty">No trending hashtags yet.</div>}

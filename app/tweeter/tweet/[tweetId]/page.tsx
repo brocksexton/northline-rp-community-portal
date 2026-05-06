@@ -131,7 +131,7 @@ export default async function TweetDetailPage({ params }: Params) {
           <section className="tweeter-panel">
             <div className="tweeter-panel-header"><strong>Trending now</strong></div>
             <div className="tweeter-trend-list">
-              {payload.trends.map((trend, index) => <Link key={trend.tag} href="/tweeter"><small>{index + 1} · Trending</small><strong>{trend.tag}</strong><span>{trend.count} posts</span></Link>)}
+              {payload.trends.map((trend, index) => <Link key={trend.tag} href="/tweeter"><small>{index + 1} · Trending</small><strong><TweeterFilteredText text={trend.tag} rules={payload.contentFilterRules} /></strong><span>{trend.count} posts</span></Link>)}
             </div>
           </section>
         </aside>

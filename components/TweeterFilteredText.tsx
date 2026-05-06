@@ -51,6 +51,7 @@ function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }
       }}
     >
       <span className="tweeter-filter-word__sizer" aria-hidden="true">{text}</span>
+      <span className="tweeter-filter-word__glow" aria-hidden="true" />
       <span className="tweeter-filter-word__blurred" aria-hidden="true">{text}</span>
       {peekActive ? (
         <span
@@ -63,6 +64,8 @@ function MaskedWord({ text, reason }: { text: string; reason: TextFilterReason }
       ) : null}
       <span className="tweeter-filter-word__sparkle tweeter-filter-word__sparkle--one" aria-hidden="true">✦</span>
       <span className="tweeter-filter-word__sparkle tweeter-filter-word__sparkle--two" aria-hidden="true">✦</span>
+      <span className="tweeter-filter-word__sparkle tweeter-filter-word__sparkle--three" aria-hidden="true">✧</span>
+      <span className="tweeter-filter-word__sparkle tweeter-filter-word__sparkle--four" aria-hidden="true">✦</span>
     </button>
   );
 }

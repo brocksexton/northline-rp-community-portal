@@ -405,7 +405,7 @@ export function TweeterAdminPanel({ initialAccounts, initialFilterRules, canMana
             <div className="tweeter-admin-actions compact-actions">
               <span>{ruleMessage}</span>
               <div>
-                <button type="button" className="secondary" onClick={resetRuleForm} disabled={!canManage || ruleSaving}>Clear</button>
+                <button type="button" className="secondary" onClick={() => resetRuleForm()} disabled={!canManage || ruleSaving}>Clear</button>
                 <button type="submit" disabled={!canManage || ruleSaving || !ruleTerm.trim()}>{ruleSaving ? 'Saving…' : ruleId ? 'Update word' : 'Add word'}</button>
               </div>
             </div>

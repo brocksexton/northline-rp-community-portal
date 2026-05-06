@@ -1,0 +1,7 @@
+# Northline RP Community Portal v2.9.18
+
+## Build hotfix
+
+- Fixed a TypeScript build failure in the Tweeter staff filter-word panel where the Clear button passed a mouse event into `resetRuleForm`.
+- Replaced legacy CSS `align-items: start/end` values with `flex-start/flex-end` to quiet autoprefixer warnings during production builds.
+- Keeps the v2.9.17 hashtag filtering and improved sparkle polish intact.
