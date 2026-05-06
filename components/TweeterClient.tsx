@@ -214,7 +214,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <button disabled title="Messages are intentionally not mirrored from game data." type="button"><Icon className="fa-regular fa-envelope" /><span>Messages</span></button>
             <button disabled title="Bookmarks are planned for a later website-only pass." type="button"><Icon className="fa-regular fa-bookmark" /><span>Bookmarks</span></button>
             {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <button disabled title="Sign in with Steam to open your profile." type="button"><Icon className="fa-regular fa-user" /><span>Profile</span></button>}
-            <Link href="/"><Icon className="fa-solid fa-arrow-left" /><span>Back to Northline</span></Link>
+            <a href="/"><Icon className="fa-solid fa-arrow-left" /><span>Back to Northline</span></a>
           </nav>
 
           <button className="tweeter-post-button" type="button" disabled title="Web posting will stay locked until a secure S&box bridge exists.">
@@ -392,7 +392,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
         <Link href="/tweeter"><Icon className="fa-solid fa-house" /><span>Home</span></Link>
         <button type="button" onClick={() => setQuery('#')}><Icon className="fa-solid fa-hashtag" /><span>Explore</span></button>
         {data.currentUser ? <Link href={`/tweeter/profile/${data.currentUser.steamId}`}><Icon className="fa-regular fa-user" /><span>Profile</span></Link> : <a href="/api/auth/steam?returnTo=/tweeter"><Icon className="fa-solid fa-user-lock" /><span>Sign in</span></a>}
-        <Link href="/"><Icon className="fa-solid fa-arrow-left" /><span>Northline</span></Link>
+        <a href="/"><Icon className="fa-solid fa-arrow-left" /><span>Northline</span></a>
       </nav>
     </main>
   );

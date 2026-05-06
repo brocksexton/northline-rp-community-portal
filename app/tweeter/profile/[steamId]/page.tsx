@@ -4,12 +4,14 @@ import { notFound } from 'next/navigation';
 import { ProfileShowcasePanels } from '@/components/ProfileShowcasePanels';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
+import { TweeterMaintenanceProfileEditor } from '@/components/TweeterMaintenanceProfileEditor';
 import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-view';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, buildTweeterUser, type TweetView } from '@/lib/tweeter-view';
 import { getProfileCoverPreset, PROFILE_THEMES } from '@/lib/profile-customization';
+import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,12 +182,13 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
 
   const activeTab = cleanTab(resolvedSearchParams.tab);
   const payload = await buildTweeterPayload(sessionSteamId);
-  const [user, player, role, layouts, communityProfile] = await Promise.all([
+  const [user, player, role, layouts, communityProfile, maintenance] = await Promise.all([
     buildTweeterUser(steamId, payload.tweets),
     getPlayer(steamId),
     getRoleForSteamId(steamId),
     getPropertyLayoutsForSteamId(steamId),
     getCommunityProfile(steamId),
+    getMaintenanceSettings(),
   ]);
   const userTweets = payload.tweets
     .filter((tweet) => tweet.authorSteamId === steamId)
@@ -210,6 +213,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
   const hiddenSectionText = publicProfile.hiddenSections.length ? publicProfile.hiddenSections.join(', ') : 'Nothing hidden';
   const joinedLabel = publicProfile.activity?.joined ?? formatShortDate(user.joinedAt);
   const roleLabel = user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : (publicProfile.role || 'Citizen');
+  const tweeterFallbackEditor = isOwner && isMaintenanceActive(maintenance) && maintenance.allowTweeterDuringMaintenance && !isTweeterMaintenanceActive(maintenance);
 
   if (privateForViewer) {
     return (
@@ -251,7 +255,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
-                {isOwner ? <Link href="/dashboard">Edit profile</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
+                {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-profile-editor' : '/dashboard'}>{tweeterFallbackEditor ? 'Quick edit' : 'Edit profile'}</Link> : <button type="button" disabled title="Follows are planned for a later website-only pass.">Follow</button>}
               </div>
             </div>
             <div className="tweeter-profile-copy">
@@ -275,6 +279,8 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
               </div>
             </div>
           </section>
+
+          {tweeterFallbackEditor ? <TweeterMaintenanceProfileEditor profile={communityProfile} role={role} displayName={user.displayName} /> : null}
 
           <ProfileTabs steamId={steamId} active={activeTab} />
 
@@ -300,7 +306,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </div>
             <div className="tweeter-profile-mini-links">
               <a href={steamProfileUrl} rel="noreferrer" target="_blank"><i className="fa-brands fa-steam" aria-hidden="true" /> Steam</a>
-              {isOwner ? <Link href="/dashboard"><i className="fa-solid fa-palette" aria-hidden="true" /> Customize</Link> : null}
+              {isOwner ? <Link href={tweeterFallbackEditor ? '#tweeter-profile-editor' : '/dashboard'}><i className="fa-solid fa-palette" aria-hidden="true" /> {tweeterFallbackEditor ? 'Quick edit' : 'Customize'}</Link> : null}
             </div>
             <details className="tweeter-profile-details-menu">
               <summary>

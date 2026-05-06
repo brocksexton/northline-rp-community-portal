@@ -51,25 +51,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() });
   }
 
-  const privacy = body.privacy === 'private' ? 'private' : 'public';
   const role = await getRoleForSteamId(steamId);
   const customCoverUrl = canUseCustomProfileCover(role) ? cleanImageUrl(body.customCoverUrl) : '';
+  const safeBannerColor = /^#[0-9a-f]{6}$/i.test(String(body.bannerColor ?? '')) ? String(body.bannerColor) : '#1d9bf0';
 
-  const profile = await upsertCommunityProfile(steamId, {
-    privacy,
-    bio: String(body.bio ?? '').trim().slice(0, 280),
-    location: String(body.location ?? '').trim().slice(0, 80),
-    websiteUrl: cleanUrl(body.websiteUrl),
-    customAvatarUrl: cleanUrl(body.customAvatarUrl),
-    customCoverUrl,
-    coverPreset: normalizeProfileCoverPreset(body.coverPreset),
-    profileTheme: normalizeProfileTheme(body.profileTheme),
-    bannerColor: /^#[0-9a-f]{6}$/i.test(String(body.bannerColor ?? '')) ? String(body.bannerColor) : '#1d9bf0',
-    showcase: cleanShowcase(body.showcase),
-    tweeterTheme: normalizeTweeterThemeEra(body.tweeterTheme),
-    tweeterMode: normalizeTweeterColorMode(body.tweeterMode),
-    websiteStyle: normalizeWebsiteStyle(body.websiteStyle),
-  });
+  const profile = body.profileEditMode === 'tweeterFallback'
+    ? await upsertCommunityProfile(steamId, {
+        bio: String(body.bio ?? '').trim().slice(0, 280),
+        customAvatarUrl: cleanUrl(body.customAvatarUrl),
+        customCoverUrl,
+        coverPreset: normalizeProfileCoverPreset(body.coverPreset),
+        profileTheme: normalizeProfileTheme(body.profileTheme),
+        bannerColor: safeBannerColor,
+        tweeterTheme: normalizeTweeterThemeEra(body.tweeterTheme),
+        tweeterMode: normalizeTweeterColorMode(body.tweeterMode),
+      })
+    : await upsertCommunityProfile(steamId, {
+        privacy: body.privacy === 'private' ? 'private' : 'public',
+        bio: String(body.bio ?? '').trim().slice(0, 280),
+        location: String(body.location ?? '').trim().slice(0, 80),
+        websiteUrl: cleanUrl(body.websiteUrl),
+        customAvatarUrl: cleanUrl(body.customAvatarUrl),
+        customCoverUrl,
+        coverPreset: normalizeProfileCoverPreset(body.coverPreset),
+        profileTheme: normalizeProfileTheme(body.profileTheme),
+        bannerColor: safeBannerColor,
+        showcase: cleanShowcase(body.showcase),
+        tweeterTheme: normalizeTweeterThemeEra(body.tweeterTheme),
+        tweeterMode: normalizeTweeterColorMode(body.tweeterMode),
+        websiteStyle: normalizeWebsiteStyle(body.websiteStyle),
+      });
 
   return jsonWithSession({ profile }, undefined, steamId, request);
 }

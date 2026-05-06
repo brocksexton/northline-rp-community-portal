@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { MaintenancePage } from '@/components/MaintenancePage';
+import { MaintenanceAccessGuard } from '@/components/MaintenanceAccessGuard';
 import { TweeterMaintenancePage } from '@/components/TweeterMaintenancePage';
 import { getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
@@ -50,6 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : (
           <>
             <a className="skip-link" href="#main-content">Skip to content</a>
+            <MaintenanceAccessGuard />
             <Header />
             <div id="main-content" tabIndex={-1}>
               {children}
