@@ -26,7 +26,7 @@ function verifiedBadge(kind: string) {
   return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
 }
 
-function MiniTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean }) {
+function MiniTweet({ tweet, signedIn, disabledReason = '' }: { tweet: TweetView; signedIn: boolean; disabledReason?: string }) {
   return (
     <article className="tweet-card-v2 thread-mini-card">
       <div className="tweet-card-avatar"><UserAvatar src={tweet.avatarUrl ?? null} name={tweet.authorDisplayName} size="md" /></div>
@@ -41,7 +41,7 @@ function MiniTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean })
         <footer className="tweet-actions-row">
           <Link href={`/tweeter/tweet/${tweet.id}`}><span>💬</span><small>{tweet.replyCount || ''}</small></Link>
           <button type="button"><span>↻</span><small>{tweet.retweetCount || ''}</small></button>
-          <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={signedIn} />
+          <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={signedIn} disabledReason={disabledReason} />
           <button type="button"><span>↗</span></button>
         </footer>
       </div>
@@ -52,6 +52,7 @@ function MiniTweet({ tweet, signedIn }: { tweet: TweetView; signedIn: boolean })
 export default async function TweetDetailPage({ params }: Params) {
   const [{ tweetId }, sessionSteamId] = await Promise.all([params, getSessionSteamId()]);
   const payload = await buildTweeterPayload(sessionSteamId);
+  const viewerSocialLockReason = sessionSteamId && !(payload.currentUser?.hasPlayedInServer || payload.currentUser?.joinedAt) ? 'Log in to the Northline game server once before using Tweeter social actions.' : '';
   const tweetMap = new Map(payload.tweets.map((tweet) => [tweet.id, tweet]));
   const tweet = tweetMap.get(tweetId);
   if (!tweet) notFound();
@@ -80,7 +81,7 @@ export default async function TweetDetailPage({ params }: Params) {
 
           {ancestors.length ? (
             <section className="thread-ancestor-list">
-              {ancestors.map((ancestor) => <MiniTweet key={ancestor.id} tweet={ancestor} signedIn={!!sessionSteamId} />)}
+              {ancestors.map((ancestor) => <MiniTweet key={ancestor.id} tweet={ancestor} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} />)}
             </section>
           ) : null}
 
@@ -107,14 +108,14 @@ export default async function TweetDetailPage({ params }: Params) {
             <footer className="tweet-detail-actions">
               <button type="button">💬</button>
               <button type="button">↻</button>
-              <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!sessionSteamId} variant="large" />
+              <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!sessionSteamId} variant="large" disabledReason={viewerSocialLockReason} />
               <button type="button">↗</button>
             </footer>
           </article>
 
           <section className="thread-replies">
             <h2>Replies</h2>
-            {replies.length ? replies.map((reply) => <MiniTweet key={reply.id} tweet={reply} signedIn={!!sessionSteamId} />) : (
+            {replies.length ? replies.map((reply) => <MiniTweet key={reply.id} tweet={reply} signedIn={!!sessionSteamId} disabledReason={viewerSocialLockReason} />) : (
               <div className="tweeter-empty-state"><strong>No replies yet</strong><p>This post does not have a visible thread in the server data.</p></div>
             )}
           </section>

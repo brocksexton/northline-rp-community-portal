@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFollowState, setFollowState } from '@/lib/tweeter-social-data';
 import { getSessionSteamIdFromRequest, noStoreHeaders, jsonWithSession } from '@/lib/session';
+import { GAME_SERVER_IDENTITY_MESSAGE, hasGameServerIdentity } from '@/lib/tweeter-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,11 +18,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   if (!sessionSteamId) return NextResponse.json({ error: 'Sign in with Steam to follow citizens.' }, { status: 401, headers: noStoreHeaders() });
+  if (!(await hasGameServerIdentity(sessionSteamId))) return NextResponse.json({ error: GAME_SERVER_IDENTITY_MESSAGE }, { status: 403, headers: noStoreHeaders() });
 
   let body: Record<string, unknown> = {};
   try { body = await request.json(); } catch { body = {}; }
   const targetSteamId = String(body.targetSteamId ?? targetFromRequest(request) ?? '').trim();
   const follow = typeof body.follow === 'boolean' ? body.follow : undefined;
+
+  if (!(await hasGameServerIdentity(targetSteamId))) return NextResponse.json({ error: 'That account needs to join the game server before it can be followed.' }, { status: 400, headers: noStoreHeaders() });
 
   try {
     return jsonWithSession(await setFollowState(sessionSteamId, targetSteamId, follow), { headers: noStoreHeaders() }, sessionSteamId, request);

@@ -34,6 +34,8 @@ type Suggestion = {
   avatarUrl?: string | null;
   verifiedKind?: string;
   bio?: string;
+  joinedAt?: string | null;
+  hasPlayedInServer?: boolean;
 };
 
 type TweeterPayload = {
@@ -45,6 +47,8 @@ type TweeterPayload = {
     handle: string;
     avatarUrl?: string | null;
     verifiedKind?: string;
+    joinedAt?: string | null;
+    hasPlayedInServer?: boolean;
   } | null;
   tweets: TweetRow[];
   trends: Array<{ tag: string; count: number }>;
@@ -164,6 +168,10 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
   }, [activeTab, data.tweets, query, tag]);
 
   const engagement = useMemo(() => totalEngagement(data.tweets), [data.tweets]);
+  const hasSteamSession = !!data.sessionSteamId;
+  const currentUserHasPlayed = !!data.currentUser?.hasPlayedInServer || !!data.currentUser?.joinedAt;
+  const socialLockReason = hasSteamSession && !currentUserHasPlayed ? 'Log in to the Northline game server once before using Tweeter social actions.' : '';
+  const composePlaceholder = socialLockReason ? 'Log in to the game server first.' : "What's happening?";
 
   return (
     <main className="tweeter-shell">
@@ -252,6 +260,16 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             </button>
           </header>
 
+          {socialLockReason ? (
+            <section className="tweeter-server-lock-banner">
+              <i className="fa-solid fa-lock" aria-hidden="true" />
+              <div>
+                <strong>Game server login required</strong>
+                <p>Your Steam account is signed in, but this account has no server join date yet. Join Northline RP in S&box once to unlock likes, follows, messages, and web profile actions.</p>
+              </div>
+            </section>
+          ) : null}
+
           <div className="tweeter-tabs" role="tablist" aria-label="Timeline tabs">
             <button className={activeTab === 'for-you' ? 'active' : ''} onClick={() => setActiveTab('for-you')} type="button">For you</button>
             <button className={activeTab === 'latest' ? 'active' : ''} onClick={() => setActiveTab('latest')} type="button">Latest</button>
@@ -261,12 +279,12 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             <UserAvatar src={data.currentUser?.avatarUrl ?? null} name={data.currentUser?.displayName ?? 'Northline'} size="md" />
             <div className="tweeter-compose-body">
               <textarea
-                placeholder="What's happening?"
+                placeholder={composePlaceholder}
                 readOnly
                 rows={3}
                 value={composerMessage}
-                onFocus={() => setComposerMessage("Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
-                onClick={() => setComposerMessage("Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
+                onFocus={() => setComposerMessage(socialLockReason || "Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
+                onClick={() => setComposerMessage(socialLockReason || "Sorry, this feature doesn't currently work on the web. Please post from within the game for now.")}
               />
               <div className="tweeter-compose-footer">
                 <div className="tweeter-compose-tools" aria-hidden="true">
@@ -332,7 +350,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   <footer className="tweet-actions-row">
                     <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Open replies"><Icon className="fa-regular fa-comment" /><small>{actionCount(tweet.replyCount)}</small></Link>
                     <button disabled title="Reposts require the future game bridge." type="button"><Icon className="fa-solid fa-retweet" /><small>{actionCount(tweet.retweetCount)}</small></button>
-                    <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!data.sessionSteamId} />
+                    <TweeterLikeButton tweetId={tweet.id} initialLiked={tweet.likedByMe} initialCount={tweet.likeCount} signedIn={!!data.sessionSteamId} disabledReason={socialLockReason} />
                     <Link href={`/tweeter/tweet/${tweet.id}`} aria-label="Share or open post"><Icon className="fa-solid fa-arrow-up-from-bracket" /></Link>
                   </footer>
                   <Link className="tweet-thread-link" href={`/tweeter/tweet/${tweet.id}`}>{tweet.replyCount > 0 || tweet.isReply ? 'View thread' : 'Open post'}</Link>
@@ -367,7 +385,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
             </div>
           </section>
 
-          <section className="tweeter-panel">
+          <section className="tweeter-panel tweeter-follow-compact">
             <div className="tweeter-panel-header"><strong>Who to follow</strong></div>
             <div className="tweeter-suggestion-list">
               {data.suggestions.map((suggestion) => (
@@ -380,7 +398,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                       {suggestion.bio ? <small>{suggestion.bio}</small> : null}
                     </div>
                   </Link>
-                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!data.sessionSteamId} compact />
+                  <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!data.sessionSteamId} compact disabledReason={socialLockReason || (suggestion.hasPlayedInServer === false ? 'This account needs to join the game server first.' : '')} />
                 </div>
               ))}
             </div>

@@ -9,6 +9,7 @@ type Props = {
   initialFollowerCount?: number;
   className?: string;
   compact?: boolean;
+  disabledReason?: string;
 };
 
 type FollowState = {
@@ -23,13 +24,13 @@ function countLabel(value: number) {
   return String(value);
 }
 
-export function TweeterFollowButton({ targetSteamId, signedIn, initialFollowing = false, initialFollowerCount = 0, className = '', compact = false }: Props) {
+export function TweeterFollowButton({ targetSteamId, signedIn, initialFollowing = false, initialFollowerCount = 0, className = '', compact = false, disabledReason = '' }: Props) {
   const [following, setFollowing] = useState(initialFollowing);
   const [count, setCount] = useState(initialFollowerCount);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!signedIn || !targetSteamId) return;
+    if (!signedIn || !targetSteamId || disabledReason) return;
     let cancelled = false;
     async function loadState() {
       try {
@@ -44,9 +45,10 @@ export function TweeterFollowButton({ targetSteamId, signedIn, initialFollowing 
     }
     void loadState();
     return () => { cancelled = true; };
-  }, [signedIn, targetSteamId]);
+  }, [disabledReason, signedIn, targetSteamId]);
 
   async function toggleFollow() {
+    if (disabledReason) return;
     if (!signedIn) {
       window.location.href = `/api/auth/steam?returnTo=${encodeURIComponent(window.location.pathname)}`;
       return;
@@ -81,11 +83,11 @@ export function TweeterFollowButton({ targetSteamId, signedIn, initialFollowing 
   return (
     <button
       type="button"
-      className={`tweeter-follow-button ${following ? 'following' : ''} ${compact ? 'compact' : ''} ${className}`.trim()}
+      className={`tweeter-follow-button ${following ? 'following' : ''} ${compact ? 'compact' : ''} ${disabledReason ? 'locked' : ''} ${className}`.trim()}
       onClick={toggleFollow}
-      disabled={busy}
+      disabled={busy || !!disabledReason}
       aria-pressed={following}
-      title={signedIn ? (following ? 'Unfollow this citizen' : 'Follow this citizen') : 'Sign in with Steam to follow'}
+      title={disabledReason || (signedIn ? (following ? 'Unfollow this citizen' : 'Follow this citizen') : 'Sign in with Steam to follow')}
     >
       <span>{following ? 'Following' : 'Follow'}</span>
       {!compact && count > 0 ? <small>{countLabel(count)}</small> : null}

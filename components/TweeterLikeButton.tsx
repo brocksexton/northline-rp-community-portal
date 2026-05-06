@@ -8,6 +8,7 @@ type Props = {
   initialCount: number;
   signedIn: boolean;
   variant?: 'action' | 'large';
+  disabledReason?: string;
 };
 
 function actionCount(value: number) {
@@ -17,12 +18,13 @@ function actionCount(value: number) {
   return String(value);
 }
 
-export function TweeterLikeButton({ tweetId, initialLiked, initialCount, signedIn, variant = 'action' }: Props) {
+export function TweeterLikeButton({ tweetId, initialLiked, initialCount, signedIn, variant = 'action', disabledReason = '' }: Props) {
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
 
   async function toggleLike() {
+    if (disabledReason) return;
     if (!signedIn) {
       window.location.href = `/api/auth/steam?returnTo=${encodeURIComponent(window.location.pathname)}`;
       return;
@@ -54,11 +56,11 @@ export function TweeterLikeButton({ tweetId, initialLiked, initialCount, signedI
   return (
     <button
       type="button"
-      className={`tweeter-like-button ${variant === 'large' ? 'large' : ''} ${liked ? 'liked' : ''}`}
+      className={`tweeter-like-button ${variant === 'large' ? 'large' : ''} ${liked ? 'liked' : ''} ${disabledReason ? 'locked' : ''}`}
       onClick={toggleLike}
-      disabled={busy}
+      disabled={busy || !!disabledReason}
       aria-pressed={liked}
-      title={signedIn ? (liked ? 'Unlike' : 'Like') : 'Sign in with Steam to like'}
+      title={disabledReason || (signedIn ? (liked ? 'Unlike' : 'Like') : 'Sign in with Steam to like')}
     >
       <span><i className={`${liked ? 'fa-solid' : 'fa-regular'} fa-heart`} aria-hidden="true" /></span>
       <small>{actionCount(count)}</small>

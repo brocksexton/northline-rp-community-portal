@@ -7,15 +7,17 @@ type Props = {
   targetName: string;
   signedIn: boolean;
   className?: string;
+  disabledReason?: string;
 };
 
-export function TweeterMessageButton({ targetSteamId, targetName, signedIn, className = '' }: Props) {
+export function TweeterMessageButton({ targetSteamId, targetName, signedIn, className = '', disabledReason = '' }: Props) {
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
   function start() {
+    if (disabledReason) return;
     if (!signedIn) {
       window.location.href = `/api/auth/steam?returnTo=${encodeURIComponent(window.location.pathname)}`;
       return;
@@ -53,7 +55,7 @@ export function TweeterMessageButton({ targetSteamId, targetName, signedIn, clas
 
   return (
     <>
-      <button type="button" className={`tweeter-message-button ${className}`.trim()} onClick={start}>
+      <button type="button" className={`tweeter-message-button ${disabledReason ? 'locked' : ''} ${className}`.trim()} onClick={start} disabled={!!disabledReason} title={disabledReason || (signedIn ? `Message ${targetName}` : 'Sign in with Steam to message')}>
         <i className="fa-regular fa-envelope" aria-hidden="true" /> <span>Message</span>
       </button>
       {open ? (

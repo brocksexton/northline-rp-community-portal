@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTweeterData } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { getTweeterWebLikeState, toggleTweeterWebLike } from '@/lib/community-data';
+import { GAME_SERVER_IDENTITY_MESSAGE, hasGameServerIdentity } from '@/lib/tweeter-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,10 @@ export async function POST(request: NextRequest, { params }: Params) {
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   if (!sessionSteamId) {
     return NextResponse.json({ error: 'Sign in with Steam to like posts.' }, { status: 401, headers: noStoreHeaders() });
+  }
+
+  if (!(await hasGameServerIdentity(sessionSteamId))) {
+    return NextResponse.json({ error: GAME_SERVER_IDENTITY_MESSAGE }, { status: 403, headers: noStoreHeaders() });
   }
 
   const { tweetId } = await params;

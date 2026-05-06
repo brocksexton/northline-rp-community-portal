@@ -39,6 +39,7 @@ export type TweeterUserView = {
   customCoverUrl?: string | null;
   profileTheme?: ProfileTheme;
   joinedAt?: string | null;
+  hasPlayedInServer?: boolean;
   playtimeHours?: number;
   title?: string | null;
   tweetCount?: number;
@@ -173,6 +174,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       customCoverUrl: canUseCustomProfileCover(currentRole) ? (currentCommunity?.customCoverUrl || null) : null,
       profileTheme: normalizeProfileTheme(currentCommunity?.profileTheme ?? DEFAULT_PROFILE_THEME),
       joinedAt: currentPlayer?.FirstJoinedUtc ?? null,
+      hasPlayedInServer: Boolean(currentPlayer?.FirstJoinedUtc),
       playtimeHours: Math.round(Number(currentPlayer?.TotalPlaytimeSeconds ?? 0) / 3600),
       title: currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : null,
       tweetCount: tweets.filter((tweet) => tweet.authorSteamId === sessionSteamId).length,
@@ -212,6 +214,7 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     customCoverUrl: canUseCustomProfileCover(role) ? (communityProfile?.customCoverUrl || null) : null,
     profileTheme: normalizeProfileTheme(communityProfile?.profileTheme ?? DEFAULT_PROFILE_THEME),
     joinedAt: player?.FirstJoinedUtc ?? null,
+    hasPlayedInServer: Boolean(player?.FirstJoinedUtc),
     playtimeHours: Math.round(Number(player?.TotalPlaytimeSeconds ?? 0) / 3600),
     title: player?.DisplayTitle ? playerTitle(player.DisplayTitle) : null,
     tweetCount: authoredTweets.length,
