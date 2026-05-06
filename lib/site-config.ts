@@ -51,6 +51,9 @@ export type SiteConfig = {
     knownIssueLabel: string;
     metricSampleMinutes: number;
     offlineAfterMinutes: number;
+    serverHost?: string;
+    serverPort?: number;
+    queryTimeoutMs?: number;
   };
   legal: {
     lastModified: string;
@@ -111,6 +114,9 @@ const fallbackConfig: SiteConfig = {
     knownIssueLabel: 'No known city-wide issues',
     metricSampleMinutes: 30,
     offlineAfterMinutes: 30,
+    serverHost: '203.0.113.10',
+    serverPort: 27015,
+    queryTimeoutMs: 1200,
   },
   legal: {
     lastModified: '2026-05-03',

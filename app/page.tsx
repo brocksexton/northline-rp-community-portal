@@ -44,10 +44,10 @@ function getSingleParam(value: string | string[] | undefined): string | undefine
 
 function cityMood(status: Awaited<ReturnType<typeof getServerRuntimeStatus>>, online: number, latestEventAt: string | null, dataConnected: boolean) {
   if (!dataConnected || status.state === 'data_missing') return { label: 'The wires are crossed', body: 'The portal cannot read the city files right now.', icon: 'fa-solid fa-plug-circle-xmark', tone: 'danger' };
-  if (status.state === 'offline') return { label: 'Server looks offline', body: status.lastSignalAt ? `Last visible signal was ${relativeFromDate(status.lastSignalAt)}.` : 'No fresh server signal is visible right now.', icon: 'fa-solid fa-power-off', tone: 'danger' };
+  if (status.state === 'offline') return { label: 'Server looks offline', body: status.source === 'server_query' ? 'The game server did not answer the direct server query.' : status.lastSignalAt ? `Last visible signal was ${relativeFromDate(status.lastSignalAt)}.` : 'No fresh server signal is visible right now.', icon: 'fa-solid fa-power-off', tone: 'danger' };
   if (online >= 8) return { label: 'The city is loud', body: `${online} citizens are currently making questionable decisions.`, icon: 'fa-solid fa-volume-high', tone: 'success' };
   if (online > 0) return { label: 'People are outside', body: `${online} ${online === 1 ? 'citizen is' : 'citizens are'} online right now.`, icon: 'fa-solid fa-person-walking', tone: 'success' };
-  if (status.state === 'quiet' || status.state === 'online') return { label: 'Online but quiet', body: latestEventAt ? `Last activity was ${relativeFromDate(latestEventAt)}.` : 'The server is online, but nobody is showing online.', icon: 'fa-solid fa-moon', tone: 'warning' };
+  if (status.state === 'quiet' || status.state === 'online') return { label: 'Online but quiet', body: status.source === 'server_query' ? 'The server answered directly, but nobody is connected right now.' : latestEventAt ? `Last activity was ${relativeFromDate(latestEventAt)}.` : 'The server is online, but nobody is showing online.', icon: 'fa-solid fa-moon', tone: 'warning' };
   return { label: 'Status unclear', body: 'The portal cannot confidently confirm the game server state right now.', icon: 'fa-solid fa-circle-question', tone: 'warning' };
 }
 
@@ -111,8 +111,8 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const playtimeSeconds = Number(player?.TotalPlaytimeSeconds ?? 0);
   const level = Number(player?.Level ?? player?.TrackedStats?.level ?? 1);
   const hasSignedIn = Boolean(steamId);
-  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
-  const mood = cityMood(runtime, population.onlineCount, population.latestEventAt, health.exists);
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes, serverHost: config.status.serverHost, serverPort: config.status.serverPort, queryTimeoutMs: config.status.queryTimeoutMs });
+  const mood = cityMood(runtime, runtime.playerCount ?? population.onlineCount, runtime.lastSignalAt ?? population.latestEventAt, health.exists);
   const homeOnlineDisplay = runtime.state === 'offline' ? 'Offline' : (runtime.state === 'data_missing' || runtime.state === 'unknown') ? 'Checking' : String(runtime.playerCount ?? population.onlineCount);
   const recentFatal = damageLogs.find((log) => Boolean(log.IsFatal));
   const initialLiveSnapshot = {

@@ -1,7 +1,9 @@
 import { readFile, readdir, stat } from 'fs/promises';
+import { createSocket } from 'node:dgram';
 import path from 'path';
 import os from 'os';
 import { getSteamProfiles } from './steam-openid';
+import { getSiteConfig } from './site-config';
 
 export type ApeItem = {
   PrefabResourcePath?: string | null;
@@ -84,7 +86,7 @@ export type ServerRuntimeStatus = {
   state: ServerRuntimeState;
   label: string;
   message: string;
-  source: 'server_status.json' | 'connection_logs' | 'data_path';
+  source: 'server_status.json' | 'server_query' | 'connection_logs' | 'data_path';
   online: boolean | null;
   playerCount: number | null;
   maxPlayers: number | null;
@@ -257,6 +259,166 @@ function signalAgeSeconds(timestamp: string | null) {
   return Math.max(0, Math.round((Date.now() - parsed) / 1000));
 }
 
+
+type SourceServerQueryResult = {
+  online: boolean;
+  playerCount: number | null;
+  maxPlayers: number | null;
+  serverName?: string | null;
+  mapName?: string | null;
+  checkedAt: string;
+  error?: string;
+};
+
+function configuredServerHost(configured?: string) {
+  return process.env.NORTHLINE_SERVER_QUERY_HOST?.trim() || process.env.SBOX_SERVER_HOST?.trim() || configured?.trim() || '203.0.113.10';
+}
+
+function configuredServerPort(configured?: number) {
+  const raw = process.env.NORTHLINE_SERVER_QUERY_PORT?.trim() || process.env.SBOX_SERVER_PORT?.trim() || String(configured ?? 27015);
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 && parsed < 65536 ? parsed : 27015;
+}
+
+function configuredServerQueryTimeoutMs(configured?: number) {
+  const raw = process.env.NORTHLINE_SERVER_QUERY_TIMEOUT_MS?.trim() || process.env.SBOX_SERVER_QUERY_TIMEOUT_MS?.trim() || String(configured ?? 1200);
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? Math.max(250, Math.min(5000, Math.round(parsed))) : 1200;
+}
+
+function sourceInfoPacket(challenge?: Buffer) {
+  const base = Buffer.concat([
+    Buffer.from([0xff, 0xff, 0xff, 0xff, 0x54]),
+    Buffer.from('Source Engine Query\0', 'ascii'),
+  ]);
+  return challenge ? Buffer.concat([base, challenge]) : base;
+}
+
+function readCString(buffer: Buffer, start: number) {
+  let end = start;
+  while (end < buffer.length && buffer[end] !== 0) end += 1;
+  return {
+    value: buffer.subarray(start, end).toString('utf8'),
+    next: Math.min(end + 1, buffer.length),
+  };
+}
+
+function parseSourceInfoResponse(buffer: Buffer): SourceServerQueryResult {
+  const checkedAt = new Date().toISOString();
+  if (buffer.length < 6) return { online: true, playerCount: null, maxPlayers: null, checkedAt };
+
+  let offset = 5;
+  if (buffer[offset] !== undefined) offset += 1; // protocol byte
+
+  const name = readCString(buffer, offset);
+  offset = name.next;
+  const map = readCString(buffer, offset);
+  offset = map.next;
+  const folder = readCString(buffer, offset);
+  offset = folder.next;
+  const game = readCString(buffer, offset);
+  offset = game.next;
+
+  offset += 2; // app id
+  const playerCount = offset < buffer.length ? buffer[offset] : null;
+  offset += 1;
+  const maxPlayers = offset < buffer.length ? buffer[offset] : null;
+
+  return {
+    online: true,
+    playerCount: typeof playerCount === 'number' ? playerCount : null,
+    maxPlayers: typeof maxPlayers === 'number' ? maxPlayers : null,
+    serverName: name.value || null,
+    mapName: map.value || null,
+    checkedAt,
+  };
+}
+
+async function querySourceServerStatus(options?: { host?: string; port?: number; timeoutMs?: number }): Promise<SourceServerQueryResult> {
+  const host = configuredServerHost(options?.host);
+  const port = configuredServerPort(options?.port);
+  const timeoutMs = configuredServerQueryTimeoutMs(options?.timeoutMs);
+  const checkedAt = new Date().toISOString();
+
+  return new Promise((resolve) => {
+    const socket = createSocket('udp4');
+    let settled = false;
+    let challenged = false;
+
+    const finish = (result: SourceServerQueryResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { socket.close(); } catch {}
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: `Timed out querying ${host}:${port}` });
+    }, timeoutMs);
+
+    const sendQuery = (challenge?: Buffer) => {
+      socket.send(sourceInfoPacket(challenge), port, host, (error) => {
+        if (error) finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: error.message });
+      });
+    };
+
+    socket.on('error', (error) => {
+      finish({ online: false, playerCount: null, maxPlayers: null, checkedAt, error: error.message });
+    });
+
+    socket.on('message', (message) => {
+      if (message.length < 5) return;
+      const responseType = message[4];
+      if (responseType === 0x41 && message.length >= 9 && !challenged) {
+        challenged = true;
+        sendQuery(message.subarray(5, 9));
+        return;
+      }
+      if (responseType === 0x49) {
+        finish(parseSourceInfoResponse(message));
+        return;
+      }
+      finish({ online: true, playerCount: null, maxPlayers: null, checkedAt });
+    });
+
+    sendQuery();
+  });
+}
+
+function statusFromServerQuery(query: SourceServerQueryResult, staleAfterSeconds: number): ServerRuntimeStatus {
+  if (!query.online) {
+    return {
+      state: 'offline',
+      label: stateLabel('offline'),
+      message: 'The game server did not answer its server query, so the portal is treating it as offline.',
+      source: 'server_query',
+      online: false,
+      playerCount: null,
+      maxPlayers: null,
+      lastSignalAt: query.checkedAt,
+      signalAgeSeconds: 0,
+      staleAfterSeconds,
+    };
+  }
+
+  const state: ServerRuntimeState = (query.playerCount ?? 0) > 0 ? 'online' : 'quiet';
+  return {
+    state,
+    label: stateLabel(state),
+    message: state === 'online'
+      ? 'The game server answered its query and players are connected.'
+      : 'The game server answered its query, but nobody is connected right now.',
+    source: 'server_query',
+    online: true,
+    playerCount: query.playerCount ?? 0,
+    maxPlayers: query.maxPlayers,
+    lastSignalAt: query.checkedAt,
+    signalAgeSeconds: 0,
+    staleAfterSeconds,
+  };
+}
+
 function stateLabel(state: ServerRuntimeState) {
   switch (state) {
     case 'online': return 'Online';
@@ -271,6 +433,9 @@ export async function getServerRuntimeStatus(options?: {
   health?: DataHealth;
   population?: PopulationSummary;
   staleAfterMinutes?: number;
+  serverHost?: string;
+  serverPort?: number;
+  queryTimeoutMs?: number;
 }): Promise<ServerRuntimeStatus> {
   const staleAfterSeconds = Math.max(60, Math.round(Number(options?.staleAfterMinutes ?? 30) * 60));
   const [health, population] = await Promise.all([
@@ -326,7 +491,7 @@ export async function getServerRuntimeStatus(options?: {
             ? 'The game server is online and players are connected.'
             : 'The game server is online, but nobody is connected right now.',
         source: 'server_status.json',
-        online: state === 'offline' ? false : state === 'unknown' ? null : true,
+        online: state === 'offline' ? false : true,
         playerCount: playerCount ?? population.onlineCount,
         maxPlayers,
         lastSignalAt: lastSignalAt ?? population.latestEventAt,
@@ -336,65 +501,13 @@ export async function getServerRuntimeStatus(options?: {
     }
   }
 
-  if (population.onlineCount > 0) {
-    return {
-      state: 'online',
-      label: stateLabel('online'),
-      message: 'Players are connected according to the latest connection logs.',
-      source: 'connection_logs',
-      online: true,
-      playerCount: population.onlineCount,
-      maxPlayers: null,
-      lastSignalAt: population.latestEventAt,
-      signalAgeSeconds: signalAgeSeconds(population.latestEventAt),
-      staleAfterSeconds,
-    };
-  }
-
-  const lastSignalAt = population.latestEventAt;
-  const age = signalAgeSeconds(lastSignalAt);
-  if (age !== null && age > staleAfterSeconds) {
-    return {
-      state: 'offline',
-      label: stateLabel('offline'),
-      message: 'No fresh server signal has been seen recently, so the portal is treating the game server as offline.',
-      source: 'connection_logs',
-      online: false,
-      playerCount: null,
-      maxPlayers: null,
-      lastSignalAt,
-      signalAgeSeconds: age,
-      staleAfterSeconds,
-    };
-  }
-
-  if (lastSignalAt) {
-    return {
-      state: 'quiet',
-      label: stateLabel('quiet'),
-      message: 'The latest signal is fresh, but nobody is connected right now.',
-      source: 'connection_logs',
-      online: true,
-      playerCount: 0,
-      maxPlayers: null,
-      lastSignalAt,
-      signalAgeSeconds: age,
-      staleAfterSeconds,
-    };
-  }
-
-  return {
-    state: 'unknown',
-    label: stateLabel('unknown'),
-    message: 'The portal can read the data folder, but there is not enough server activity data to know whether the game server is online.',
-    source: 'connection_logs',
-    online: null,
-    playerCount: null,
-    maxPlayers: null,
-    lastSignalAt: null,
-    signalAgeSeconds: null,
-    staleAfterSeconds,
-  };
+  const siteConfig = await getSiteConfig();
+  const queryStatus = await querySourceServerStatus({
+    host: options?.serverHost ?? siteConfig.status.serverHost,
+    port: options?.serverPort ?? siteConfig.status.serverPort,
+    timeoutMs: options?.queryTimeoutMs ?? siteConfig.status.queryTimeoutMs,
+  });
+  return statusFromServerQuery(queryStatus, staleAfterSeconds);
 }
 
 export async function getDataHealth(): Promise<DataHealth> {

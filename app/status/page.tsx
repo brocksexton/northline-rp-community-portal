@@ -31,9 +31,11 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       label: 'Offline',
       tone: 'danger' as StatusTone,
       headline: 'Northline looks offline.',
-      body: runtime.lastSignalAt
-        ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
-        : 'The portal cannot see a fresh server signal right now. Check Discord for restart or maintenance updates.',
+      body: runtime.source === 'server_query'
+        ? 'The game server did not answer the configured server query. It may be stopped, restarting, or unreachable.'
+        : runtime.lastSignalAt
+          ? `No fresh server signal has been seen recently. Last visible activity was ${relativeFromDate(runtime.lastSignalAt)}.`
+          : 'The portal cannot see a fresh server signal right now. Check Discord for restart or maintenance updates.',
       action: 'Check Discord',
     };
   }
@@ -51,9 +53,11 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       label: runtime.state === 'quiet' ? 'Quiet' : 'Online',
       tone: 'neutral' as StatusTone,
       headline: 'Northline is online but quiet.',
-      body: latestEventAt
-        ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
-        : 'The game server is online, but nobody is showing online right now.',
+      body: runtime.source === 'server_query'
+        ? 'The game server answered directly, but nobody is connected right now.'
+        : latestEventAt
+          ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
+          : 'The game server is online, but nobody is showing online right now.',
       action: 'Join through s&box',
     };
   }
@@ -87,8 +91,8 @@ export default async function StatusPage() {
     getCityOverview(),
   ]);
 
-  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
-  const state = inferPublicState(runtime, population.onlineCount, population.latestEventAt);
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes, serverHost: config.status.serverHost, serverPort: config.status.serverPort, queryTimeoutMs: config.status.queryTimeoutMs });
+  const state = inferPublicState(runtime, runtime.playerCount ?? population.onlineCount, runtime.lastSignalAt ?? population.latestEventAt);
   const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
   const notices = updates.slice(0, 3);
   const recentEvents = population.recentEvents.slice(0, 5);
@@ -129,7 +133,7 @@ export default async function StatusPage() {
           <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" />
           <span>Last signal</span>
           <strong>{runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Nothing yet'}</strong>
-          <p>{runtime.source === 'server_status.json' ? 'Last server heartbeat seen by the portal.' : 'Last public connection signal seen by the portal.'}</p>
+          <p>{runtime.source === 'server_status.json' ? 'Last server heartbeat seen by the portal.' : runtime.source === 'server_query' ? 'Last direct server query run by the portal.' : 'Last public connection signal seen by the portal.'}</p>
         </article>
         <article className="status-snapshot-card-v2">
           <i className="fa-solid fa-users" aria-hidden="true" />

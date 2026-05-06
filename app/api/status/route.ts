@@ -17,7 +17,7 @@ export async function GET() {
     getStatusUpdates(8),
   ]);
 
-  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes });
+  const runtime = await getServerRuntimeStatus({ health, population, staleAfterMinutes: config.status.offlineAfterMinutes, serverHost: config.status.serverHost, serverPort: config.status.serverPort, queryTimeoutMs: config.status.queryTimeoutMs });
 
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
@@ -39,7 +39,7 @@ export async function GET() {
     updates,
     notes: {
       metrics: 'CPU, RAM, disk, and process memory are sampled by the web process. True NIC bytes in/out can be added later with a Windows performance-counter collector.',
-      serverStatus: 'If APE_RP_DATA_PATH/server_status.json exists, it is treated as the preferred server heartbeat. Otherwise, the portal infers online/offline state from recent connection logs and config.status.offlineAfterMinutes.',
+      serverStatus: 'If APE_RP_DATA_PATH/server_status.json exists, it is treated as the preferred server heartbeat. Otherwise, the portal queries the configured game server at NORTHLINE_SERVER_QUERY_HOST:NORTHLINE_SERVER_QUERY_PORT, defaulting to 203.0.113.10:27015.',
     },
   }, { headers: noStoreHeaders() });
 }
