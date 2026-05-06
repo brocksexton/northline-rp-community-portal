@@ -42,6 +42,8 @@ If this is not configured, the page still works, but it will show that console o
 
 The website does not run arbitrary console text. It only generates sanitized command strings for known actions.
 
+Kick, ban, and broadcast commands require a console bridge if you want them to execute immediately in-game. If no bridge is configured, they are saved to the local command queue so a bridge can forward them later. Server power actions do not require a command bridge because they run the configured local batch scripts directly.
+
 For direct delivery, provide a server-side script that accepts the full command string as its first argument:
 
 ```env
@@ -57,6 +59,8 @@ NORTHLINE_SERVER_COMMAND_QUEUE_PATH=C:\Servers\northline-data\server-command-que
 A separate local bridge can consume that queue and forward commands to the game server console.
 
 ## Power controls
+
+The default power-control scripts match the Northline Windows server layout. `Run-NorthboundRP.bat` should be the game-server launcher that starts `sbox-server.exe`; `update_sbox.bat` should run SteamCMD/update work.
 
 Defaults:
 

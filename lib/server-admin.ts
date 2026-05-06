@@ -301,7 +301,7 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
   const createdAt = new Date().toISOString();
   let result = '';
   let status: QueuedServerCommand['status'] = 'sent';
-  let command = action;
+  let command: string = action;
 
   try {
     if (action === 'start') {
