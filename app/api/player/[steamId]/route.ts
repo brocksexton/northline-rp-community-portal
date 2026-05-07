@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPermissionsForSteamId, getPlayer, getRoleForSteamId, hasPermission } from '@/lib/ape-data';
+import { getPermissionsForSteamId, getPlayer, getRoleForSteamId } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
+import { canAccessServerAdministration, getRequestStaffIdentity } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
   const sessionSteamId = getSessionSteamIdFromRequest(_request);
   const { steamId } = await params;
 
-  const canView = sessionSteamId === steamId || (await hasPermission(sessionSteamId, 'ViewLogs'));
+  const staffIdentity = sessionSteamId && sessionSteamId !== steamId ? await getRequestStaffIdentity(_request) : null;
+  const canView = sessionSteamId === steamId || Boolean(staffIdentity && canAccessServerAdministration(staffIdentity));
   if (!canView) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: noStoreHeaders() });
   }

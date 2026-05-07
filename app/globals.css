@@ -17932,7 +17932,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
 @media (max-width: 980px) { .jobs-hero-card, .jobs-posting-layout, .staff-jobs-layout, .job-review-layout { grid-template-columns: 1fr; } .jobs-posting-list { position: static; } .job-application-grid, .job-posting-columns, .staff-jobs-stats { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .job-form-grid, .job-editor-grid, .job-admin-list, .job-app-meta, .job-application-review-card .job-app-meta, .job-status-strip { grid-template-columns: 1fr; } .job-question-toolbar { grid-template-columns: 1fr; } .job-wizard-actions { align-items: stretch; } .job-wizard-actions .button { width: 100%; } }
 
-/* v2.9.50 Ape Tavern badge + trusted staff controls */
+/* v2.9.50 Ape Tavern badge + badge-only controls */
 .tweeter-verified.tweeter-verified-custom {
   background: transparent !important;
   width: 1.15rem;

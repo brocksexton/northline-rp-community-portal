@@ -21,6 +21,12 @@ function clean(value: unknown, fallback: string, max = 120) {
   return (raw || fallback).slice(0, max);
 }
 
+function displayBadgeLabel(value: unknown) {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw === 'Ape Tavern Staff' || raw === 'Ape Tavern/Northbound RP Staff') return APE_TAVERN_BADGE_KIND;
+  return clean(raw, APE_TAVERN_BADGE_KIND, 80);
+}
+
 function normalizeSteamId(value: unknown) {
   const digits = String(value ?? '').trim().replace(/\D+/g, '');
   return /^\d{15,20}$/.test(digits) ? digits : '';
@@ -38,7 +44,7 @@ export function normalizeApeStaffState(input: unknown): ApeStaffState {
     return true;
   });
   return {
-    badgeLabel: clean(raw.badgeLabel, APE_TAVERN_BADGE_KIND, 80),
+    badgeLabel: displayBadgeLabel(raw.badgeLabel),
     badgeImagePath: clean(raw.badgeImagePath, APE_TAVERN_BADGE_IMAGE_PATH, 200),
     staffSteamIds: staffSteamIds.length ? staffSteamIds : [...DEFAULT_APE_TAVERN_STAFF_IDS],
     updatedAt: raw.updatedAt ? clean(raw.updatedAt, '', 80) : null,
@@ -90,10 +96,16 @@ export async function isApeStaffSteamId(steamId: string | null | undefined): Pro
 
 export async function resolveVerifiedBadgeKind(steamId: string, role: string, fallbackKind?: string | null): Promise<string> {
   const state = await getApeStaffState();
-  if (state.staffSteamIds.includes(steamId)) return state.badgeLabel || APE_TAVERN_BADGE_KIND;
+  if (state.staffSteamIds.includes(steamId)) return APE_TAVERN_BADGE_KIND;
   const normalizedRole = (role || '').trim();
   if (normalizedRole && normalizedRole !== 'User') return normalizedRole;
   return clean(fallbackKind, 'None', 80) || 'None';
+}
+
+export async function resolvePublicRoleLabel(steamId: string, role: string): Promise<string> {
+  const normalizedRole = (role || '').trim();
+  if (await isApeStaffSteamId(steamId)) return APE_TAVERN_BADGE_KIND;
+  return normalizedRole || 'User';
 }
 
 export function parseSteamIdList(value: unknown): string[] {

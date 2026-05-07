@@ -16,6 +16,8 @@ import { getCommunityProfiles, getTweeterWebLikeState, type CommunityProfile } f
 import { money, duration, compactNumber, playerTitle } from '@/lib/format';
 import { getProfileCoverPreset } from '@/lib/profile-customization';
 import { getSteamProfiles } from '@/lib/steam-openid';
+import { getApeStaffSteamIds } from '@/lib/ape-staff-data';
+import { APE_TAVERN_BADGE_KIND } from '@/lib/ape-staff-shared';
 
 export type LeaderboardMetricKey =
   | 'netWorth'
@@ -295,7 +297,7 @@ function boardDefinitions(): BoardDefinition[] {
 }
 
 export async function buildLeaderboardData(currentSteamId: string | null = null): Promise<{ summary: LeaderboardSummary; boards: LeaderboardBoard[] }> {
-  const [players, profiles, roleAssignments, roleDefinitions, layouts, damageLogs, tweeter, guideProgress] = await Promise.all([
+  const [players, profiles, roleAssignments, roleDefinitions, layouts, damageLogs, tweeter, guideProgress, apeStaffIds] = await Promise.all([
     getPlayers(),
     getCommunityProfiles(),
     getRoleAssignments(),
@@ -304,6 +306,7 @@ export async function buildLeaderboardData(currentSteamId: string | null = null)
     getAllDamageLogs(),
     getTweeterData(),
     getAllGuideProgress(),
+    getApeStaffSteamIds(),
   ]);
 
   const publicPlayers = players.filter((player) => {
@@ -352,7 +355,8 @@ export async function buildLeaderboardData(currentSteamId: string | null = null)
     const property = layoutsByOwner.get(steamId) ?? { layouts: 0, props: 0 };
     const twitter = tweetsByAuthor.get(steamId) ?? { posts: 0, likes: 0 };
     const progress = guideProgress.get(steamId);
-    const role = roleFor(steamId);
+    const rawRole = roleFor(steamId);
+    const role = apeStaffIds.has(steamId) ? APE_TAVERN_BADGE_KIND : rawRole;
     return {
       steamId,
       player,

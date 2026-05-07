@@ -235,7 +235,7 @@ export function DailyDropsAdminPanel({ initialState, canManage }: Props) {
 
       <div className="staff-editor-actions">
         <button className="button button-primary" disabled={!canManage || saving} type="button" onClick={save}><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> {saving ? 'Saving…' : 'Save daily drops'}</button>
-        {!canManage ? <span>Ape Tavern staff access required to edit.</span> : message ? <span>{message}</span> : null}
+        {!canManage ? <span>Website admin access required to edit.</span> : message ? <span>{message}</span> : null}
       </div>
     </article>
   );

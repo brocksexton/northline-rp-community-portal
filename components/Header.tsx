@@ -5,6 +5,8 @@ import { getSessionSteamId } from '@/lib/session';
 import { getSiteConfig } from '@/lib/site-config';
 import { enabledFeatureIds, getSiteFeatureSettings, type SiteFeatureId } from '@/lib/site-features-data';
 import { getSteamProfile } from '@/lib/steam-openid';
+import { isApeStaffSteamId } from '@/lib/ape-staff-data';
+import { APE_TAVERN_BADGE_KIND } from '@/lib/ape-staff-shared';
 
 type HeaderNavItem = {
   href: string;
@@ -28,7 +30,8 @@ const nav: HeaderNavItem[] = [
   { href: '/shop', label: 'Shop', icon: 'fa-solid fa-store', description: 'Supporter shop', featureId: 'shop' },
 ];
 
-function canSeeStaff(role: string, permissions: string[]) {
+function canSeeStaff(role: string, permissions: string[], isBadgeOnlyApeStaff: boolean) {
+  if (isBadgeOnlyApeStaff) return false;
   return ['Developer', 'Admin', 'Moderator'].includes(role) || permissions.includes('ViewLogs') || permissions.includes('AdminTools');
 }
 
@@ -68,16 +71,18 @@ export async function Header() {
   const visibleOnlineCount = runtime.state === 'offline' || runtime.state === 'data_missing'
     ? null
     : runtime.playerCount ?? population.onlineCount;
-  const [role, permissions, player, communityProfile, steamProfile] = steamId
+  const [role, permissions, player, communityProfile, steamProfile, isBadgeOnlyApeStaff] = steamId
     ? await Promise.all([
       getRoleForSteamId(steamId),
       getPermissionsForSteamId(steamId),
       getPlayer(steamId),
       getCommunityProfile(steamId),
       getSteamProfile(steamId),
+      isApeStaffSteamId(steamId),
     ])
-    : ['Guest', [] as string[], null, null, null] as const;
-  const staff = steamId ? canSeeStaff(role, permissions) : false;
+    : ['Guest', [] as string[], null, null, null, false] as const;
+  const staff = steamId ? canSeeStaff(role, permissions, isBadgeOnlyApeStaff) : false;
+  const displayRole = isBadgeOnlyApeStaff ? APE_TAVERN_BADGE_KIND : role;
   const displayName = steamId ? getCitizenName(player, steamId) : 'Guest';
   const avatar = communityProfile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null;
   const profileHref = steamId ? `/tweeter/profile/${steamId}` : '/dashboard';
@@ -99,7 +104,7 @@ export async function Header() {
       onlineCount={visibleOnlineCount}
       statusState={runtime.state}
       statusLabel={statusPillLabel(runtime.state, visibleOnlineCount)}
-      user={steamId ? { steamId, displayName, role, avatar } : null}
+      user={steamId ? { steamId, displayName, role: displayRole, avatar } : null}
     />
   );
 }

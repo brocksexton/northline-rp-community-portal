@@ -16,6 +16,8 @@ import { playerTitle } from '@/lib/format';
 import { getProfileCoverPreset } from '@/lib/profile-customization';
 import { getTweeterRestrictionMap } from '@/lib/tweeter-moderation-data';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { getApeStaffSteamIds } from '@/lib/ape-staff-data';
+import { APE_TAVERN_BADGE_KIND } from '@/lib/ape-staff-shared';
 import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
 
 export const dynamic = 'force-dynamic';
@@ -68,6 +70,7 @@ export default async function PlayersPage() {
     getTweeterData(),
     getSiteFeatureSettings(),
   ]);
+  const apeStaffIds = await getApeStaffSteamIds();
 
   const enabledFeatures = enabledFeatureIds(featureSettings);
   const tweeterVisible = enabledFeatures.has('tweeter');
@@ -103,7 +106,8 @@ export default async function PlayersPage() {
       const player = playerBySteam.get(steamId) ?? null;
       const steam = steamProfiles.get(steamId) ?? null;
       const displayName = getCitizenName(player, steam?.personaName || `Citizen ${steamId.slice(-8)}`);
-      const role = rolesBySteam.get(steamId) ?? defaultRole;
+      const rawRole = rolesBySteam.get(steamId) ?? defaultRole;
+      const role = apeStaffIds.has(steamId) ? APE_TAVERN_BADGE_KIND : rawRole;
       const activity = activityLabel(steamId, onlineIds, lastSeenBySteam);
       const coverPreset = getProfileCoverPreset(profile.coverPreset);
       const coverImageUrl = profile.customCoverUrl?.trim() || coverPreset.imageUrl || '';

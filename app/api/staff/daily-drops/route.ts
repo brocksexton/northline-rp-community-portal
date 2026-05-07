@@ -7,14 +7,14 @@ import { canManageSiteConfiguration, getRequestStaffIdentity } from '@/lib/staff
 export async function GET(request: NextRequest) {
   const identity = await getRequestStaffIdentity(request);
   if (!identity) return jsonWithSession({ ok: false, message: 'Sign in required.' }, { status: 401 }, null, request);
-  if (!canManageSiteConfiguration(identity)) return jsonWithSession({ ok: false, message: 'Ape Tavern staff access required.' }, { status: 403 }, identity.steamId, request);
+  if (!canManageSiteConfiguration(identity)) return jsonWithSession({ ok: false, message: 'Website admin access required.' }, { status: 403 }, identity.steamId, request);
   return jsonWithSession({ ok: true, state: await getDailyDropsAdminState() }, undefined, identity.steamId, request);
 }
 
 export async function POST(request: NextRequest) {
   const identity = await getRequestStaffIdentity(request);
   if (!identity) return jsonWithSession({ ok: false, message: 'Sign in required.' }, { status: 401 }, null, request);
-  if (!canManageSiteConfiguration(identity)) return jsonWithSession({ ok: false, message: 'Ape Tavern staff access required.' }, { status: 403 }, identity.steamId, request);
+  if (!canManageSiteConfiguration(identity)) return jsonWithSession({ ok: false, message: 'Website admin access required.' }, { status: 403 }, identity.steamId, request);
   const body = await request.json().catch(() => ({}));
   const definitions = await saveCaseDefinitions(body);
   const activeCount = definitions.filter((definition) => definition.status === 'active').length;

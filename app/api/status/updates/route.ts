@@ -28,7 +28,7 @@ async function requireStaff(request: NextRequest): Promise<{ identity: StaffIden
     return { response: NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() }) };
   }
   if (!canPostStatusUpdates(identity)) {
-    return { response: NextResponse.json({ error: 'Admin or Ape Tavern staff access required.' }, { status: 403, headers: noStoreHeaders() }) };
+    return { response: NextResponse.json({ error: 'Admin or website staff access required.' }, { status: 403, headers: noStoreHeaders() }) };
   }
   return { identity: { steamId: identity.steamId, displayName: identity.displayName, roleLabel: identity.roleLabel } };
 }

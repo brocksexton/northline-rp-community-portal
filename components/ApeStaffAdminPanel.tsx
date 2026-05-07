@@ -49,7 +49,7 @@ export function ApeStaffAdminPanel({ initialState, canManage }: Props) {
       if (!response.ok || !data.state) throw new Error(data.message || 'Could not save the Ape Tavern staff list.');
       setState(data.state);
       setSteamIdsText(idsToText(data.state.staffSteamIds));
-      setNotice(`Saved ${data.state.staffSteamIds.length} Ape Tavern staff IDs.`);
+      setNotice(`Saved ${data.state.staffSteamIds.length} Ape Tavern badge IDs.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not save the Ape Tavern staff list.');
     } finally {
@@ -62,7 +62,7 @@ export function ApeStaffAdminPanel({ initialState, canManage }: Props) {
       <div className="section-heading">
         <span className="kicker">Identity + security</span>
         <h2>Ape Tavern staff badge</h2>
-        <p>Trusted SteamIDs in this list get the custom badge on Tweeter/profile pages and developer-level website access for protected staff tools.</p>
+        <p>SteamIDs in this list get the custom Ape Tavern badge and display label on public profiles. This list is badge-only and does not grant staff/admin access.</p>
       </div>
 
       <div className="ape-staff-panel-body">
@@ -87,7 +87,7 @@ export function ApeStaffAdminPanel({ initialState, canManage }: Props) {
         </label>
 
         <div className="ape-staff-panel-meta">
-          <span>{parsedIds.length} trusted IDs</span>
+          <span>{parsedIds.length} badge IDs</span>
           <small>Updated {state.updatedAt ? new Date(state.updatedAt).toLocaleString() : 'Not yet'}{state.updatedBy ? ` by ${state.updatedBy}` : ''}</small>
         </div>
 
@@ -95,7 +95,7 @@ export function ApeStaffAdminPanel({ initialState, canManage }: Props) {
 
         <div className="staff-hero-actions">
           <button type="button" className="button button-primary" onClick={save} disabled={!canManage || busy}>{busy ? 'Saving…' : 'Save staff list'}</button>
-          {!canManage ? <span className="muted-inline-note">Only Ape Tavern staff can edit this list.</span> : null}
+          {!canManage ? <span className="muted-inline-note">Only website administrators with site configuration access can edit this badge list.</span> : null}
         </div>
       </div>
     </article>

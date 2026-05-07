@@ -1,4 +1,4 @@
-export const APE_TAVERN_BADGE_KIND = 'Ape Tavern Staff';
+export const APE_TAVERN_BADGE_KIND = 'Ape Tavern';
 export const APE_TAVERN_BADGE_IMAGE_PATH = '/badges/ape-tavern-staff.png';
 export const DEFAULT_APE_TAVERN_STAFF_IDS = [
   '76561198055176887',

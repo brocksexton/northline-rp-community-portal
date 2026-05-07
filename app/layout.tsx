@@ -5,6 +5,7 @@ import { MaintenancePage } from '@/components/MaintenancePage';
 import { MaintenanceAccessGuard } from '@/components/MaintenanceAccessGuard';
 import { TweeterMaintenancePage } from '@/components/TweeterMaintenancePage';
 import { getCommunityProfile } from '@/lib/community-data';
+import { getRoleForSteamId } from '@/lib/ape-data';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
 import { headers } from 'next/headers';
@@ -36,11 +37,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [config, steamId, maintenance, headerList] = await Promise.all([getSiteConfig(), getSessionSteamId(), getMaintenanceSettings(), headers()]);
-  const [profile, trustedApeStaff] = steamId ? await Promise.all([getCommunityProfile(steamId), isApeStaffSteamId(steamId)]) : [null, false] as const;
+  const [profile, role, isBadgeOnlyApeStaff] = steamId ? await Promise.all([getCommunityProfile(steamId), getRoleForSteamId(steamId), isApeStaffSteamId(steamId)]) : [null, 'Guest', false] as const;
   const websiteStyle = profile?.websiteStyle ?? 'civic';
   const pathname = headerList.get('x-northline-pathname') ?? '';
   const isTweeterPath = pathname === '/tweeter' || pathname.startsWith('/tweeter/');
-  const trustedStaffBypass = trustedApeStaff;
+  const trustedStaffBypass = role.toLowerCase() === 'developer' && !isBadgeOnlyApeStaff;
   const maintenanceBlocked = isMaintenanceActive(maintenance) && !trustedStaffBypass && (!isTweeterPath || !maintenance.allowTweeterDuringMaintenance);
   const tweeterMaintenanceBlocked = isTweeterMaintenanceActive(maintenance) && isTweeterPath && !trustedStaffBypass;
   return (

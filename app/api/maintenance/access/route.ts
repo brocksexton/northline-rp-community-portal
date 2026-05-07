@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
+import { getRoleForSteamId } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, jsonWithSession } from '@/lib/session';
 import { isApeStaffSteamId } from '@/lib/ape-staff-data';
 
@@ -18,11 +19,13 @@ function isTweeterPath(pathname: string): boolean {
 
 export async function GET(request: NextRequest) {
   const steamId = getSessionSteamIdFromRequest(request);
-  const [settings, trustedStaffBypass] = await Promise.all([
+  const [settings, role, isBadgeOnlyApeStaff] = await Promise.all([
     getMaintenanceSettings(),
+    steamId ? getRoleForSteamId(steamId) : Promise.resolve('Guest'),
     steamId ? isApeStaffSteamId(steamId) : Promise.resolve(false),
   ]);
 
+  const trustedStaffBypass = role.toLowerCase() === 'developer' && !isBadgeOnlyApeStaff;
   const pathname = cleanPath(request.nextUrl.searchParams.get('path'));
   const tweeterPath = isTweeterPath(pathname);
   const siteMaintenance = isMaintenanceActive(settings);

@@ -160,7 +160,7 @@ export function MaintenanceSettingsPanel({ initialSettings, canManage, studio = 
       </div>
 
       {!canManage ? (
-        <div className="notice warning"><p>Only trusted Ape Tavern staff can change maintenance mode.</p></div>
+        <div className="notice warning"><p>Only website admins can change maintenance mode.</p></div>
       ) : null}
 
       <div className="maintenance-toggle-deck">

@@ -18,40 +18,56 @@ function normalizedRole(role: string) {
   return (role || '').trim().toLowerCase();
 }
 
-export function canManageSiteConfiguration(identity: Pick<StaffIdentity, 'isApeTavernStaff'>): boolean {
+function isBadgeOnlyIdentity(identity: Pick<StaffIdentity, 'isApeTavernStaff'>): boolean {
   return identity.isApeTavernStaff;
+}
+
+export function canManageSiteConfiguration(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
+  const role = normalizedRole(identity.role);
+  return role === 'developer' || identity.permissions.includes('AdminTools') || identity.permissions.includes('ModifyServerSettings');
 }
 
 export function canAccessServerAdministration(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
   const role = normalizedRole(identity.role);
-  return identity.isApeTavernStaff || role === 'admin' || role === 'moderator' || identity.permissions.includes('AdminTools') || identity.permissions.includes('ViewLogs') || identity.permissions.includes('ModifyServerSettings');
+  return role === 'developer' || role === 'admin' || role === 'moderator' || identity.permissions.includes('AdminTools') || identity.permissions.includes('ViewLogs') || identity.permissions.includes('ModifyServerSettings');
 }
 
-export function canRunServerPowerActions(identity: Pick<StaffIdentity, 'permissions' | 'isApeTavernStaff'>): boolean {
-  return identity.isApeTavernStaff || identity.permissions.includes('ModifyServerSettings');
+export function canRunServerPowerActions(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
+  const role = normalizedRole(identity.role);
+  return role === 'developer' || identity.permissions.includes('ModifyServerSettings');
 }
 
 export function canRunModerationActions(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
   const role = normalizedRole(identity.role);
-  return identity.isApeTavernStaff || role === 'admin' || identity.permissions.includes('AdminTools');
+  return role === 'developer' || role === 'admin' || identity.permissions.includes('AdminTools');
 }
 
-export function canManageTweeterConfiguration(identity: Pick<StaffIdentity, 'isApeTavernStaff'>): boolean {
-  return identity.isApeTavernStaff;
+export function canManageTweeterConfiguration(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
+  const role = normalizedRole(identity.role);
+  return role === 'developer' || identity.permissions.includes('AdminTools');
 }
 
-export function canManageJobPostings(identity: Pick<StaffIdentity, 'permissions' | 'isApeTavernStaff'>): boolean {
-  return identity.isApeTavernStaff || identity.permissions.includes('AdminTools');
+export function canManageJobPostings(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
+  const role = normalizedRole(identity.role);
+  return role === 'developer' || identity.permissions.includes('AdminTools');
 }
 
 export function canReviewJobApplications(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
   const role = normalizedRole(identity.role);
-  return identity.isApeTavernStaff || role === 'admin' || role === 'moderator' || identity.permissions.includes('ViewLogs') || identity.permissions.includes('AdminTools');
+  return role === 'developer' || role === 'admin' || role === 'moderator' || identity.permissions.includes('ViewLogs') || identity.permissions.includes('AdminTools');
 }
 
 export function canPostStatusUpdates(identity: Pick<StaffIdentity, 'role' | 'permissions' | 'isApeTavernStaff'>): boolean {
+  if (isBadgeOnlyIdentity(identity)) return false;
   const role = normalizedRole(identity.role);
-  return identity.isApeTavernStaff || role === 'admin' || identity.permissions.includes('AdminTools') || identity.permissions.includes('ModifyServerSettings');
+  return role === 'developer' || role === 'admin' || identity.permissions.includes('AdminTools') || identity.permissions.includes('ModifyServerSettings');
 }
 
 async function buildStaffIdentity(steamId: string): Promise<StaffIdentity> {

@@ -169,7 +169,7 @@ export default async function StaffPage() {
         <article className="staff-panel maintenance-help-panel">
           <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Use this when you want visitors to see a clean update page instead of a half-finished feature.</p></div>
           <div className="stack-list compact-stack">
-            <div><strong>Main site</strong><span>Close most pages while still letting trusted Ape Tavern staff in.</span><small>You can optionally keep Tweeter open.</small></div>
+            <div><strong>Main site</strong><span>Close most pages while still letting eligible website staff in.</span><small>You can optionally keep Tweeter open.</small></div>
             <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
             <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
@@ -200,7 +200,7 @@ export default async function StaffPage() {
             <div><strong>Soft ban</strong><span>Leaves the profile visible but disables social actions.</span><small>Likes, follows, DMs, and profile edits are locked.</small></div>
             <div><strong>Full ban</strong><span>Hides the account and locks Tweeter features entirely.</span><small>Active in-game bans also show notices on profiles.</small></div>
           </div>
-          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but trusted badge visibility can be changed below.</span>}</div>
+          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but badge visibility can be changed below.</span>}</div>
         </article>
       </section>
 

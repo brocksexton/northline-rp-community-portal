@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const access = await getAccess(request);
   if (!access.identity || !access.allowed) return NextResponse.json({ error: 'Staff access required.' }, { status: 403, headers: noStoreHeaders() });
-  if (!access.canManage) return NextResponse.json({ error: 'Ape Tavern staff access required to change Tweeter filtered words.' }, { status: 403, headers: noStoreHeaders() });
+  if (!access.canManage) return NextResponse.json({ error: 'Website admin access required to change Tweeter filtered words.' }, { status: 403, headers: noStoreHeaders() });
 
   const body = await request.json().catch(() => ({}));
   try {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const access = await getAccess(request);
   if (!access.identity || !access.allowed) return NextResponse.json({ error: 'Staff access required.' }, { status: 403, headers: noStoreHeaders() });
-  if (!access.canManage) return NextResponse.json({ error: 'Ape Tavern staff access required to change Tweeter filtered words.' }, { status: 403, headers: noStoreHeaders() });
+  if (!access.canManage) return NextResponse.json({ error: 'Website admin access required to change Tweeter filtered words.' }, { status: 403, headers: noStoreHeaders() });
 
   const body = await request.json().catch(() => ({}));
   try {

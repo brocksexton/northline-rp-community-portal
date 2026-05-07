@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const identity = await getRequestStaffIdentity(request);
   if (!identity) return jsonWithSession({ ok: false, message: 'Sign in required.' }, { status: 401 }, null, request);
-  if (!canManageJobPostings(identity)) return jsonWithSession({ ok: false, message: 'Ape Tavern staff or AdminTools access required.' }, { status: 403 }, identity.steamId, request);
+  if (!canManageJobPostings(identity)) return jsonWithSession({ ok: false, message: 'Website admin or AdminTools access required.' }, { status: 403 }, identity.steamId, request);
   const body = await request.json().catch(() => ({}));
   const state = await saveJobPostings(body, identity.steamId);
   await notifyAdminAudit({
