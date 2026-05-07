@@ -140,3 +140,24 @@ The watcher starts at the end of the log when the bot starts, so it does not rep
 ### Server-start connection watcher behavior
 
 When connection notices are enabled, the bot treats a server log line like `Connected to Steam` as a server lifecycle event, not as a player join. It posts a concise server-started embed to the configured connection notice channel. Player join/leave notices require a SteamID64 in the log line.
+
+### Player avatars and death notices
+
+When connection notices are enabled, join/leave embeds now try to load the player's Steam profile summary using `STEAM_API_KEY`. If Steam returns an avatar, the bot uses it as the embed thumbnail/author image.
+
+Death notices can be enabled separately:
+
+```env
+NORTHLINE_BOT_DEATH_NOTICES=true
+NORTHLINE_BOT_DEATH_CHANNEL_ID=your-discord-channel-id
+NORTHLINE_BOT_DEATH_LOG_PATH=C:\Servers\northline-data\server-console.log
+NORTHLINE_BOT_DEATH_EVENTS_PATH=C:\Servers\northline-data\death-events.jsonl
+```
+
+The watcher recognizes common death lines containing SteamID64 values, including:
+
+- `Brock [76561198033862837] died from fall damage`
+- `Brock [76561198033862837] was killed by Alex [76561198000000000] with pistol`
+- `Alex [76561198000000000] killed Brock [76561198033862837] with rifle`
+
+Each detected death is posted as an embed and appended to the JSONL event history so it can be analyzed later.

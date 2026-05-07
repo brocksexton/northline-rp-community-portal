@@ -1,6 +1,6 @@
 import { loadNorthlineEnv } from '../shared/load-env.mjs';
 loadNorthlineEnv({ debug: true });
-import { open, stat } from 'node:fs/promises';
+import { appendFile, open, stat } from 'node:fs/promises';
 import {
   Client,
   GatewayIntentBits,
@@ -21,6 +21,15 @@ const connectionPollMs = Math.max(1000, Math.min(Number(process.env.NORTHLINE_BO
 const connectionDedupeMs = Math.max(5000, Math.min(Number(process.env.NORTHLINE_BOT_CONNECTION_DEDUPE_MS || 45000) || 45000, 300000));
 const connectionIncludeSteamId = !/^false$/i.test(process.env.NORTHLINE_BOT_CONNECTION_INCLUDE_STEAMID || 'true');
 const connectionProfileBaseUrl = (process.env.NORTHLINE_BOT_PROFILE_BASE_URL || `${publicUrl.replace(/\/$/, '')}/tweeter/profile`).replace(/\/$/, '');
+const steamApiKey = (process.env.STEAM_API_KEY || '').trim();
+const steamProfileCacheMs = Math.max(60_000, Math.min(Number(process.env.NORTHLINE_BOT_STEAM_PROFILE_CACHE_MS || 900000) || 900000, 86_400_000));
+const deathNoticesEnabled = /^true$/i.test(process.env.NORTHLINE_BOT_DEATH_NOTICES || '');
+const deathChannelId = (process.env.NORTHLINE_BOT_DEATH_CHANNEL_ID || connectionChannelId || '').trim();
+const deathLogPath = (process.env.NORTHLINE_BOT_DEATH_LOG_PATH || connectionLogPath).trim();
+const deathPollMs = Math.max(1000, Math.min(Number(process.env.NORTHLINE_BOT_DEATH_POLL_MS || connectionPollMs) || connectionPollMs, 30000));
+const deathDedupeMs = Math.max(5000, Math.min(Number(process.env.NORTHLINE_BOT_DEATH_DEDUPE_MS || 45000) || 45000, 300000));
+const deathIncludeSteamId = !/^false$/i.test(process.env.NORTHLINE_BOT_DEATH_INCLUDE_STEAMID || 'true');
+const deathEventsPath = (process.env.NORTHLINE_BOT_DEATH_EVENTS_PATH || 'C:\\Servers\\northline-data\\death-events.jsonl').trim();
 
 
 if (!token) {
@@ -56,6 +65,44 @@ function parseColor(value) {
 function clean(value, max = 1024) {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text.length > max ? `${text.slice(0, Math.max(0, max - 1))}…` : text;
+}
+
+function steamProfileUrl(steamId) {
+  return steamId ? `https://steamcommunity.com/profiles/${steamId}` : null;
+}
+
+const steamProfileCache = new Map();
+
+async function getSteamProfile(steamId) {
+  if (!steamId) return null;
+  const now = Date.now();
+  const cached = steamProfileCache.get(steamId);
+  if (cached && now - cached.cachedAt < steamProfileCacheMs) return cached.profile;
+  const fallback = { steamId, profileUrl: steamProfileUrl(steamId), personaName: null, avatar: null };
+  if (!steamApiKey) {
+    steamProfileCache.set(steamId, { cachedAt: now, profile: fallback });
+    return fallback;
+  }
+
+  try {
+    const params = new URLSearchParams({ key: steamApiKey, steamids: steamId });
+    const response = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?${params.toString()}`);
+    if (!response.ok) throw new Error(`Steam API returned ${response.status}`);
+    const data = await response.json();
+    const player = data?.response?.players?.[0];
+    const profile = {
+      steamId,
+      profileUrl: player?.profileurl || fallback.profileUrl,
+      personaName: player?.personaname || null,
+      avatar: player?.avatarfull || player?.avatarmedium || player?.avatar || null,
+    };
+    steamProfileCache.set(steamId, { cachedAt: now, profile });
+    return profile;
+  } catch (error) {
+    console.warn('[northline-discord-bot] Steam profile lookup failed:', error instanceof Error ? error.message : error);
+    steamProfileCache.set(steamId, { cachedAt: now, profile: fallback });
+    return fallback;
+  }
 }
 
 function hasAnyRole(member, roleIds) {
@@ -348,33 +395,187 @@ function shouldSendConnectionNotice(event) {
   return true;
 }
 
-function connectionNoticeEmbed(event) {
+async function connectionNoticeEmbed(event) {
   if (event.action === 'server-started') {
     return new EmbedBuilder()
       .setColor(0x57f287)
-      .setTitle('Server started')
+      .setTitle('🟢 Server started')
       .setDescription('The server has started and should appear in the server browser shortly.')
-      .setFooter({ text: 'Northline RP Server Watch' })
+      .setFooter({ text: 'Northline RP • Live city feed' })
       .setTimestamp(new Date());
   }
 
   const joined = event.action === 'join';
+  const profile = await getSteamProfile(event.steamId);
+  const displayName = profile?.personaName || event.name;
   const embed = new EmbedBuilder()
     .setColor(joined ? 0x57f287 : 0xed4245)
-    .setTitle(joined ? 'Player joined' : 'Player left')
-    .setDescription(joined ? `**${event.name}** is connecting to the city.` : `**${event.name}** disconnected from the city.`)
-    .setFooter({ text: 'Northline RP Server Watch' })
+    .setTitle(joined ? '🟢 Player joined' : '🔴 Player left')
+    .setDescription(joined ? `**${displayName}** is heading into Northline.` : `**${displayName}** left the city.`)
+    .setFooter({ text: 'Northline RP • Live city feed' })
     .setTimestamp(new Date());
+
+  if (profile?.avatar) {
+    embed.setThumbnail(profile.avatar);
+    embed.setAuthor({ name: displayName, iconURL: profile.avatar, url: profile.profileUrl || undefined });
+  }
   if (event.steamId && connectionProfileBaseUrl) embed.setURL(`${connectionProfileBaseUrl}/${event.steamId}`);
-  const fields = [{ name: 'Player', value: event.name, inline: true }];
+
+  const fields = [{ name: 'Citizen', value: displayName, inline: true }];
   if (connectionIncludeSteamId && event.steamId) fields.push({ name: 'SteamID64', value: `\`${event.steamId}\``, inline: true });
+  if (profile?.profileUrl) fields.push({ name: 'Steam profile', value: `[Open profile](${profile.profileUrl})`, inline: true });
+  if (joined) fields.push({ name: 'Status', value: 'Checking bags, tying shoes, entering RP.', inline: false });
   embed.addFields(...fields);
   return embed;
 }
 
 async function sendConnectionNotice(channel, event) {
   if (!shouldSendConnectionNotice(event)) return;
-  await channel.send({ embeds: [connectionNoticeEmbed(event)] });
+  await channel.send({ embeds: [await connectionNoticeEmbed(event)] });
+}
+
+const deathNoticeDedupe = new Map();
+
+function stripLogPrefix(line) {
+  return String(line || '')
+    .replace(/\u001b\[[0-9;]*m/g, '')
+    .replace(/^\[server-log\]\s*/i, '')
+    .replace(/^\[?\d{1,2}:\d{2}:\d{2}\]?\s*/i, '')
+    .replace(/^\[[^\]]+\]\s*/i, '')
+    .replace(/^(generic|info|log|server|client|trace|debug|warning|warn|notice)\s+/i, '')
+    .trim();
+}
+
+function cleanLogName(value) {
+  return clean(String(value || '')
+    .replace(/[`*_~|]/g, '')
+    .replace(/^(generic|info|log|server|client|trace|debug|warning|warn|notice)\s+/i, '')
+    .trim(), 80);
+}
+
+function extractCause(tail, fallback = 'Unknown') {
+  const raw = String(tail || '').trim();
+  if (!raw) return fallback;
+  const lower = raw.toLowerCase();
+  if (/suicide|self|themself|himself|herself/.test(lower)) return 'Suicide';
+  if (/fall|gravity|impact/.test(lower)) return 'Fall damage';
+  if (/fire|burn/.test(lower)) return 'Fire';
+  if (/explode|explosion|blast/.test(lower)) return 'Explosion';
+  const matched = raw.match(/(?:with|using|by|from|cause:|weapon:)\s+(.+)$/i);
+  const text = clean((matched?.[1] || raw)
+    .replace(/\[[0-9]{15,20}\]/g, '')
+    .replace(/^(by|with|using|from|cause:|weapon:)\s+/i, '')
+    .trim(), 120);
+  return text || fallback;
+}
+
+function parseDeathLine(line) {
+  const text = String(line || '').replace(/\u001b\[[0-9;]*m/g, '').trim();
+  if (!text) return null;
+  if (!/\b(died|death|killed|murdered|slain|suicide|fatal|dead)\b/i.test(text)) return null;
+  if (/\b(disconnected|connecting|connected to steam|joined|has joined)\b/i.test(text)) return null;
+
+  const body = stripLogPrefix(text);
+  const player = '(.{1,80}?)\\s*\\[(\\d{15,20})\\]';
+
+  let match = body.match(new RegExp(`^${player}.*?\\b(?:was\\s+)?(?:killed|murdered|slain|downed)\\s+by\\s+${player}(.*)$`, 'i'));
+  if (match) {
+    return {
+      action: 'death',
+      victimName: cleanLogName(match[1]),
+      victimSteamId: match[2],
+      killerName: cleanLogName(match[3]),
+      killerSteamId: match[4],
+      cause: extractCause(match[5], 'Killed by another player'),
+      raw: text,
+    };
+  }
+
+  match = body.match(new RegExp(`^${player}.*?\\b(?:killed|murdered|slain)\\s+${player}(.*)$`, 'i'));
+  if (match) {
+    return {
+      action: 'death',
+      killerName: cleanLogName(match[1]),
+      killerSteamId: match[2],
+      victimName: cleanLogName(match[3]),
+      victimSteamId: match[4],
+      cause: extractCause(match[5], 'Killed by another player'),
+      raw: text,
+    };
+  }
+
+  match = body.match(new RegExp(`^${player}.*?\\b(?:died|has died|was killed|committed suicide|is dead)\\b(.*)$`, 'i'));
+  if (match) {
+    const tail = match[3] || '';
+    return {
+      action: 'death',
+      victimName: cleanLogName(match[1]),
+      victimSteamId: match[2],
+      killerName: null,
+      killerSteamId: null,
+      cause: extractCause(tail, /suicide/i.test(body) ? 'Suicide' : 'Unknown'),
+      raw: text,
+    };
+  }
+
+  return null;
+}
+
+function shouldSendDeathNotice(event) {
+  const key = `${event.victimSteamId}:${event.killerSteamId || 'world'}:${event.cause}`;
+  const now = Date.now();
+  const previous = deathNoticeDedupe.get(key) || 0;
+  if (now - previous < deathDedupeMs) return false;
+  deathNoticeDedupe.set(key, now);
+  for (const [oldKey, timestamp] of deathNoticeDedupe.entries()) {
+    if (now - timestamp > deathDedupeMs * 4) deathNoticeDedupe.delete(oldKey);
+  }
+  return true;
+}
+
+async function deathNoticeEmbed(event) {
+  const victimProfile = await getSteamProfile(event.victimSteamId);
+  const killerProfile = await getSteamProfile(event.killerSteamId);
+  const victimName = victimProfile?.personaName || event.victimName || 'Unknown player';
+  const killerName = killerProfile?.personaName || event.killerName || null;
+
+  const embed = new EmbedBuilder()
+    .setColor(killerName ? 0xff6b6b : 0xfaa61a)
+    .setTitle(killerName ? '💀 Fatal encounter' : '💀 Player death')
+    .setDescription(killerName ? `**${victimName}** was killed by **${killerName}**.` : `**${victimName}** died.`)
+    .setFooter({ text: 'Northline RP • Incident feed' })
+    .setTimestamp(new Date());
+
+  if (victimProfile?.avatar) {
+    embed.setThumbnail(victimProfile.avatar);
+    embed.setAuthor({ name: victimName, iconURL: victimProfile.avatar, url: victimProfile.profileUrl || undefined });
+  }
+
+  const fields = [
+    { name: 'Victim', value: victimName, inline: true },
+    { name: 'Cause', value: clean(event.cause || 'Unknown', 120), inline: true },
+  ];
+  if (killerName) fields.splice(1, 0, { name: 'Involved player', value: killerName, inline: true });
+  if (deathIncludeSteamId && event.victimSteamId) fields.push({ name: 'Victim SteamID64', value: `\`${event.victimSteamId}\``, inline: true });
+  if (deathIncludeSteamId && event.killerSteamId) fields.push({ name: 'Other SteamID64', value: `\`${event.killerSteamId}\``, inline: true });
+  if (victimProfile?.profileUrl) fields.push({ name: 'Victim profile', value: `[Open Steam profile](${victimProfile.profileUrl})`, inline: true });
+  if (killerProfile?.profileUrl) fields.push({ name: 'Other profile', value: `[Open Steam profile](${killerProfile.profileUrl})`, inline: true });
+  embed.addFields(...fields);
+  return embed;
+}
+
+async function appendDeathEvent(event) {
+  try {
+    await appendFile(deathEventsPath, `${JSON.stringify({ ...event, createdAt: new Date().toISOString() })}\n`, 'utf8');
+  } catch (error) {
+    console.warn('[northline-discord-bot] Could not write death event:', error instanceof Error ? error.message : error);
+  }
+}
+
+async function sendDeathNotice(channel, event) {
+  if (!shouldSendDeathNotice(event)) return;
+  await appendDeathEvent(event);
+  await channel.send({ embeds: [await deathNoticeEmbed(event)] });
 }
 
 async function readNewLogChunk(filePath, offset) {
@@ -446,9 +647,61 @@ async function startConnectionNoticeWatcher() {
   }, connectionPollMs).unref?.();
 }
 
+async function startDeathNoticeWatcher() {
+  if (!deathNoticesEnabled) return;
+  if (!deathChannelId) {
+    console.warn('[northline-discord-bot] Death notices are enabled but NORTHLINE_BOT_DEATH_CHANNEL_ID is empty.');
+    return;
+  }
+
+  let channel = null;
+  try {
+    channel = await client.channels.fetch(deathChannelId);
+  } catch (error) {
+    console.error('[northline-discord-bot] Could not fetch death notice channel:', error);
+    return;
+  }
+  if (!channel?.isTextBased?.()) {
+    console.error('[northline-discord-bot] Death notice channel is not text-based.');
+    return;
+  }
+
+  let offset = 0;
+  let pending = '';
+  try {
+    const info = await stat(deathLogPath);
+    offset = info.isFile() ? info.size : 0;
+  } catch {
+    offset = 0;
+  }
+
+  console.log(`[northline-discord-bot] Watching death notices from ${deathLogPath}. Channel: ${deathChannelId}. Starting at byte ${offset}.`);
+
+  setInterval(async () => {
+    try {
+      const result = await readNewLogChunk(deathLogPath, offset);
+      offset = result.offset;
+      if (!result.text) return;
+
+      const combined = pending + result.text;
+      const parts = combined.split(/\r?\n/);
+      pending = combined.endsWith('\n') || combined.endsWith('\r') ? '' : (parts.pop() || '');
+      const lines = pending ? parts : parts.filter(Boolean);
+
+      for (const line of lines) {
+        const event = parseDeathLine(line);
+        if (event) await sendDeathNotice(channel, event);
+      }
+    } catch (error) {
+      console.error('[northline-discord-bot] Death notice watcher error:', error instanceof Error ? error.message : error);
+    }
+  }, deathPollMs).unref?.();
+}
+
 client.once('ready', () => {
   console.log(`Northline Discord bot signed in as ${client.user.tag}. API: ${apiBase}`);
   startConnectionNoticeWatcher().catch((error) => console.error('[northline-discord-bot] Connection watcher failed:', error));
+  startDeathNoticeWatcher().catch((error) => console.error('[northline-discord-bot] Death watcher failed:', error));
 });
 
 client.on('interactionCreate', async (interaction) => {
