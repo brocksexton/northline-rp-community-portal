@@ -1,20 +1,64 @@
 import Link from 'next/link';
-import { getCityOverview, getDataHealth, getHostMetrics, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs } from '@/lib/ape-data';
-import { duration, fullDate } from '@/lib/format';
+import { getCityOverview, getDataHealth, getHostMetrics, getPopulationSummary } from '@/lib/ape-data';
+import { duration } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
 import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
 import { getJobsAdminState } from '@/lib/jobs-data';
-import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
-import { ApeStaffAdminPanel } from '@/components/ApeStaffAdminPanel';
-import { getApeStaffState } from '@/lib/ape-staff-data';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Staff' };
+export const metadata = { title: 'Staff Command Center' };
 
 function bytesToGb(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+}
+
+function WorkspaceCard({
+  eyebrow,
+  title,
+  description,
+  icon,
+  href,
+  tone = 'blue',
+  stats = [],
+  secondaryHref,
+  secondaryLabel,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon: string;
+  href: string;
+  tone?: 'blue' | 'green' | 'amber' | 'rose' | 'violet' | 'slate';
+  stats?: { label: string; value: string | number }[];
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}) {
+  return (
+    <article className={`staff-launch-card tone-${tone}`}>
+      <div className="staff-launch-card-topline">
+        <span className="kicker">{eyebrow}</span>
+        <span className="staff-launch-icon"><i className={icon} aria-hidden="true" /></span>
+      </div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      {stats.length ? (
+        <dl className="staff-launch-stats">
+          {stats.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <div className="staff-launch-actions">
+        <Link className="button button-primary" href={href}><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open workspace</Link>
+        {secondaryHref && secondaryLabel ? <Link className="button button-soft" href={secondaryHref}>{secondaryLabel}</Link> : null}
+      </div>
+    </article>
+  );
 }
 
 export default async function StaffPage() {
@@ -36,194 +80,179 @@ export default async function StaffPage() {
     );
   }
 
-  const [
-    health,
-    population,
-    metrics,
-    overview,
-    adminLogs,
-    chatLogs,
-    damageLogs,
-    maintenanceSettings,
-    featureSettings,
-    dailyDropsState,
-    jobsAdminState,
-    apeStaffState,
-  ] = await Promise.all([
+  const [health, population, metrics, overview, maintenanceSettings, featureSettings, dailyDropsState, jobsAdminState] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
     getCityOverview(),
-    getRecentAdminLogs(15),
-    getRecentChatLogs(15),
-    getRecentDamageLogs(15),
     getMaintenanceSettings(),
     getSiteFeatureSettings(),
     getDailyDropsAdminState(),
     getJobsAdminState(),
-    getApeStaffState(),
   ]);
 
   const canManageSiteFeatures = canManageSiteConfiguration(identity);
   const enabledFeatures = enabledFeatureIds(featureSettings);
-  const statusVisible = enabledFeatures.has('status');
-  const bansVisible = enabledFeatures.has('bans');
-  const tweeterVisible = enabledFeatures.has('tweeter');
+  const siteMode = maintenanceSettings.enabled ? 'Maintenance' : 'Open';
+  const tweeterMode = maintenanceSettings.tweeterMaintenanceEnabled ? 'Paused' : enabledFeatures.has('tweeter') ? 'Visible' : 'Hidden';
 
   return (
-    <main className="page-shell staff-page staff-command-page">
-      <section className="staff-command-hero">
+    <main className="page-shell staff-page staff-command-page staff-command-center-v2">
+      <section className="staff-command-hero staff-command-center-hero">
         <div className="staff-command-copy">
-          <span className="ops-kicker">
-            <i /> Staff Control Center
-          </span>
-          <h1>City operations at a glance</h1>
-          <p>Review server health, player volume, and recent moderation signals from one readable staff dashboard.</p>
+          <span className="ops-kicker"><i /> Staff Command Center</span>
+          <h1>One calm launchpad for every staff tool.</h1>
+          <p>Use this page for situational awareness and routing. Configuration, logs, moderation, server controls, applications, cases, and site settings now live in dedicated workspaces.</p>
           <div className="staff-hero-actions">
-            {statusVisible ? <Link className="button button-primary" href="/status">Public status</Link> : null}
-            <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Status diagnostics</Link>
             <Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Server control</Link>
-            {bansVisible ? <Link className="button button-soft" href="/bans">Ban list</Link> : null}
-            {tweeterVisible ? <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link> : null}
+            <Link className="button button-soft" href="/staff/activity"><i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Activity center</Link>
+            {canManageSiteFeatures ? <Link className="button button-soft" href="/staff/site"><i className="fa-solid fa-sliders" aria-hidden="true" /> Site settings</Link> : null}
           </div>
         </div>
 
-        <aside className="staff-identity-card">
-          <span>Signed in as</span>
-          <strong>{identity.roleLabel}</strong>
-          <p>{identity.permissions.length} permissions</p>
+        <aside className="staff-identity-card staff-operator-card">
+          <span>Operator</span>
+          <strong>{identity.displayName}</strong>
+          <p>{identity.roleLabel} · {identity.permissions.length} permission{identity.permissions.length === 1 ? '' : 's'}</p>
           <small>{identity.steamId}</small>
         </aside>
       </section>
 
-      <section className="staff-signal-grid" aria-label="Staff overview">
-        <article><span>Online now</span><strong>{population.onlineCount}</strong><p>Connected players</p></article>
-        <article><span>Known saves</span><strong>{overview.players}</strong><p>Saved citizens</p></article>
-        <article><span>Warnings</span><strong>{overview.warnings}</strong><p>Moderation records</p></article>
-        <article><span>Mutes</span><strong>{overview.mutes}</strong><p>Voice/chat controls</p></article>
+      <section className="staff-signal-grid staff-command-signals" aria-label="Staff overview">
+        <article><span>Players online</span><strong>{population.onlineCount}</strong><p>Connected citizens right now</p></article>
+        <article><span>Known saves</span><strong>{overview.players}</strong><p>Persisted citizen records</p></article>
+        <article><span>Site mode</span><strong>{siteMode}</strong><p>Main website availability</p></article>
+        <article><span>Tweeter</span><strong>{tweeterMode}</strong><p>Social feature visibility</p></article>
       </section>
 
-      <section className="staff-workspace-section">
-        <div className="section-heading inline">
+      {!health.exists || health.warnings.length ? (
+        <section className="staff-command-alert">
           <div>
-            <span className="kicker">Dedicated workspaces</span>
-            <h2>Configuration areas that need breathing room</h2>
-            <p>Open dedicated management pages for staffing and daily-drop configuration instead of squeezing those tools into the homepage.</p>
+            <span className="kicker">Attention needed</span>
+            <h2>{health.exists ? 'Server data has warnings' : 'Server data path needs setup'}</h2>
+            <p>{health.warnings[0] ?? 'The website cannot currently read the configured server data path.'}</p>
           </div>
-        </div>
+          <Link className="button button-primary" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Open diagnostics</Link>
+        </section>
+      ) : null}
 
-        <div className="staff-workspace-grid">
-          <article className="staff-workspace-card">
-            <div className="staff-workspace-topline">
-              <span className="kicker">Hiring</span>
-              <span className="staff-workspace-icon"><i className="fa-solid fa-briefcase" aria-hidden="true" /></span>
-            </div>
-            <h3>Staff applications workspace</h3>
-            <p>Manage role postings, review incoming applications, update statuses, and leave applicant-visible notes from one dedicated page.</p>
-            <dl className="staff-workspace-stats">
-              <div><dt>Applications</dt><dd>{jobsAdminState.stats.totalApplications}</dd></div>
-              <div><dt>Open review</dt><dd>{jobsAdminState.stats.openApplications}</dd></div>
-              <div><dt>Active postings</dt><dd>{jobsAdminState.stats.visiblePostings}</dd></div>
-            </dl>
-            <div className="staff-hero-actions">
-              <Link className="button button-primary" href="/staff/jobs"><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open workspace</Link>
-              <Link className="button button-soft" href="/jobs"><i className="fa-solid fa-eye" aria-hidden="true" /> View public portal</Link>
-            </div>
-          </article>
-
-          <article className="staff-workspace-card">
-            <div className="staff-workspace-topline">
-              <span className="kicker">Daily Drops</span>
-              <span className="staff-workspace-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></span>
-            </div>
-            <h3>Case modification workspace</h3>
-            <p>Edit daily-drop cases, reward pools, cadence, and visibility with a full page that is easier to navigate and understand.</p>
-            <dl className="staff-workspace-stats">
-              <div><dt>Configured cases</dt><dd>{dailyDropsState.definitions.length}</dd></div>
-              <div><dt>Active</dt><dd>{dailyDropsState.activeCount}</dd></div>
-              <div><dt>Claims recorded</dt><dd>{dailyDropsState.claimedCount}</dd></div>
-            </dl>
-            <div className="staff-hero-actions">
-              <Link className="button button-primary" href="/staff/cases"><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open workspace</Link>
-              <Link className="button button-soft" href="/cases"><i className="fa-solid fa-eye" aria-hidden="true" /> View public page</Link>
-            </div>
-          </article>
+      <section className="staff-section-head">
+        <div>
+          <span className="kicker">Workspaces</span>
+          <h2>Choose the tool you need</h2>
+          <p>Each workspace gets room to breathe. The homepage stays focused on routing and live context.</p>
         </div>
       </section>
 
-      <section className="staff-dashboard-admin-grid">
-        <SiteFeaturesAdminPanel initialSettings={featureSettings} canManage={canManageSiteFeatures} />
-        <ApeStaffAdminPanel initialState={apeStaffState} canManage={canManageSiteFeatures} />
-      </section>
-
-      <section className="staff-command-grid maintenance-command-grid">
-        <article className="staff-panel maintenance-control-card">
-          <div className="section-heading"><span className="kicker">Maintenance</span><h2>Maintenance studio</h2><p>Open the dedicated studio to pause the main site, pause Tweeter, pick a preset, and customize the downtime page.</p></div>
-          <dl className="maintenance-status-list">
-            <div><dt>Main site</dt><dd>{maintenanceSettings.enabled ? 'Maintenance on' : 'Open'}</dd></div>
-            <div><dt>Tweeter</dt><dd>{maintenanceSettings.tweeterMaintenanceEnabled ? 'Maintenance on' : maintenanceSettings.allowTweeterDuringMaintenance ? 'Allowed through' : 'Normal'}</dd></div>
-            <div><dt>Theme</dt><dd>{maintenanceSettings.theme}</dd></div>
-          </dl>
-          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/maintenance"><i className="fa-solid fa-screwdriver-wrench" aria-hidden="true" /> Open studio</Link></div>
-        </article>
-        <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Use this when you want visitors to see a clean update page instead of a half-finished feature.</p></div>
-          <div className="stack-list compact-stack">
-            <div><strong>Main site</strong><span>Close most pages while still letting eligible website staff in.</span><small>You can optionally keep Tweeter open.</small></div>
-            <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
-            <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
-          </div>
-        </article>
-
-        <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">Server control</span><h2>Live console and players</h2><p>Open the web control room to watch console output, see connected citizens, run kick/ban commands, and start, kill, restart, or update the server when permitted.</p></div>
-          <div className="stack-list compact-stack">
-            <div><strong>Player actions</strong><span>SteamID is filled automatically from the connected-player list.</span><small>Web actions are audited and can post Discord embeds.</small></div>
-            <div><strong>Game action watcher</strong><span>New in-game kicks and bans detected in admin logs can also notify Discord.</span><small>Configured from server-side environment variables.</small></div>
-          </div>
-          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Open server control</Link></div>
-        </article>
-
-        <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">Status diagnostics</span><h2>Server reachability</h2><p>See heartbeat freshness, query hosts, local process checks, and host metrics without exposing technical details on the public status page.</p></div>
-          <div className="stack-list compact-stack">
-            <div><strong>Network checks</strong><span>Compare configured public host and local fallback hosts.</span><small>Useful when UDP queries are blocked or hairpin routing fails.</small></div>
-            <div><strong>Process fallback</strong><span>Confirms whether the game process appears to be running on the same host.</span><small>Only staff can see these details.</small></div>
-          </div>
-          <div className="staff-hero-actions"><Link className="button button-primary" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Open diagnostics</Link></div>
-        </article>
-
-        <article className="staff-panel maintenance-help-panel">
-          <div className="section-heading"><span className="kicker">Tweeter moderation</span><h2>Social account controls</h2><p>Hide Tweeter profiles, soft-ban website actions, or fully ban an account from Tweeter without changing game save data.</p></div>
-          <div className="stack-list compact-stack">
-            <div><strong>Hide profile</strong><span>Removes a profile from public Tweeter views and discovery.</span><small>Useful for cleanup or privacy issues.</small></div>
-            <div><strong>Soft ban</strong><span>Leaves the profile visible but disables social actions.</span><small>Likes, follows, DMs, and profile edits are locked.</small></div>
-            <div><strong>Full ban</strong><span>Hides the account and locks Tweeter features entirely.</span><small>Active in-game bans also show notices on profiles.</small></div>
-          </div>
-          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but badge visibility can be changed below.</span>}</div>
-        </article>
-      </section>
-
-      <section className="staff-command-grid">
-        <article className="staff-panel health-panel">
-          <div className="section-heading"><span className="kicker">Data health</span><h2>{health.exists ? 'Connected' : 'Needs setup'}</h2><p>{health.exists ? 'The website can read Northbound RP server files.' : 'The website cannot currently read the configured server data path.'}</p></div>
-          {health.warnings.length ? <div className="notice danger">{health.warnings.map((warning) => <p key={warning}>{warning}</p>)}</div> : <p className="notice success">Game data is readable.</p>}
-        </article>
-        <article className="staff-panel host-panel">
-          <div className="section-heading"><span className="kicker">Host summary</span><h2>{metrics.machine}</h2><p>{metrics.platform}</p></div>
-          <dl className="metric-grid compact">
-            <div><dt>Host uptime</dt><dd>{duration(metrics.uptimeSeconds)}</dd></div>
-            <div><dt>Web uptime</dt><dd>{duration(metrics.webProcess.uptimeSeconds)}</dd></div>
-            <div><dt>RAM used</dt><dd>{bytesToGb(metrics.systemMemory.usedBytes)}</dd></div>
-            <div><dt>Web RAM</dt><dd>{bytesToGb(metrics.webProcess.rssBytes)}</dd></div>
-          </dl>
-        </article>
-      </section>
-
-      <section className="staff-log-grid">
-        <article className="staff-log-panel"><div className="section-heading"><span className="kicker">Admin logs</span><h2>Recent actions</h2></div><div className="stack-list compact-stack">{adminLogs.map((log) => <div key={`${log.Timestamp}-${log.ActionType}-${log.TargetName}`}><strong>{log.ActionType}</strong><span>{log.AdminName} {log.TargetName ? `→ ${log.TargetName}` : ''}</span><small>{fullDate(log.Timestamp)} · {log.Details || 'No details'}</small></div>)}</div></article>
-        <article className="staff-log-panel"><div className="section-heading"><span className="kicker">Chat logs</span><h2>Recent messages</h2></div><div className="stack-list compact-stack">{chatLogs.map((log) => <div key={`${log.Timestamp}-${log.SenderSteamId}-${log.Message}`}><strong>{log.SenderName}</strong><span>{log.Message}</span><small>{fullDate(log.Timestamp)} · {log.Type}</small></div>)}</div></article>
-        <article className="staff-log-panel"><div className="section-heading"><span className="kicker">Damage logs</span><h2>Recent damage</h2></div><div className="stack-list compact-stack">{damageLogs.map((log) => <div key={`${log.Timestamp}-${log.VictimSteamId}-${log.Damage}`}><strong>{log.Cause || 'Damage'}</strong><span>{log.AttackerName || 'Unknown'} → {log.VictimName} · {Math.round(Number(log.Damage ?? 0))} dmg</span><small>{fullDate(log.Timestamp)}{log.IsFatal ? ' · fatal' : ''}</small></div>)}</div></article>
+      <section className="staff-launch-grid" aria-label="Staff workspaces">
+        <WorkspaceCard
+          eyebrow="Hiring"
+          title="Applications"
+          description="Review applicants, edit postings, publish hidden drafts, and leave applicant-visible notes."
+          icon="fa-solid fa-briefcase"
+          href="/staff/jobs"
+          secondaryHref="/jobs"
+          secondaryLabel="Public portal"
+          tone="blue"
+          stats={[
+            { label: 'Apps', value: jobsAdminState.stats.totalApplications },
+            { label: 'Open', value: jobsAdminState.stats.openApplications },
+            { label: 'Postings', value: jobsAdminState.stats.visiblePostings },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Daily Drops"
+          title="Cases"
+          description="Tune cases, reward pools, cadence, presentation, and future shop-ready case testing."
+          icon="fa-solid fa-gift"
+          href="/staff/cases"
+          secondaryHref="/cases"
+          secondaryLabel="Public cases"
+          tone="violet"
+          stats={[
+            { label: 'Cases', value: dailyDropsState.definitions.length },
+            { label: 'Active', value: dailyDropsState.activeCount },
+            { label: 'Claims', value: dailyDropsState.claimedCount },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Server"
+          title="Control room"
+          description="Run server actions, watch connected players, manage power controls, and use audited moderation commands."
+          icon="fa-solid fa-server"
+          href="/staff/server"
+          tone="green"
+          stats={[
+            { label: 'Online', value: population.onlineCount },
+            { label: 'Uptime', value: duration(metrics.uptimeSeconds) },
+            { label: 'RAM', value: bytesToGb(metrics.systemMemory.usedBytes) },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Maintenance"
+          title="Maintenance studio"
+          description="Pause the site or Tweeter, choose downtime copy, and control visitor-facing maintenance presentation."
+          icon="fa-solid fa-screwdriver-wrench"
+          href="/staff/maintenance"
+          tone="amber"
+          stats={[
+            { label: 'Site', value: siteMode },
+            { label: 'Tweeter', value: tweeterMode },
+            { label: 'Theme', value: maintenanceSettings.theme },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Social"
+          title="Tweeter admin"
+          description="Manage Tweeter restrictions, filtered words, hidden profiles, soft bans, and social moderation controls."
+          icon="fa-brands fa-twitter"
+          href="/staff/tweeter"
+          secondaryHref="/tweeter"
+          secondaryLabel="Open feed"
+          tone="rose"
+          stats={[
+            { label: 'Public', value: enabledFeatures.has('tweeter') ? 'Yes' : 'No' },
+            { label: 'Mode', value: tweeterMode },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Site"
+          title="Site settings"
+          description="Feature visibility, public modules, and Ape Tavern badge/display configuration live here."
+          icon="fa-solid fa-sliders"
+          href="/staff/site"
+          tone="slate"
+          stats={[
+            { label: 'Features', value: featureSettings.features.length },
+            { label: 'Enabled', value: featureSettings.features.filter((feature) => feature.enabled).length },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Signals"
+          title="Diagnostics"
+          description="Check data health, heartbeat freshness, query results, process status, and public status diagnostics."
+          icon="fa-solid fa-stethoscope"
+          href="/staff/status"
+          secondaryHref="/status"
+          secondaryLabel="Public status"
+          tone="blue"
+          stats={[
+            { label: 'Data', value: health.exists ? 'OK' : 'Missing' },
+            { label: 'Warnings', value: health.warnings.length },
+          ]}
+        />
+        <WorkspaceCard
+          eyebrow="Logs"
+          title="Activity center"
+          description="Browse recent admin actions, chat messages, and damage events away from the staff homepage."
+          icon="fa-solid fa-clock-rotate-left"
+          href="/staff/activity"
+          tone="slate"
+          stats={[
+            { label: 'Warnings', value: overview.warnings },
+            { label: 'Mutes', value: overview.mutes },
+          ]}
+        />
       </section>
     </main>
   );
