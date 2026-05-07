@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { getDataHealth, getPopulationSummary, getRoleForSteamId, getServerConfig, getServerRuntimeStatus, hasPermission } from '@/lib/ape-data';
+import { getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus } from '@/lib/ape-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getOperationalMetrics } from '@/lib/host-metrics';
 import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
 import { StaffMetricsHistoryPanel } from '@/components/StaffMetricsHistoryPanel';
 import { StatusUpdatesAdminPanel } from '@/components/StatusUpdatesAdminPanel';
-import { getSessionSteamId } from '@/lib/session';
+import { getCurrentStaffIdentity, canAccessServerAdministration } from '@/lib/staff-auth';
 import { getSiteConfig } from '@/lib/site-config';
 import { isSiteFeatureEnabled } from '@/lib/site-features-data';
 
@@ -47,11 +47,10 @@ function DiagnosticRow({ label, value, detail }: { label: string; value: string;
 }
 
 export default async function StaffStatusPage() {
-  const steamId = await getSessionSteamId();
-  const role = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const allowed = Boolean(steamId) && (role.toLowerCase() === 'developer' || await hasPermission(steamId, 'ViewLogs'));
+  const identity = await getCurrentStaffIdentity();
+  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
 
-  if (!steamId || !allowed) {
+  if (!identity || !allowed) {
     return (
       <main className="page-shell">
         <section className="card auth-panel">

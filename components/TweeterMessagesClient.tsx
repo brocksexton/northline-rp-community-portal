@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { UserAvatar } from '@/components/UserAvatar';
+import { TweeterVerifiedBadge } from '@/components/TweeterVerifiedBadge';
 
 type TweeterUser = {
   steamId: string;
@@ -53,11 +54,6 @@ function formatConversationTime(value: string) {
   const day = 24 * 60 * 60 * 1000;
   if (diff >= 0 && diff < day) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function verifiedBadge(kind?: string) {
-  if (!kind || kind === 'None') return null;
-  return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
 }
 
 function mergeUsers(users: Record<string, TweeterUser>, suggestions: TweeterUser[]) {
@@ -214,7 +210,7 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
               <button type="button" key={summary.otherSteamId} className={selectedSteamId === summary.otherSteamId ? 'active' : ''} onClick={() => selectConversation(summary.otherSteamId)}>
                 <UserAvatar src={user?.avatarUrl ?? null} name={displayName} size="md" />
                 <span>
-                  <span className="tweeter-message-person-line"><strong>{displayName} {verifiedBadge(user?.verifiedKind)}</strong><time dateTime={summary.lastMessage.createdAt}>{formatConversationTime(summary.lastMessage.createdAt)}</time></span>
+                  <span className="tweeter-message-person-line"><strong>{displayName} <TweeterVerifiedBadge kind={user?.verifiedKind} /></strong><time dateTime={summary.lastMessage.createdAt}>{formatConversationTime(summary.lastMessage.createdAt)}</time></span>
                   <small>{mine ? 'You: ' : ''}{summary.lastMessage.body}</small>
                   <small className="tweeter-message-handle">{user?.handle ?? '@citizen'}</small>
                 </span>
@@ -261,7 +257,7 @@ export function TweeterMessagesClient({ initialData }: { initialData: InitialDat
               <header className="tweeter-message-thread-head">
                 <UserAvatar src={selectedUser.avatarUrl ?? null} name={selectedUser.displayName} size="md" />
                 <div>
-                  <h2>{selectedUser.displayName} {verifiedBadge(selectedUser.verifiedKind)}</h2>
+                  <h2>{selectedUser.displayName} <TweeterVerifiedBadge kind={selectedUser.verifiedKind} /></h2>
                   <Link href={`/tweeter/profile/${selectedUser.steamId}`}>{selectedUser.handle}</Link>
                 </div>
                 <Link className="tweeter-message-profile-link" href={`/tweeter/profile/${selectedUser.steamId}`}>View profile</Link>

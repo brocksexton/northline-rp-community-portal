@@ -29,6 +29,8 @@ function botActor(body: Body): StaffIdentity {
     displayName: username,
     role: 'discord-bot',
     permissions: ['AdminTools', 'ModifyServerSettings', 'ViewLogs'],
+    isApeTavernStaff: true,
+    roleLabel: 'Discord Bot',
   };
 }
 

@@ -1,18 +1,16 @@
 import Link from 'next/link';
 import { MaintenanceSettingsPanel } from '@/components/MaintenanceSettingsPanel';
-import { getRoleForSteamId, hasPermission } from '@/lib/ape-data';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
-import { getSessionSteamId } from '@/lib/session';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Maintenance Studio' };
 
 export default async function StaffMaintenancePage() {
-  const steamId = await getSessionSteamId();
-  const role = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const allowed = Boolean(steamId) && (role.toLowerCase() === 'developer' || await hasPermission(steamId, 'ViewLogs'));
+  const identity = await getCurrentStaffIdentity();
+  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
 
-  if (!steamId || !allowed) {
+  if (!identity || !allowed) {
     return (
       <main className="page-shell">
         <section className="card auth-panel">
@@ -26,7 +24,7 @@ export default async function StaffMaintenancePage() {
   }
 
   const settings = await getMaintenanceSettings();
-  const canManage = role.toLowerCase() === 'developer';
+  const canManage = canManageSiteConfiguration(identity);
 
   return (
     <main className="page-shell staff-page maintenance-studio-page">
@@ -42,9 +40,9 @@ export default async function StaffMaintenancePage() {
         </div>
         <aside className="staff-identity-card">
           <span>Signed in as</span>
-          <strong>{role}</strong>
+          <strong>{identity.roleLabel}</strong>
           <p>{canManage ? 'Can change maintenance settings' : 'Read-only access'}</p>
-          <small>{steamId}</small>
+          <small>{identity.steamId}</small>
         </aside>
       </section>
 

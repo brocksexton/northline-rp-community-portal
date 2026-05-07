@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
+import { TweeterVerifiedBadge } from '@/components/TweeterVerifiedBadge';
 import { getSessionSteamId } from '@/lib/session';
 import { buildTweeterPayload, type TweetView } from '@/lib/tweeter-view';
 import type { TextFilterRule } from '@/lib/content-filter';
@@ -45,11 +46,6 @@ function formatFullTime(seconds: number) {
   return new Date(seconds * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-function verifiedBadge(kind: string) {
-  if (!kind || kind === 'None') return null;
-  return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
-}
-
 function MiniTweet({ tweet, signedIn, disabledReason = '', contentFilterRules }: { tweet: TweetView; signedIn: boolean; disabledReason?: string; contentFilterRules?: TextFilterRule[] }) {
   return (
     <article className="tweet-card-v2 thread-mini-card">
@@ -57,7 +53,7 @@ function MiniTweet({ tweet, signedIn, disabledReason = '', contentFilterRules }:
       <div className="tweet-card-body">
         <div className="tweet-card-header">
           <div className="tweet-card-authorline">
-            <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link"><strong>{tweet.authorDisplayName}</strong>{verifiedBadge(tweet.verifiedKind)}</Link>
+            <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link"><strong>{tweet.authorDisplayName}</strong><TweeterVerifiedBadge kind={tweet.verifiedKind} /></Link>
             <span>{tweet.handle}</span><span>·</span><span>{formatFullTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
@@ -114,7 +110,7 @@ export default async function TweetDetailPage({ params }: Params) {
             <div className="tweet-detail-author">
               <UserAvatar src={tweet.avatarUrl ?? null} name={tweet.authorDisplayName} size="lg" />
               <div>
-                <Link href={`/tweeter/profile/${tweet.authorSteamId}`}><strong>{tweet.authorDisplayName}</strong>{verifiedBadge(tweet.verifiedKind)}</Link>
+                <Link href={`/tweeter/profile/${tweet.authorSteamId}`}><strong>{tweet.authorDisplayName}</strong><TweeterVerifiedBadge kind={tweet.verifiedKind} /></Link>
                 <span>{tweet.handle}</span>
               </div>
             </div>

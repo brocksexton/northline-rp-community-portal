@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPlayer, getPermissionsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { createStatusUpdate, deleteStatusUpdate, updateStatusUpdate, type StatusUpdateTone } from '@/lib/community-data';
-import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
-import { getSteamProfile } from '@/lib/steam-openid';
+import { jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { discordAuditField, notifyAdminAudit, notifyStatusUpdatePosted } from '@/lib/discord-webhooks';
+import { canPostStatusUpdates, getRequestStaffIdentity } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 
 type StaffIdentity = {
   steamId: string;
   displayName: string;
+  roleLabel: string;
 };
-
-function canPostStatus(role: string, permissions: string[]): boolean {
-  return ['Developer', 'Admin'].includes(role) || permissions.includes('AdminTools') || permissions.includes('ModifyServerSettings');
-}
 
 function normalizeTone(value: unknown): StatusUpdateTone {
   if (value === 'event' || value === 'warning' || value === 'maintenance') return value;
@@ -27,28 +23,14 @@ function normalizeAccent(value: unknown): string | undefined {
 }
 
 async function requireStaff(request: NextRequest): Promise<{ identity: StaffIdentity } | { response: NextResponse }> {
-  const steamId = getSessionSteamIdFromRequest(request);
-  if (!steamId) {
+  const identity = await getRequestStaffIdentity(request);
+  if (!identity) {
     return { response: NextResponse.json({ error: 'Steam sign-in required.' }, { status: 401, headers: noStoreHeaders() }) };
   }
-
-  const [role, permissions, player, steamProfile] = await Promise.all([
-    getRoleForSteamId(steamId),
-    getPermissionsForSteamId(steamId),
-    getPlayer(steamId),
-    getSteamProfile(steamId),
-  ]);
-
-  if (!canPostStatus(role, permissions)) {
-    return { response: NextResponse.json({ error: 'Admin or Developer access required.' }, { status: 403, headers: noStoreHeaders() }) };
+  if (!canPostStatusUpdates(identity)) {
+    return { response: NextResponse.json({ error: 'Admin or Ape Tavern staff access required.' }, { status: 403, headers: noStoreHeaders() }) };
   }
-
-  return {
-    identity: {
-      steamId,
-      displayName: player?.RpDisplayName || player?.LastKnownDisplayName || steamProfile?.personaName || `Steam ${steamId.slice(-8)}`,
-    },
-  };
+  return { identity: { steamId: identity.steamId, displayName: identity.displayName, roleLabel: identity.roleLabel } };
 }
 
 function validateCopy(body: Record<string, unknown>) {
@@ -77,15 +59,15 @@ export async function POST(request: NextRequest) {
     createdByName: staff.identity.displayName,
   });
 
-  await notifyStatusUpdatePosted(update, staff.identity);
+  await notifyStatusUpdatePosted(update, { steamId: staff.identity.steamId, name: staff.identity.displayName });
   await notifyAdminAudit({
     action: 'Posted public status update',
-    actor: staff.identity,
+    actor: { steamId: staff.identity.steamId, name: staff.identity.displayName },
     target: update.title,
     detail: update.body,
     severity: update.tone === 'warning' || update.tone === 'maintenance' ? 'warning' : 'success',
     url: '/status',
-    fields: [discordAuditField('Tone', update.tone, true)],
+    fields: [discordAuditField('Tone', update.tone, true), discordAuditField('Actor role', staff.identity.roleLabel, true)],
   });
 
   return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
@@ -114,12 +96,12 @@ export async function PATCH(request: NextRequest) {
   if (!update) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
   await notifyAdminAudit({
     action: 'Edited public status update',
-    actor: staff.identity,
+    actor: { steamId: staff.identity.steamId, name: staff.identity.displayName },
     target: update.title,
     detail: update.body,
     severity: 'info',
     url: '/status',
-    fields: [discordAuditField('Notice ID', update.id, true), discordAuditField('Tone', update.tone, true)],
+    fields: [discordAuditField('Notice ID', update.id, true), discordAuditField('Tone', update.tone, true), discordAuditField('Actor role', staff.identity.roleLabel, true)],
   });
   return jsonWithSession({ update }, undefined, staff.identity.steamId, request);
 }
@@ -136,10 +118,11 @@ export async function DELETE(request: NextRequest) {
   if (!deleted) return NextResponse.json({ error: 'Notice not found.' }, { status: 404, headers: noStoreHeaders() });
   await notifyAdminAudit({
     action: 'Removed public status update',
-    actor: staff.identity,
+    actor: { steamId: staff.identity.steamId, name: staff.identity.displayName },
     target: id,
     severity: 'warning',
     url: '/status',
+    fields: [discordAuditField('Actor role', staff.identity.roleLabel, true)],
   });
   return jsonWithSession({ ok: true, id }, undefined, staff.identity.steamId, request);
 }

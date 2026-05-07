@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (type === 'server-control') {
-    if (!canRunServerPowerActions(staff.identity)) return NextResponse.json({ error: 'Developer or server settings permission is required.' }, { status: 403, headers: noStoreHeaders() });
+    if (!canRunServerPowerActions(staff.identity)) return NextResponse.json({ error: 'Trusted Ape Tavern staff or server settings permission is required.' }, { status: 403, headers: noStoreHeaders() });
     const requested = stringValue(body.action);
     const action = requested === 'start' || requested === 'kill' || requested === 'restart' || requested === 'update' ? requested : null;
     if (!action) return NextResponse.json({ error: 'Unsupported server control action.' }, { status: 400, headers: noStoreHeaders() });
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (type === 'service-control') {
-    if (!canRunServerPowerActions(staff.identity)) return NextResponse.json({ error: 'Developer or server settings permission is required.' }, { status: 403, headers: noStoreHeaders() });
+    if (!canRunServerPowerActions(staff.identity)) return NextResponse.json({ error: 'Trusted Ape Tavern staff or server settings permission is required.' }, { status: 403, headers: noStoreHeaders() });
     const requestedService = stringValue(body.service);
     const service = requestedService === 'discord-bot' || requestedService === 'server-bridge' ? requestedService : null;
     const requestedAction = stringValue(body.action);

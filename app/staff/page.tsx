@@ -1,14 +1,14 @@
 import Link from 'next/link';
-import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamId, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId } from '@/lib/ape-data';
+import { getCityOverview, getDataHealth, getHostMetrics, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs } from '@/lib/ape-data';
 import { duration, fullDate } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
-import { getSessionSteamId } from '@/lib/session';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
 import { getJobsAdminState } from '@/lib/jobs-data';
 import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
-import { DailyDropsAdminPanel } from '@/components/DailyDropsAdminPanel';
-import { StaffJobsAdminPanel } from '@/components/StaffJobsAdminPanel';
+import { ApeStaffAdminPanel } from '@/components/ApeStaffAdminPanel';
+import { getApeStaffState } from '@/lib/ape-staff-data';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Staff' };
@@ -18,30 +18,41 @@ function bytesToGb(bytes: number): string {
 }
 
 export default async function StaffPage() {
-  const steamId = await getSessionSteamId();
-  const roleForAccess = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const permissionsForAccess = steamId ? await getPermissionsForSteamId(steamId) : [];
-  const allowed = Boolean(steamId) && (['developer', 'admin', 'moderator'].includes(roleForAccess.toLowerCase()) || permissionsForAccess.includes('ViewLogs') || permissionsForAccess.includes('AdminTools'));
+  const identity = await getCurrentStaffIdentity();
+  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
 
-  if (!steamId || !allowed) {
+  if (!identity || !allowed) {
     return (
       <main className="page-shell">
         <section className="card auth-panel">
           <span className="eyebrow">Staff</span>
           <h1>Access denied</h1>
           <p>This page requires a Northbound RP staff role.</p>
-          <a className="button button-primary" href="/api/auth/steam?returnTo=/staff"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
+          <a className="button button-primary" href="/api/auth/steam?returnTo=/staff">
+            <i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam
+          </a>
         </section>
       </main>
     );
   }
 
-  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings, featureSettings, dailyDropsState, jobsAdminState] = await Promise.all([
+  const [
+    health,
+    population,
+    metrics,
+    overview,
+    adminLogs,
+    chatLogs,
+    damageLogs,
+    maintenanceSettings,
+    featureSettings,
+    dailyDropsState,
+    jobsAdminState,
+    apeStaffState,
+  ] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
-    getPermissionsForSteamId(steamId),
-    Promise.resolve(roleForAccess),
     getCityOverview(),
     getRecentAdminLogs(15),
     getRecentChatLogs(15),
@@ -50,11 +61,10 @@ export default async function StaffPage() {
     getSiteFeatureSettings(),
     getDailyDropsAdminState(),
     getJobsAdminState(),
+    getApeStaffState(),
   ]);
 
-  const canManageSiteFeatures = role.toLowerCase() === 'developer';
-  const canManageJobPostings = role.toLowerCase() === 'developer' || permissions.includes('AdminTools');
-  const canReviewJobApplications = ['developer', 'admin', 'moderator'].includes(role.toLowerCase()) || permissions.includes('ViewLogs') || permissions.includes('AdminTools');
+  const canManageSiteFeatures = canManageSiteConfiguration(identity);
   const enabledFeatures = enabledFeatureIds(featureSettings);
   const statusVisible = enabledFeatures.has('status');
   const bansVisible = enabledFeatures.has('bans');
@@ -64,7 +74,9 @@ export default async function StaffPage() {
     <main className="page-shell staff-page staff-command-page">
       <section className="staff-command-hero">
         <div className="staff-command-copy">
-          <span className="ops-kicker"><i /> Staff Control Center</span>
+          <span className="ops-kicker">
+            <i /> Staff Control Center
+          </span>
           <h1>City operations at a glance</h1>
           <p>Review server health, player volume, and recent moderation signals from one readable staff dashboard.</p>
           <div className="staff-hero-actions">
@@ -75,11 +87,12 @@ export default async function StaffPage() {
             {tweeterVisible ? <Link className="button button-soft" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter admin</Link> : null}
           </div>
         </div>
+
         <aside className="staff-identity-card">
           <span>Signed in as</span>
-          <strong>{role}</strong>
-          <p>{permissions.length} permissions</p>
-          <small>{steamId}</small>
+          <strong>{identity.roleLabel}</strong>
+          <p>{identity.permissions.length} permissions</p>
+          <small>{identity.steamId}</small>
         </aside>
       </section>
 
@@ -90,15 +103,58 @@ export default async function StaffPage() {
         <article><span>Mutes</span><strong>{overview.mutes}</strong><p>Voice/chat controls</p></article>
       </section>
 
+      <section className="staff-workspace-section">
+        <div className="section-heading inline">
+          <div>
+            <span className="kicker">Dedicated workspaces</span>
+            <h2>Configuration areas that need breathing room</h2>
+            <p>Open dedicated management pages for staffing and daily-drop configuration instead of squeezing those tools into the homepage.</p>
+          </div>
+        </div>
 
+        <div className="staff-workspace-grid">
+          <article className="staff-workspace-card">
+            <div className="staff-workspace-topline">
+              <span className="kicker">Hiring</span>
+              <span className="staff-workspace-icon"><i className="fa-solid fa-briefcase" aria-hidden="true" /></span>
+            </div>
+            <h3>Staff applications workspace</h3>
+            <p>Manage role postings, review incoming applications, update statuses, and leave applicant-visible notes from one dedicated page.</p>
+            <dl className="staff-workspace-stats">
+              <div><dt>Applications</dt><dd>{jobsAdminState.stats.totalApplications}</dd></div>
+              <div><dt>Open review</dt><dd>{jobsAdminState.stats.openApplications}</dd></div>
+              <div><dt>Active postings</dt><dd>{jobsAdminState.stats.visiblePostings}</dd></div>
+            </dl>
+            <div className="staff-hero-actions">
+              <Link className="button button-primary" href="/staff/jobs"><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open workspace</Link>
+              <Link className="button button-soft" href="/jobs"><i className="fa-solid fa-eye" aria-hidden="true" /> View public portal</Link>
+            </div>
+          </article>
 
+          <article className="staff-workspace-card">
+            <div className="staff-workspace-topline">
+              <span className="kicker">Daily Drops</span>
+              <span className="staff-workspace-icon"><i className="fa-solid fa-gift" aria-hidden="true" /></span>
+            </div>
+            <h3>Case modification workspace</h3>
+            <p>Edit daily-drop cases, reward pools, cadence, and visibility with a full page that is easier to navigate and understand.</p>
+            <dl className="staff-workspace-stats">
+              <div><dt>Configured cases</dt><dd>{dailyDropsState.definitions.length}</dd></div>
+              <div><dt>Active</dt><dd>{dailyDropsState.activeCount}</dd></div>
+              <div><dt>Claims recorded</dt><dd>{dailyDropsState.claimedCount}</dd></div>
+            </dl>
+            <div className="staff-hero-actions">
+              <Link className="button button-primary" href="/staff/cases"><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open workspace</Link>
+              <Link className="button button-soft" href="/cases"><i className="fa-solid fa-eye" aria-hidden="true" /> View public page</Link>
+            </div>
+          </article>
+        </div>
+      </section>
 
       <section className="staff-dashboard-admin-grid">
         <SiteFeaturesAdminPanel initialSettings={featureSettings} canManage={canManageSiteFeatures} />
-        <DailyDropsAdminPanel initialState={dailyDropsState} canManage={canManageSiteFeatures} />
+        <ApeStaffAdminPanel initialState={apeStaffState} canManage={canManageSiteFeatures} />
       </section>
-
-      <StaffJobsAdminPanel initialState={jobsAdminState} canManagePostings={canManageJobPostings} canReviewApplications={canReviewJobApplications} />
 
       <section className="staff-command-grid maintenance-command-grid">
         <article className="staff-panel maintenance-control-card">
@@ -113,12 +169,11 @@ export default async function StaffPage() {
         <article className="staff-panel maintenance-help-panel">
           <div className="section-heading"><span className="kicker">How it works</span><h2>Site controls</h2><p>Use this when you want visitors to see a clean update page instead of a half-finished feature.</p></div>
           <div className="stack-list compact-stack">
-            <div><strong>Main site</strong><span>Close most pages while still letting Developer accounts in.</span><small>You can optionally keep Tweeter open.</small></div>
+            <div><strong>Main site</strong><span>Close most pages while still letting trusted Ape Tavern staff in.</span><small>You can optionally keep Tweeter open.</small></div>
             <div><strong>Tweeter</strong><span>Pause Tweeter by itself with a page that matches the feed.</span><small>Useful when only social pages need work.</small></div>
             <div><strong>Presets + custom buttons</strong><span>Pick a starting look, then tweak text, colors, countdowns, and visitor buttons.</span><small>Everything saves to the website data folder.</small></div>
           </div>
         </article>
-
 
         <article className="staff-panel maintenance-help-panel">
           <div className="section-heading"><span className="kicker">Server control</span><h2>Live console and players</h2><p>Open the web control room to watch console output, see connected citizens, run kick/ban commands, and start, kill, restart, or update the server when permitted.</p></div>
@@ -145,7 +200,7 @@ export default async function StaffPage() {
             <div><strong>Soft ban</strong><span>Leaves the profile visible but disables social actions.</span><small>Likes, follows, DMs, and profile edits are locked.</small></div>
             <div><strong>Full ban</strong><span>Hides the account and locks Tweeter features entirely.</span><small>Active in-game bans also show notices on profiles.</small></div>
           </div>
-          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but developer visibility can be changed above.</span>}</div>
+          <div className="staff-hero-actions">{tweeterVisible ? <Link className="button button-primary" href="/staff/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter admin</Link> : <span className="muted-inline-note">Tweeter is hidden publicly, but trusted badge visibility can be changed below.</span>}</div>
         </article>
       </section>
 

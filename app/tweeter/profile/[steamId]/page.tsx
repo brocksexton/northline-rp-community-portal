@@ -8,6 +8,7 @@ import { TweeterFollowButton } from '@/components/TweeterFollowButton';
 import { TweeterMessageButton } from '@/components/TweeterMessageButton';
 import { TweeterMaintenanceProfileEditor } from '@/components/TweeterMaintenanceProfileEditor';
 import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
+import { TweeterVerifiedBadge } from '@/components/TweeterVerifiedBadge';
 import { getPlayer, getPropertyLayoutsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { buildPublicProfileView, type PublicProfileView } from '@/lib/profile-view';
@@ -84,11 +85,6 @@ function formatTweetTime(seconds: number) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-function verifiedBadge(kind?: string) {
-  if (!kind || kind === 'None') return null;
-  return <span className="tweeter-verified" title={kind} aria-label={kind}><span className="verified-check">✓</span></span>;
-}
-
 
 function profileCoverStyle(user: Awaited<ReturnType<typeof buildTweeterUser>>): CSSProperties {
   const preset = getProfileCoverPreset(user.coverPreset);
@@ -116,7 +112,7 @@ function ProfileTweet({ tweet, signedIn, disabledReason = '', contentFilterRules
       <div className="tweet-card-body">
         <div className="tweet-card-header">
           <div className="tweet-card-authorline">
-            <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link"><strong>{tweet.authorDisplayName}</strong>{verifiedBadge(tweet.verifiedKind)}</Link>
+            <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link"><strong>{tweet.authorDisplayName}</strong><TweeterVerifiedBadge kind={tweet.verifiedKind} /></Link>
             <span>{tweet.handle}</span><span>·</span><span>{formatTweetTime(tweet.postedAtTimeSeconds)}</span>
           </div>
         </div>
@@ -325,7 +321,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
               </div>
             </div>
             <div className="tweeter-profile-copy">
-              <h1>{user.displayName} {verifiedBadge(user.verifiedKind)}</h1>
+              <h1>{user.displayName} <TweeterVerifiedBadge kind={user.verifiedKind} /></h1>
               <span>{user.handle}</span>
               <p>{publicProfile.bio || user.bio}</p>
               <div className="tweeter-profile-meta">
@@ -410,7 +406,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             <div className="tweeter-profile-mini-head">
               <UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="md" />
               <div>
-                <strong>{user.displayName} {verifiedBadge(user.verifiedKind)}</strong>
+                <strong>{user.displayName} <TweeterVerifiedBadge kind={user.verifiedKind} /></strong>
                 <span>{user.handle}</span>
               </div>
             </div>
@@ -451,7 +447,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
                 <div className="tweeter-suggestion" key={suggestion.steamId}>
                   <Link href={`/tweeter/profile/${suggestion.steamId}`} className="tweeter-suggestion-main">
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
-                    <div><strong>{suggestion.displayName} {verifiedBadge(suggestion.verifiedKind)}</strong><span>{suggestion.handle}</span></div>
+                    <div><strong>{suggestion.displayName} <TweeterVerifiedBadge kind={suggestion.verifiedKind} /></strong><span>{suggestion.handle}</span></div>
                   </Link>
                   <TweeterFollowButton targetSteamId={suggestion.steamId} signedIn={!!sessionSteamId} initialFollowing={followStates[suggestion.steamId]?.following ?? false} initialFollowerCount={followStates[suggestion.steamId]?.followerCount ?? 0} compact disabledReason={viewerSocialLockReason} />
                 </div>

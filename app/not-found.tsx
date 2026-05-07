@@ -3,22 +3,21 @@ import { ErrorShell } from '@/components/ErrorShell';
 import { MaintenancePage } from '@/components/MaintenancePage';
 import { TweeterErrorShell } from '@/components/TweeterErrorShell';
 import { TweeterMaintenancePage } from '@/components/TweeterMaintenancePage';
-import { getRoleForSteamId } from '@/lib/ape-data';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
+import { isApeStaffSteamId } from '@/lib/ape-staff-data';
 
 export default async function NotFound() {
   const [headerList, settings, steamId] = await Promise.all([headers(), getMaintenanceSettings(), getSessionSteamId()]);
   const pathname = headerList.get('x-northline-pathname') ?? '';
   const isTweeterPath = pathname === '/tweeter' || pathname.startsWith('/tweeter/');
-  const role = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const developer = role.toLowerCase() === 'developer';
+  const trustedStaffBypass = steamId ? await isApeStaffSteamId(steamId) : false;
 
-  if (isTweeterMaintenanceActive(settings) && isTweeterPath && !developer) {
+  if (isTweeterMaintenanceActive(settings) && isTweeterPath && !trustedStaffBypass) {
     return <TweeterMaintenancePage settings={settings} />;
   }
 
-  if (isMaintenanceActive(settings) && !developer && (!isTweeterPath || !settings.allowTweeterDuringMaintenance)) {
+  if (isMaintenanceActive(settings) && !trustedStaffBypass && (!isTweeterPath || !settings.allowTweeterDuringMaintenance)) {
     return <MaintenancePage settings={settings} />;
   }
 

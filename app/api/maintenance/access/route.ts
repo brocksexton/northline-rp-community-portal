@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getRoleForSteamId } from '@/lib/ape-data';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getSessionSteamIdFromRequest, jsonWithSession } from '@/lib/session';
+import { isApeStaffSteamId } from '@/lib/ape-staff-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,18 +18,17 @@ function isTweeterPath(pathname: string): boolean {
 
 export async function GET(request: NextRequest) {
   const steamId = getSessionSteamIdFromRequest(request);
-  const [settings, role] = await Promise.all([
+  const [settings, trustedStaffBypass] = await Promise.all([
     getMaintenanceSettings(),
-    steamId ? getRoleForSteamId(steamId) : Promise.resolve('Guest'),
+    steamId ? isApeStaffSteamId(steamId) : Promise.resolve(false),
   ]);
 
   const pathname = cleanPath(request.nextUrl.searchParams.get('path'));
-  const developer = role.toLowerCase() === 'developer';
   const tweeterPath = isTweeterPath(pathname);
   const siteMaintenance = isMaintenanceActive(settings);
   const tweeterMaintenance = isTweeterMaintenanceActive(settings);
-  const blockedBySiteMaintenance = siteMaintenance && !developer && (!tweeterPath || !settings.allowTweeterDuringMaintenance);
-  const blockedByTweeterMaintenance = tweeterMaintenance && tweeterPath && !developer;
+  const blockedBySiteMaintenance = siteMaintenance && !trustedStaffBypass && (!tweeterPath || !settings.allowTweeterDuringMaintenance);
+  const blockedByTweeterMaintenance = tweeterMaintenance && tweeterPath && !trustedStaffBypass;
   const allowed = !blockedBySiteMaintenance && !blockedByTweeterMaintenance;
 
   return jsonWithSession({

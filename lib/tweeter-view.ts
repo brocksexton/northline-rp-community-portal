@@ -1,6 +1,7 @@
 import { getPlayers, getPlayersBySteamId, getRoleForSteamId, getTweeterData } from '@/lib/ape-data';
 import { getCommunityProfiles, getTweeterWebLikeState } from '@/lib/community-data';
 import { getSteamProfiles } from '@/lib/steam-openid';
+import { resolveVerifiedBadgeKind } from '@/lib/ape-staff-data';
 import { playerTitle } from '@/lib/format';
 import { canUseCustomProfileCover, DEFAULT_PROFILE_COVER_PRESET, DEFAULT_PROFILE_THEME, normalizeProfileCoverPreset, normalizeProfileTheme, type ProfileTheme } from '@/lib/profile-customization';
 import { getTweeterRestriction, getTweeterRestrictionMap, type TweeterAccountRestriction, type TweeterModerationNotice } from '@/lib/tweeter-moderation-data';
@@ -133,9 +134,10 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
     if (retweetOfId) retweetCounts.set(retweetOfId, (retweetCounts.get(retweetOfId) ?? 0) + 1);
   }
 
-  const tweets = tweeter.Tweets
-    .filter((tweet) => !restrictionMap[String(tweet.AuthorSteamId)]?.hiddenFromTweeter)
-    .map((tweet) => {
+  const visibleTweets = tweeter.Tweets.filter((tweet) => !restrictionMap[String(tweet.AuthorSteamId)]?.hiddenFromTweeter);
+  const tweetRoleEntries = await Promise.all([...new Set(visibleTweets.map((tweet) => String(tweet.AuthorSteamId)))].map(async (steamId) => [steamId, await getRoleForSteamId(steamId)] as const));
+  const tweetRoles = new Map(tweetRoleEntries);
+  const tweets = await Promise.all(visibleTweets.map(async (tweet) => {
     const steamId = String(tweet.AuthorSteamId);
     const player = playersById.get(steamId);
     const steamProfile = steamProfiles.get(steamId);
@@ -143,6 +145,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
     const displayName = tweet.AuthorDisplayName || player?.RpDisplayName || player?.LastKnownDisplayName || steamProfile?.personaName || `Citizen ${steamId.slice(-8)}`;
     const nativeLikeCount = Math.max(Number(tweet.LikeCount ?? 0), gameLikeCounts.get(tweet.Id) ?? 0);
     const webLikeCount = webLikeState.counts[tweet.Id] ?? 0;
+    const role = tweetRoles.get(steamId) ?? 'User';
     return {
       id: tweet.Id,
       authorSteamId: steamId,
@@ -151,7 +154,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       avatarUrl: communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium || null,
       body: tweet.Body,
       postedAtTimeSeconds: tweet.PostedAtTimeSeconds ?? 0,
-      verifiedKind: tweet.VerifiedKind ?? 'None',
+      verifiedKind: await resolveVerifiedBadgeKind(steamId, role, tweet.VerifiedKind ?? 'None'),
       likeCount: nativeLikeCount + webLikeCount,
       likedByMe: gameLikedTweetIds.has(tweet.Id) || webLikeState.likedTweetIds.has(tweet.Id),
       isReply: !!tweet.IsReply,
@@ -163,7 +166,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       replyCount: replyCounts.get(tweet.Id) ?? 0,
       retweetCount: retweetCounts.get(tweet.Id) ?? 0,
     };
-  });
+  }));
 
   const tags = new Map<string, number>();
   for (const tweet of tweets) {
@@ -189,7 +192,7 @@ export async function buildTweeterPayload(sessionSteamId: string | null): Promis
       displayName: currentDisplayName,
       handle: makeTweeterHandle(currentDisplayName, sessionSteamId),
       avatarUrl: currentCommunity?.customAvatarUrl || currentSteam?.avatarFull || currentSteam?.avatarMedium || null,
-      verifiedKind: currentRole !== 'User' ? currentRole : 'None',
+      verifiedKind: await resolveVerifiedBadgeKind(sessionSteamId, currentRole, currentRole !== 'User' ? currentRole : 'None'),
       bio: formatSuggestionBio(currentRole, currentPlayer?.DisplayTitle ? playerTitle(currentPlayer.DisplayTitle) : '', Number(currentPlayer?.TotalPlaytimeSeconds ?? 0)),
       bannerColor: currentCommunity?.bannerColor || '#1d9bf0',
       coverPreset: normalizeProfileCoverPreset(currentCommunity?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),
@@ -241,7 +244,7 @@ export async function buildTweeterUser(steamId: string, tweets?: TweetView[]): P
     displayName,
     handle: makeTweeterHandle(displayName, steamId),
     avatarUrl: communityProfile?.customAvatarUrl || steamProfile?.avatarFull || steamProfile?.avatarMedium || null,
-    verifiedKind: role !== 'User' ? role : 'None',
+    verifiedKind: await resolveVerifiedBadgeKind(steamId, role, role !== 'User' ? role : 'None'),
     bio: communityProfile?.privacy === 'private' ? 'This citizen keeps their profile private.' : (communityProfile?.bio || formatSuggestionBio(role, player?.DisplayTitle ? playerTitle(player.DisplayTitle) : '', Number(player?.TotalPlaytimeSeconds ?? 0))),
     bannerColor: communityProfile?.bannerColor || '#1d9bf0',
     coverPreset: normalizeProfileCoverPreset(communityProfile?.coverPreset ?? DEFAULT_PROFILE_COVER_PRESET),

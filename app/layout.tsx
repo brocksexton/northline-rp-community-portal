@@ -4,12 +4,12 @@ import { Header } from '@/components/Header';
 import { MaintenancePage } from '@/components/MaintenancePage';
 import { MaintenanceAccessGuard } from '@/components/MaintenanceAccessGuard';
 import { TweeterMaintenancePage } from '@/components/TweeterMaintenancePage';
-import { getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getMaintenanceSettings, isMaintenanceActive, isTweeterMaintenanceActive } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
 import { headers } from 'next/headers';
 import { getSiteConfig } from '@/lib/site-config';
+import { isApeStaffSteamId } from '@/lib/ape-staff-data';
 import { buildMetadataFromConfig } from '@/lib/embed-metadata';
 import './globals.css';
 
@@ -36,13 +36,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [config, steamId, maintenance, headerList] = await Promise.all([getSiteConfig(), getSessionSteamId(), getMaintenanceSettings(), headers()]);
-  const [profile, role] = steamId ? await Promise.all([getCommunityProfile(steamId), getRoleForSteamId(steamId)]) : [null, 'Guest'] as const;
+  const [profile, trustedApeStaff] = steamId ? await Promise.all([getCommunityProfile(steamId), isApeStaffSteamId(steamId)]) : [null, false] as const;
   const websiteStyle = profile?.websiteStyle ?? 'civic';
   const pathname = headerList.get('x-northline-pathname') ?? '';
   const isTweeterPath = pathname === '/tweeter' || pathname.startsWith('/tweeter/');
-  const developer = role.toLowerCase() === 'developer';
-  const maintenanceBlocked = isMaintenanceActive(maintenance) && !developer && (!isTweeterPath || !maintenance.allowTweeterDuringMaintenance);
-  const tweeterMaintenanceBlocked = isTweeterMaintenanceActive(maintenance) && isTweeterPath && !developer;
+  const trustedStaffBypass = trustedApeStaff;
+  const maintenanceBlocked = isMaintenanceActive(maintenance) && !trustedStaffBypass && (!isTweeterPath || !maintenance.allowTweeterDuringMaintenance);
+  const tweeterMaintenanceBlocked = isTweeterMaintenanceActive(maintenance) && isTweeterPath && !trustedStaffBypass;
   return (
     <html lang="en" style={{ ['--accent' as string]: config.brand.accentColor }}>
       <head>

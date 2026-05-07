@@ -6,6 +6,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { TweeterLikeButton } from '@/components/TweeterLikeButton';
 import { TweeterFollowButton } from '@/components/TweeterFollowButton';
 import { TweeterFilteredText, TweeterFilterNotice } from '@/components/TweeterFilteredText';
+import { TweeterVerifiedBadge } from '@/components/TweeterVerifiedBadge';
 import type { TextFilterRule } from '@/lib/content-filter';
 
 type TweetRow = {
@@ -91,15 +92,6 @@ function formatTweetTime(seconds: number, nowMs: number) {
   if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m`;
   if (diff < day) return `${Math.max(1, Math.floor(diff / hour))}h`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-
-function verifiedBadge(kind?: string) {
-  if (!kind || kind === 'None') return null;
-  return (
-    <span className="tweeter-verified" title={kind} aria-label={kind}>
-      <span className="verified-check">✓</span>
-    </span>
-  );
 }
 
 function actionCount(value: number) {
@@ -348,7 +340,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                     <div className="tweet-card-authorline">
                       <Link href={`/tweeter/profile/${tweet.authorSteamId}`} className="tweet-author-link">
                         <strong>{tweet.authorDisplayName}</strong>
-                        {verifiedBadge(tweet.verifiedKind)}
+                        <TweeterVerifiedBadge kind={tweet.verifiedKind} />
                       </Link>
                       <span>{tweet.handle}</span>
                       <span>·</span>
@@ -410,7 +402,7 @@ export function TweeterClient({ initialData }: { initialData: TweeterPayload }) 
                   <Link href={`/tweeter/profile/${suggestion.steamId}`} className="tweeter-suggestion-main">
                     <UserAvatar src={suggestion.avatarUrl ?? null} name={suggestion.displayName} size="sm" />
                     <div>
-                      <strong>{suggestion.displayName} {verifiedBadge(suggestion.verifiedKind ?? 'None')}</strong>
+                      <strong>{suggestion.displayName} <TweeterVerifiedBadge kind={suggestion.verifiedKind ?? 'None'} /></strong>
                       <span>{suggestion.handle}</span>
                       {suggestion.bio ? <small>{suggestion.bio}</small> : null}
                     </div>

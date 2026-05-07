@@ -313,7 +313,7 @@ export function TweeterAdminPanel({ initialAccounts, initialFilterRules, canMana
             <p>Enter a SteamID64, choose the action, and save. This only affects the website/Tweeter layer.</p>
           </div>
 
-          {!canManage ? <div className="notice warning"><p>Read-only view. Developer access is required to save account restrictions.</p></div> : null}
+          {!canManage ? <div className="notice warning"><p>Read-only view. Ape Tavern staff access is required to save account restrictions.</p></div> : null}
 
           <form onSubmit={submit}>
             <label className="tweeter-admin-steamid-field">
@@ -381,7 +381,7 @@ export function TweeterAdminPanel({ initialAccounts, initialFilterRules, canMana
             <p>Manage the words Tweeter obscures with the sparkle blur. Changes apply to feed, profile, and thread rendering.</p>
           </div>
 
-          {!canManage ? <div className="notice warning"><p>Read-only view. Developer access is required to add, edit, or remove filtered words.</p></div> : null}
+          {!canManage ? <div className="notice warning"><p>Read-only view. Ape Tavern staff access is required to add, edit, or remove filtered words.</p></div> : null}
 
           <form className="tweeter-filter-word-form" onSubmit={submitRule}>
             <label>

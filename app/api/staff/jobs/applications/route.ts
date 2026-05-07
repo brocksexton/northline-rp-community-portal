@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPermissionsForSteamId, getRoleForSteamId } from '@/lib/ape-data';
 import { reviewJobApplication } from '@/lib/jobs-data';
-import { getSessionSteamIdFromRequest, jsonWithSession, withNoStoreHeaders } from '@/lib/session';
+import { jsonWithSession, withNoStoreHeaders } from '@/lib/session';
 import { discordAuditField, notifyAdminAudit } from '@/lib/discord-webhooks';
-function canReviewApplications(role: string, permissions: string[]) { return ['developer', 'admin', 'moderator'].includes(role.toLowerCase()) || permissions.includes('ViewLogs') || permissions.includes('AdminTools'); }
-export async function POST(request: NextRequest) { const steamId = getSessionSteamIdFromRequest(request); if (!steamId) return jsonWithSession({ ok: false, message: 'Sign in required.' }, { status: 401 }, steamId, request); const [role, permissions] = await Promise.all([getRoleForSteamId(steamId), getPermissionsForSteamId(steamId)]); if (!canReviewApplications(role, permissions)) return jsonWithSession({ ok: false, message: 'Staff review access required.' }, { status: 403 }, steamId, request); const body = await request.json().catch(() => ({})); const state = await reviewJobApplication(body, steamId, role); await notifyAdminAudit({ action: 'Reviewed staff application', actor: { steamId, name: role }, severity: 'info', url: '/staff', fields: [discordAuditField('Application ID', typeof body === 'object' && body !== null ? String((body as Record<string, unknown>).applicationId ?? '') : ''), discordAuditField('Status', typeof body === 'object' && body !== null ? String((body as Record<string, unknown>).status ?? '') : '', true)] }); return jsonWithSession({ ok: true, state }, undefined, steamId, request); }
-export async function OPTIONS() { return withNoStoreHeaders(new NextResponse(null, { status: 204 })); }
+import { canReviewJobApplications, getRequestStaffIdentity } from '@/lib/staff-auth';
+
+export async function POST(request: NextRequest) {
+  const identity = await getRequestStaffIdentity(request);
+  if (!identity) return jsonWithSession({ ok: false, message: 'Sign in required.' }, { status: 401 }, null, request);
+  if (!canReviewJobApplications(identity)) return jsonWithSession({ ok: false, message: 'Staff review access required.' }, { status: 403 }, identity.steamId, request);
+  const body = await request.json().catch(() => ({}));
+  const state = await reviewJobApplication(body, identity.steamId, identity.roleLabel);
+  await notifyAdminAudit({
+    action: 'Reviewed staff application',
+    actor: { steamId: identity.steamId, name: identity.roleLabel },
+    severity: 'info',
+    url: '/staff',
+    fields: [
+      discordAuditField('Application ID', typeof body === 'object' && body !== null ? String((body as Record<string, unknown>).applicationId ?? '') : ''),
+      discordAuditField('Status', typeof body === 'object' && body !== null ? String((body as Record<string, unknown>).status ?? '') : '', true),
+    ],
+  });
+  return jsonWithSession({ ok: true, state }, undefined, identity.steamId, request);
+}
+
+export async function OPTIONS() {
+  return withNoStoreHeaders(new NextResponse(null, { status: 204 }));
+}

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { TweeterAdminPanel } from '@/components/TweeterAdminPanel';
-import { getRoleForSteamId, hasPermission } from '@/lib/ape-data';
-import { getSessionSteamId } from '@/lib/session';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canManageTweeterConfiguration } from '@/lib/staff-auth';
 import { listTweeterAccountModeration } from '@/lib/tweeter-moderation-data';
 import { listTweeterContentFilterRules } from '@/lib/tweeter-content-filter-data';
 
@@ -9,11 +8,10 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tweeter Administration' };
 
 export default async function StaffTweeterPage() {
-  const steamId = await getSessionSteamId();
-  const role = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const allowed = Boolean(steamId) && (role.toLowerCase() === 'developer' || await hasPermission(steamId, 'ViewLogs'));
+  const identity = await getCurrentStaffIdentity();
+  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
 
-  if (!steamId || !allowed) {
+  if (!identity || !allowed) {
     return (
       <main className="page-shell">
         <section className="card auth-panel">
@@ -27,7 +25,7 @@ export default async function StaffTweeterPage() {
   }
 
   const [accounts, filterRules] = await Promise.all([listTweeterAccountModeration(), listTweeterContentFilterRules()]);
-  const canManage = role.toLowerCase() === 'developer';
+  const canManage = canManageTweeterConfiguration(identity);
 
   return (
     <main className="page-shell staff-page tweeter-admin-page">
@@ -43,9 +41,9 @@ export default async function StaffTweeterPage() {
         </div>
         <aside className="staff-identity-card">
           <span>Signed in as</span>
-          <strong>{role}</strong>
+          <strong>{identity.roleLabel}</strong>
           <p>{canManage ? 'Can change Tweeter restrictions' : 'Read-only access'}</p>
-          <small>{steamId}</small>
+          <small>{identity.steamId}</small>
         </aside>
       </section>
 
