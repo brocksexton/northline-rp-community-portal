@@ -15,6 +15,9 @@ const serviceLogPath = envPath(process.env.NORTHLINE_SERVER_BRIDGE_LOG_PATH, pat
 const statePath = envPath(process.env.NORTHLINE_SERVER_BRIDGE_STATE_PATH, path.join(dataDir, 'server-command-bridge-state.json'));
 const startScript = envPath(process.env.NORTHLINE_START_SERVER_SCRIPT, isWin ? 'C:\\Servers\\Scripts\\Run-NorthboundRP.bat' : '');
 const launchServer = !/^false$/i.test(process.env.NORTHLINE_BRIDGE_LAUNCH_SERVER || 'true');
+const exitWithServer = /^true$/i.test(process.env.NORTHLINE_BRIDGE_EXIT_WITH_SERVER || 'false');
+const retryServerLaunch = /^true$/i.test(process.env.NORTHLINE_BRIDGE_RETRY_SERVER_LAUNCH || 'false');
+const retryServerLaunchMs = Math.max(5000, Number(process.env.NORTHLINE_BRIDGE_RETRY_SERVER_LAUNCH_MS || 30000));
 const skipExistingDefault = !/^false$/i.test(process.env.NORTHLINE_BRIDGE_SKIP_EXISTING_QUEUE_ON_FIRST_RUN || 'true');
 const pollMs = Math.max(300, Number(process.env.NORTHLINE_BRIDGE_POLL_MS || 1000));
 
@@ -61,6 +64,27 @@ async function appendLog(line) {
   if (serviceLogPath !== logPath) await fsp.appendFile(serviceLogPath, `${line}\n`, 'utf8').catch(() => {});
 }
 
+async function tailFile(filePath, limit = 28) {
+  try {
+    const raw = await fsp.readFile(filePath, 'utf8');
+    return raw.split(/\r?\n/).filter(Boolean).slice(-limit).join('\n');
+  } catch {
+    return '';
+  }
+}
+
+async function appendConsoleTail(reason) {
+  const tail = await tailFile(logPath, 40);
+  if (!tail) {
+    await appendLog(`[bridge ${timestamp()}] No console tail was available after ${reason}.`);
+    return;
+  }
+  await appendLog(`[bridge ${timestamp()}] Console tail after ${reason}:`);
+  for (const line of tail.split(/\r?\n/)) {
+    await appendLog(`[server-log] ${line}`);
+  }
+}
+
 function safeCommand(raw) {
   const command = String(raw || '').replace(/[\r\n]+/g, ' ').trim();
   if (!command) return '';
@@ -98,23 +122,39 @@ async function launchGameServer() {
   await appendLog(`[bridge] Queue: ${queuePath}`);
   await appendLog(`[bridge] Console log: ${logPath}`);
   await appendLog(`[bridge] Bridge log: ${serviceLogPath}`);
+  await appendLog(`[bridge] Exit with server: ${exitWithServer ? 'true' : 'false'}`);
+  await appendLog(`[bridge] Retry server launch: ${retryServerLaunch ? 'true' : 'false'}`);
   await appendLog('============================================================');
 
   const cwd = path.dirname(startScript);
   if (isWin) {
     // Use CALL so .bat/.cmd files launch reliably and paths with spaces do not turn into literal quoted commands.
+    // /s keeps Windows quote handling predictable for a quoted .bat path.
     const commandLine = `call ${quoteForCmd(startScript)}`;
-    await appendLog(`[bridge] Windows command line: cmd.exe /d /c ${commandLine}`);
-    child = spawn('cmd.exe', ['/d', '/c', commandLine], { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
+    await appendLog(`[bridge] Windows command line: cmd.exe /d /s /c ${commandLine}`);
+    child = spawn('cmd.exe', ['/d', '/s', '/c', commandLine], { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
   } else {
+    await appendLog(`[bridge] POSIX command line: ${startScript}`);
     child = spawn(startScript, [], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
   }
 
   child.stdout.on('data', (chunk) => fs.appendFileSync(logPath, chunk));
   child.stderr.on('data', (chunk) => fs.appendFileSync(logPath, chunk));
+  child.on('error', async (error) => {
+    await appendLog(`[bridge ${timestamp()}] Server process failed to launch: ${error?.stack || error?.message || error}`);
+  });
   child.on('exit', async (code, signal) => {
+    const exitedChild = child;
+    child = null;
     await appendLog(`[bridge ${timestamp()}] Server process exited. code=${code ?? 'null'} signal=${signal ?? 'null'}`);
-    if (!shuttingDown) process.exit(code || 0);
+    await appendConsoleTail(`server exit code=${code ?? 'null'} signal=${signal ?? 'null'}`);
+    if (shuttingDown) return;
+    if (exitWithServer) process.exit(code || 0);
+    await appendLog(`[bridge ${timestamp()}] Bridge is staying online. No commands will be consumed until a live server process is owned by the bridge.`);
+    if (retryServerLaunch && exitedChild) {
+      await appendLog(`[bridge ${timestamp()}] Retry is enabled. Relaunching server in ${retryServerLaunchMs}ms.`);
+      setTimeout(() => launchGameServer().catch((error) => appendLog(`[bridge ${timestamp()}] Retry launch failed: ${error?.stack || error?.message || error}`)), retryServerLaunchMs);
+    }
   });
 }
 
@@ -139,17 +179,18 @@ function shouldExecute(record) {
 }
 
 async function scanQueue() {
+  if (!child || !child.stdin || child.killed) return;
   let info;
   try { info = await fsp.stat(queuePath); } catch { return; }
   if (info.size < queueOffset) queueOffset = 0;
   if (info.size === queueOffset) return;
 
   const fd = await fsp.open(queuePath, 'r');
+  let shouldAdvanceOffset = true;
   try {
     const length = info.size - queueOffset;
     const buffer = Buffer.alloc(length);
     await fd.read(buffer, 0, length, queueOffset);
-    queueOffset = info.size;
     const raw = buffer.toString('utf8');
     for (const line of raw.split(/\r?\n/)) {
       if (!line.trim()) continue;
@@ -158,8 +199,13 @@ async function scanQueue() {
       if (!shouldExecute(record)) continue;
       const command = safeCommand(record.command);
       if (!command) continue;
-      await sendToServer(command);
+      const sent = await sendToServer(command);
+      if (!sent) {
+        shouldAdvanceOffset = false;
+        break;
+      }
     }
+    if (shouldAdvanceOffset) queueOffset = info.size;
   } finally {
     await fd.close();
     await writeState();
