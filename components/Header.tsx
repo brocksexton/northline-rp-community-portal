@@ -20,6 +20,7 @@ const nav: HeaderNavItem[] = [
   { href: '/players', label: 'Players', icon: 'fa-solid fa-users', description: 'Public citizen profiles', featureId: 'players' },
   { href: '/leaderboards', label: 'Boards', icon: 'fa-solid fa-ranking-star', description: 'Public rankings and brag boards', featureId: 'leaderboards' },
   { href: '/cases', label: 'Daily Drops', icon: 'fa-solid fa-gift', description: 'Daily free check-in cases', featureId: 'dailyDrops' },
+  { href: '/jobs', label: 'Staff Apps', icon: 'fa-solid fa-briefcase', description: 'Staff job postings and applications', featureId: 'jobs' },
   { href: '/guides', label: 'Guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started and tips', featureId: 'guides' },
   { href: '/rules', label: 'Rules', icon: 'fa-solid fa-scale-balanced', description: 'How we keep things fun', featureId: 'rules' },
   { href: '/bans', label: 'Bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records', featureId: 'bans' },

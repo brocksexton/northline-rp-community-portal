@@ -1,0 +1,6 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { submitJobApplication } from '@/lib/jobs-data';
+import { getSessionSteamIdFromRequest, jsonWithSession, withNoStoreHeaders } from '@/lib/session';
+import { discordAuditField, notifyAdminAudit } from '@/lib/discord-webhooks';
+export async function POST(request: NextRequest) { const steamId = getSessionSteamIdFromRequest(request); if (!steamId) return jsonWithSession({ ok: false, message: 'Sign in with Steam before submitting an application.' }, { status: 401 }, steamId, request); const body = await request.json().catch(() => ({})); const result = await submitJobApplication(steamId, body); if (result.ok && result.application) await notifyAdminAudit({ action: 'New staff application submitted', actor: { steamId, name: steamId }, target: result.application.jobTitle, severity: 'info', url: '/staff', fields: [discordAuditField('Posting', result.application.jobTitle, true), discordAuditField('Answers', String(result.application.answers.length), true)] }); return jsonWithSession(result, { status: result.ok ? 200 : 400 }, steamId, request); }
+export async function OPTIONS() { return withNoStoreHeaders(new NextResponse(null, { status: 204 })); }

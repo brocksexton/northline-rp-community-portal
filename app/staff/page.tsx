@@ -1,12 +1,14 @@
 import Link from 'next/link';
-import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamId, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId, hasPermission } from '@/lib/ape-data';
+import { getCityOverview, getDataHealth, getHostMetrics, getPermissionsForSteamId, getPopulationSummary, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId } from '@/lib/ape-data';
 import { duration, fullDate } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
 import { getSessionSteamId } from '@/lib/session';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
+import { getJobsAdminState } from '@/lib/jobs-data';
 import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
 import { DailyDropsAdminPanel } from '@/components/DailyDropsAdminPanel';
+import { StaffJobsAdminPanel } from '@/components/StaffJobsAdminPanel';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Staff' };
@@ -18,7 +20,8 @@ function bytesToGb(bytes: number): string {
 export default async function StaffPage() {
   const steamId = await getSessionSteamId();
   const roleForAccess = steamId ? await getRoleForSteamId(steamId) : 'Guest';
-  const allowed = Boolean(steamId) && (roleForAccess.toLowerCase() === 'developer' || await hasPermission(steamId, 'ViewLogs'));
+  const permissionsForAccess = steamId ? await getPermissionsForSteamId(steamId) : [];
+  const allowed = Boolean(steamId) && (['developer', 'admin', 'moderator'].includes(roleForAccess.toLowerCase()) || permissionsForAccess.includes('ViewLogs') || permissionsForAccess.includes('AdminTools'));
 
   if (!steamId || !allowed) {
     return (
@@ -33,7 +36,7 @@ export default async function StaffPage() {
     );
   }
 
-  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings, featureSettings, dailyDropsState] = await Promise.all([
+  const [health, population, metrics, permissions, role, overview, adminLogs, chatLogs, damageLogs, maintenanceSettings, featureSettings, dailyDropsState, jobsAdminState] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
@@ -46,9 +49,12 @@ export default async function StaffPage() {
     getMaintenanceSettings(),
     getSiteFeatureSettings(),
     getDailyDropsAdminState(),
+    getJobsAdminState(),
   ]);
 
   const canManageSiteFeatures = role.toLowerCase() === 'developer';
+  const canManageJobPostings = role.toLowerCase() === 'developer' || permissions.includes('AdminTools');
+  const canReviewJobApplications = ['developer', 'admin', 'moderator'].includes(role.toLowerCase()) || permissions.includes('ViewLogs') || permissions.includes('AdminTools');
   const enabledFeatures = enabledFeatureIds(featureSettings);
   const statusVisible = enabledFeatures.has('status');
   const bansVisible = enabledFeatures.has('bans');
@@ -91,6 +97,8 @@ export default async function StaffPage() {
         <SiteFeaturesAdminPanel initialSettings={featureSettings} canManage={canManageSiteFeatures} />
         <DailyDropsAdminPanel initialState={dailyDropsState} canManage={canManageSiteFeatures} />
       </section>
+
+      <StaffJobsAdminPanel initialState={jobsAdminState} canManagePostings={canManageJobPostings} canReviewApplications={canReviewJobApplications} />
 
       <section className="staff-command-grid maintenance-command-grid">
         <article className="staff-panel maintenance-control-card">
