@@ -112,3 +112,26 @@ NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS=true
 ```
 
 Leave it false/blank unless you need those privileged events.
+
+
+## Connection join/leave notices
+
+The bot can tail the server console log and post an embed when it sees connection lines such as:
+
+```text
+07:52:35 Generic  Brock [76561198033862837] is connecting
+```
+
+Add these values to `.env.local`, then restart the Discord bot:
+
+```env
+NORTHLINE_BOT_CONNECTION_NOTICES=true
+NORTHLINE_BOT_CONNECTION_CHANNEL_ID=your-discord-channel-id
+NORTHLINE_BOT_CONNECTION_LOG_PATH=C:\Servers\northline-data\server-console.log
+NORTHLINE_BOT_CONNECTION_POLL_MS=2000
+NORTHLINE_BOT_CONNECTION_INCLUDE_STEAMID=true
+NORTHLINE_BOT_CONNECTION_DEDUPE_MS=45000
+NORTHLINE_BOT_PROFILE_BASE_URL=https://northline.lol/tweeter/profile
+```
+
+The watcher starts at the end of the log when the bot starts, so it does not replay old historical joins and leaves after each restart.
