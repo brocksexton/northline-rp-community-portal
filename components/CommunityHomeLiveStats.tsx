@@ -320,8 +320,8 @@ export function CommunityHomeLiveStats({
         <article className={`community-card death-board live-death-board ${highlight?.totalDelta ? 'has-new-chaos' : ''}`}>
           <div className="community-section-heading death-heading-row">
             <div>
-              <span className="community-kicker">City chaos report</span>
-              <h2>How are people dying?</h2>
+              <span className="community-kicker">Live kill tally</span>
+              <h2>Chaos board and kill tally</h2>
               <p>{leadDeathLine}</p>
             </div>
             <div className={`live-feed-pill ${pollState}`} aria-live="polite">
