@@ -59,6 +59,13 @@ function compactPercent(value: number) {
   return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
 }
 
+function hasUnreadJobApplicationUpdate(application: { applicantViewedAt?: string | null; updatedAt: string; status: string; notes: Array<{ createdAt: string }> }) {
+  if (!application.applicantViewedAt) return application.notes.length > 0 || application.status !== 'submitted';
+  const viewed = new Date(application.applicantViewedAt).getTime();
+  const latest = Math.max(new Date(application.updatedAt).getTime(), ...application.notes.map((note) => new Date(note.createdAt).getTime()));
+  return Number.isFinite(latest) && latest > viewed;
+}
+
 function signedInFacts({
   role,
   playerDeaths,
@@ -153,6 +160,8 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const jobsState = jobsVisible ? await getPublicJobsState(steamId) : null;
   const activeJobPostings = jobsState?.postings ?? [];
   const applicantApplications = jobsState?.applications ?? [];
+  const unreadJobApplications = applicantApplications.filter(hasUnreadJobApplicationUpdate);
+  const unreadJobApplication = unreadJobApplications[0] ?? null;
   const openApplicantApplication = applicantApplications.find((application) => ['submitted', 'under_review', 'approved'].includes(application.status));
 
   return (
@@ -272,21 +281,24 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
       </section>
 
       {hasSignedIn && jobsVisible && activeJobPostings.length ? (
-        <section className="community-card home-staff-applications-callout">
+        <section className={`community-card home-staff-applications-callout ${unreadJobApplications.length ? 'has-update' : ''}`}>
+          {unreadJobApplications.length ? (
+            <div className="home-staff-applications-update"><i className="fa-solid fa-bell" aria-hidden="true" /><strong>{unreadJobApplications.length === 1 ? 'Your staff application has an update.' : `You have ${unreadJobApplications.length} staff application updates.`}</strong></div>
+          ) : null}
           <div className="home-staff-applications-copy">
             <span className="community-kicker">Staff applications</span>
-            <h2>{openApplicantApplication ? 'Your staff application is being tracked.' : 'Staff applications are open.'}</h2>
-            <p>{openApplicantApplication ? `${openApplicantApplication.jobTitle} is currently ${openApplicantApplication.status.replace('_', ' ')}. Open the portal to review your answers and staff notes.` : `There ${activeJobPostings.length === 1 ? 'is' : 'are'} ${activeJobPostings.length} active posting${activeJobPostings.length === 1 ? '' : 's'} available right now. Start with the role that fits you best.`}</p>
+            <h2>{unreadJobApplication ? 'Staff left something for you.' : openApplicantApplication ? 'Your staff application is being tracked.' : 'Staff applications are open.'}</h2>
+            <p>{unreadJobApplication ? `${unreadJobApplication.jobTitle} has a new status or applicant-visible note. Open My Applications to review it.` : openApplicantApplication ? `${openApplicantApplication.jobTitle} is currently ${openApplicantApplication.status.replace('_', ' ')}. Open the mini-app to review your answers and staff notes.` : `There ${activeJobPostings.length === 1 ? 'is' : 'are'} ${activeJobPostings.length} active posting${activeJobPostings.length === 1 ? '' : 's'} available right now. Start with the role that fits you best.`}</p>
           </div>
           <div className="home-staff-applications-list">
             {activeJobPostings.slice(0, 3).map((posting) => (
-              <Link className="home-staff-applications-role" href="/jobs" key={posting.id}>
+              <Link className="home-staff-applications-role" href="/jobs/open" key={posting.id}>
                 <i className={posting.icon} aria-hidden="true" />
                 <span><strong>{posting.title}</strong><small>{posting.department} · {posting.commitment}</small></span>
               </Link>
             ))}
           </div>
-          <Link className="button button-primary" href="/jobs"><i className="fa-solid fa-briefcase" aria-hidden="true" /> Open applications</Link>
+          <Link className="button button-primary" href={unreadJobApplications.length ? '/jobs/applications' : '/jobs'}><i className="fa-solid fa-briefcase" aria-hidden="true" /> {unreadJobApplications.length ? 'Review update' : 'Open applications'}</Link>
         </section>
       ) : null}
 

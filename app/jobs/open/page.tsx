@@ -8,12 +8,12 @@ import { isSiteFeatureEnabled } from '@/lib/site-features-data';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
-  return buildPageMetadata({ title: 'Staff Applications', description: 'Open the Northline RP staff application hub.', path: '/jobs' });
+  return buildPageMetadata({ title: 'Open Staff Postings', description: 'View open Northline RP staff postings and start a guided application.', path: '/jobs/open' });
 }
 
-export default async function JobsPage() {
+export default async function OpenJobsPage() {
   if (!(await isSiteFeatureEnabled('jobs'))) notFound();
   const steamId = await getSessionSteamId();
   const state = await getPublicJobsState(steamId);
-  return <main className="page-shell jobs-page"><JobPortalClient initialState={state} signedIn={Boolean(steamId)} initialView="hub" /></main>;
+  return <main className="page-shell jobs-page"><JobPortalClient initialState={state} signedIn={Boolean(steamId)} initialView="open" /></main>;
 }
