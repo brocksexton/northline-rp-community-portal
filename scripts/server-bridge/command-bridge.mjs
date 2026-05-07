@@ -8,15 +8,36 @@ loadNorthlineEnv();
 
 const isWin = process.platform === 'win32';
 const root = process.cwd();
-const dataDir = process.env.NORTHLINE_DATA_PATH?.trim() || path.join(root, '.northline-data');
-const queuePath = process.env.NORTHLINE_SERVER_COMMAND_QUEUE_PATH?.trim() || path.join(dataDir, 'server-command-queue.jsonl');
-const logPath = process.env.NORTHLINE_SERVER_CONSOLE_LOG_PATH?.trim() || (isWin ? 'C:\\Servers\\northline-data\\server-console.log' : path.join(dataDir, 'server-console.log'));
-const serviceLogPath = process.env.NORTHLINE_SERVER_BRIDGE_LOG_PATH?.trim() || path.join(dataDir, 'server-bridge.log');
-const statePath = process.env.NORTHLINE_SERVER_BRIDGE_STATE_PATH?.trim() || path.join(dataDir, 'server-command-bridge-state.json');
-const startScript = process.env.NORTHLINE_START_SERVER_SCRIPT?.trim() || (isWin ? 'C:\\Servers\\Scripts\\Run-NorthboundRP.bat' : '');
+const dataDir = envPath(process.env.NORTHLINE_DATA_PATH, path.join(root, '.northline-data'));
+const queuePath = envPath(process.env.NORTHLINE_SERVER_COMMAND_QUEUE_PATH, path.join(dataDir, 'server-command-queue.jsonl'));
+const logPath = envPath(process.env.NORTHLINE_SERVER_CONSOLE_LOG_PATH, isWin ? 'C:\\Servers\\northline-data\\server-console.log' : path.join(dataDir, 'server-console.log'));
+const serviceLogPath = envPath(process.env.NORTHLINE_SERVER_BRIDGE_LOG_PATH, path.join(dataDir, 'server-bridge.log'));
+const statePath = envPath(process.env.NORTHLINE_SERVER_BRIDGE_STATE_PATH, path.join(dataDir, 'server-command-bridge-state.json'));
+const startScript = envPath(process.env.NORTHLINE_START_SERVER_SCRIPT, isWin ? 'C:\\Servers\\Scripts\\Run-NorthboundRP.bat' : '');
 const launchServer = !/^false$/i.test(process.env.NORTHLINE_BRIDGE_LAUNCH_SERVER || 'true');
 const skipExistingDefault = !/^false$/i.test(process.env.NORTHLINE_BRIDGE_SKIP_EXISTING_QUEUE_ON_FIRST_RUN || 'true');
 const pollMs = Math.max(300, Number(process.env.NORTHLINE_BRIDGE_POLL_MS || 1000));
+
+function cleanEnvValue(value) {
+  let text = String(value ?? '').trim();
+  // Tolerate values copied into .env or Windows environment variables with literal escaped quotes.
+  if ((text.startsWith('\\"') && text.endsWith('\\"')) || (text.startsWith("\\'") && text.endsWith("\\'"))) {
+    text = text.slice(2, -2);
+  }
+  text = text.replace(/^\\(["'])/, '$1').replace(/\\(["'])$/, '$1');
+  if ((text.startsWith('\"') && text.endsWith('\"')) || (text.startsWith("'") && text.endsWith("'"))) {
+    text = text.slice(1, -1);
+  }
+  return text.trim();
+}
+
+function envPath(value, fallback = '') {
+  return cleanEnvValue(value || fallback);
+}
+
+function quoteForCmd(value) {
+  return `"${cleanEnvValue(value).replace(/["]/g, '')}"`;
+}
 
 let child = null;
 let queueOffset = 0;
@@ -81,7 +102,10 @@ async function launchGameServer() {
 
   const cwd = path.dirname(startScript);
   if (isWin) {
-    child = spawn('cmd.exe', ['/d', '/s', '/c', `"${startScript}"`], { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
+    // Use CALL so .bat/.cmd files launch reliably and paths with spaces do not turn into literal quoted commands.
+    const commandLine = `call ${quoteForCmd(startScript)}`;
+    await appendLog(`[bridge] Windows command line: cmd.exe /d /c ${commandLine}`);
+    child = spawn('cmd.exe', ['/d', '/c', commandLine], { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
   } else {
     child = spawn(startScript, [], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
   }
