@@ -40,12 +40,23 @@ export type QueuedServerCommand = {
   result?: string | null;
 };
 
+export type ConsoleLogCandidate = {
+  path: string;
+  exists: boolean;
+  readable: boolean;
+  sizeBytes: number | null;
+  modifiedAt: string | null;
+  note: string | null;
+};
+
 export type ServerAdminSnapshot = {
   generatedAt: string;
   console: {
     source: string | null;
     readable: boolean;
     lines: ConsoleLine[];
+    candidates: ConsoleLogCandidate[];
+    hint: string | null;
   };
   players: ConnectedServerPlayer[];
   queue: QueuedServerCommand[];
@@ -55,6 +66,8 @@ export type ServerAdminSnapshot = {
     startScript: string;
     updateScript: string;
     commandQueuePath: string;
+    consoleLogPath: string;
+    webManagedStartCapture: boolean;
   };
 };
 
@@ -69,6 +82,13 @@ function dataDir() {
 
 function commandQueuePath() {
   return process.env.NORTHLINE_SERVER_COMMAND_QUEUE_PATH?.trim() || path.join(dataDir(), 'server-command-queue.jsonl');
+}
+
+function defaultConsoleLogPath() {
+  return process.env.NORTHLINE_SERVER_CONSOLE_LOG_PATH?.trim()
+    || process.env.SBOX_SERVER_CONSOLE_LOG_PATH?.trim()
+    || process.env.SBOX_SERVER_LOG_PATH?.trim()
+    || (process.platform === 'win32' ? 'C:\\Servers\\northline-data\\server-console.log' : path.join(dataDir(), 'server-console.log'));
 }
 
 function seenGameActionsPath() {
@@ -101,7 +121,8 @@ function configuredConsoleLogCandidates() {
     path.join(base, 'logs', 'latest.log'),
     path.join(base, 'logs', 'console.log'),
   ] : [];
-  return [...explicit, ...fallback];
+  const values = [...explicit, ...fallback, defaultConsoleLogPath()];
+  return [...new Set(values.filter(Boolean))];
 }
 
 function configuredProcessNames() {
@@ -133,6 +154,41 @@ async function existingConsoleLogPath(): Promise<string | null> {
     } catch {}
   }
   return null;
+}
+
+async function getConsoleLogCandidates(): Promise<ConsoleLogCandidate[]> {
+  const candidates = configuredConsoleLogCandidates();
+  const rows: ConsoleLogCandidate[] = [];
+  for (const candidate of candidates) {
+    try {
+      const info = await stat(candidate);
+      rows.push({
+        path: candidate,
+        exists: true,
+        readable: info.isFile(),
+        sizeBytes: info.isFile() ? info.size : null,
+        modifiedAt: info.isFile() ? info.mtime.toISOString() : null,
+        note: info.isFile() ? null : 'Path exists but is not a file.',
+      });
+    } catch (error) {
+      rows.push({
+        path: candidate,
+        exists: false,
+        readable: false,
+        sizeBytes: null,
+        modifiedAt: null,
+        note: error instanceof Error ? error.message : 'Not found or not readable.',
+      });
+    }
+  }
+  return rows;
+}
+
+function consoleHint(readable: boolean, candidates: ConsoleLogCandidate[]) {
+  if (readable) return null;
+  if (!candidates.length) return 'No console log path is configured.';
+  const primary = candidates[0]?.path || defaultConsoleLogPath();
+  return `No readable console log was found. The website cannot attach to an existing Windows console window; it can only tail a log file. Start the game server from this panel to capture output to ${primary}, or set NORTHLINE_SERVER_CONSOLE_LOG_PATH to a file your server writes to.`;
 }
 
 export async function readConsoleOutput(limit = 260): Promise<{ source: string | null; readable: boolean; lines: ConsoleLine[] }> {
@@ -262,8 +318,36 @@ export async function sendServerCommand(input: { command: string; actor: StaffId
     return record;
   }
 
-  await appendCommandRecord(base);
-  return base;
+  const queued = { ...base, result: `Queued only. No NORTHLINE_CONSOLE_COMMAND_SCRIPT is configured, so this will not execute until a local bridge consumes ${commandQueuePath()}.` } satisfies QueuedServerCommand;
+  await appendCommandRecord(queued);
+  return queued;
+}
+
+async function appendConsoleCaptureHeader(scriptPath: string, action: string) {
+  const logPath = defaultConsoleLogPath();
+  await mkdir(path.dirname(logPath), { recursive: true });
+  await appendFile(logPath, `
+============================================================
+[${new Date().toISOString()}] ${action}: ${scriptPath}
+============================================================
+`, 'utf8');
+  return logPath;
+}
+
+async function writeWindowsCaptureRunner(scriptPath: string) {
+  const logPath = await appendConsoleCaptureHeader(scriptPath, 'Website managed launch');
+  const runnerPath = path.join(dataDir(), 'northline-web-managed-server-runner.cmd');
+  await ensureDataDir();
+  const content = [
+    '@echo off',
+    'setlocal EnableExtensions',
+    `echo [${new Date().toISOString()}] Starting Northline RP server through web-managed capture.>> "${logPath}"`,
+    `echo Script: ${scriptPath}>> "${logPath}"`,
+    `call "${scriptPath}" >> "${logPath}" 2>&1`,
+    `echo [${new Date().toISOString()}] Server script exited.>> "${logPath}"`,
+  ].join('\r\n');
+  await writeFile(runnerPath, content, 'utf8');
+  return { runnerPath, logPath };
 }
 
 async function runDetachedBatch(scriptPath: string): Promise<string> {
@@ -273,6 +357,22 @@ async function runDetachedBatch(scriptPath: string): Promise<string> {
   }
   await execFileAsync('sh', ['-lc', `${JSON.stringify(scriptPath)} >/dev/null 2>&1 &`], { timeout: 10_000 });
   return `Started ${scriptPath}`;
+}
+
+async function runServerStartWithConsoleCapture(scriptPath: string): Promise<string> {
+  if (process.platform === 'win32') {
+    const { runnerPath, logPath } = await writeWindowsCaptureRunner(scriptPath);
+    const command = `Start-Process -FilePath $env:NORTHLINE_CAPTURE_RUNNER -WorkingDirectory $env:NORTHLINE_CAPTURE_DIR -WindowStyle Normal`;
+    await execFileAsync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command], {
+      windowsHide: true,
+      timeout: 10_000,
+      env: { ...process.env, NORTHLINE_CAPTURE_RUNNER: runnerPath, NORTHLINE_CAPTURE_DIR: path.dirname(runnerPath) },
+    });
+    return `Started ${scriptPath} with web-managed console capture. Tail file: ${logPath}`;
+  }
+  const logPath = await appendConsoleCaptureHeader(scriptPath, 'Website managed launch');
+  await execFileAsync('sh', ['-lc', `${JSON.stringify(scriptPath)} >> ${JSON.stringify(logPath)} 2>&1 &`], { timeout: 10_000 });
+  return `Started ${scriptPath} with web-managed console capture. Tail file: ${logPath}`;
 }
 
 async function killConfiguredServerProcesses(): Promise<string> {
@@ -306,7 +406,7 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
   try {
     if (action === 'start') {
       command = `start-server ${defaultStartScript()}`;
-      result = await runDetachedBatch(defaultStartScript());
+      result = await runServerStartWithConsoleCapture(defaultStartScript());
     } else if (action === 'update') {
       command = `update-server ${defaultUpdateScript()}`;
       result = await runDetachedBatch(defaultUpdateScript());
@@ -317,7 +417,7 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
       command = `restart-server ${configuredProcessNames().join(',')} -> ${defaultStartScript()}`;
       const killed = await killConfiguredServerProcesses();
       await new Promise((resolve) => setTimeout(resolve, 2500));
-      const started = await runDetachedBatch(defaultStartScript());
+      const started = await runServerStartWithConsoleCapture(defaultStartScript());
       result = `${killed}\n${started}`;
     }
   } catch (error) {
@@ -399,23 +499,26 @@ export async function scanGameModerationActions(): Promise<{ sent: number; scann
 
 export async function getServerAdminSnapshot(): Promise<ServerAdminSnapshot> {
   await scanGameModerationActions().catch(() => ({ sent: 0, scanned: 0 }));
-  const [consoleOutput, players, queue] = await Promise.all([
+  const [consoleOutput, consoleCandidates, players, queue] = await Promise.all([
     readConsoleOutput(),
+    getConsoleLogCandidates(),
     getConnectedServerPlayers(),
     getRecentCommandQueue(30),
   ]);
 
   return {
     generatedAt: new Date().toISOString(),
-    console: consoleOutput,
+    console: { ...consoleOutput, candidates: consoleCandidates, hint: consoleHint(consoleOutput.readable, consoleCandidates) },
     players,
     queue,
     capabilities: {
       consoleCommandScript: Boolean(consoleCommandScript()),
-      consoleLogConfigured: Boolean(configuredConsoleLogCandidates()[0]),
+      consoleLogConfigured: Boolean(process.env.NORTHLINE_SERVER_CONSOLE_LOG_PATH || process.env.SBOX_SERVER_CONSOLE_LOG_PATH || process.env.SBOX_SERVER_LOG_PATH),
       startScript: defaultStartScript(),
       updateScript: defaultUpdateScript(),
       commandQueuePath: commandQueuePath(),
+      consoleLogPath: defaultConsoleLogPath(),
+      webManagedStartCapture: true,
     },
   };
 }

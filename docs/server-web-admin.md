@@ -4,7 +4,7 @@ The staff server control room lives at `/staff/server`.
 
 ## What it does
 
-- Shows current console output by reading a configured log file.
+- Shows current console output by tailing a real log file.
 - Lists currently connected players from the portal's connection-log state.
 - Opens a player moderation menu with SteamID already supplied.
 - Sends safe web commands for:
@@ -28,15 +28,27 @@ DISCORD_WEBHOOK_WEB_ACTION=
 DISCORD_WEBHOOK_GAME_ACTION=
 ```
 
-## Console output
+## Console output and why it may not change
 
-Set the log path that the panel should tail:
+The website cannot attach to an already-open Windows CMD console window. It can only read a file. Your original `Run-NorthboundRP.bat` writes to its own visible console window, so the web panel has nothing to tail unless output is redirected to a log file.
+
+This version fixes that for web-started launches: when you click **Start server** or **Restart** from `/staff/server`, the website runs your configured start script through a web-managed wrapper and redirects output to:
 
 ```env
-NORTHLINE_SERVER_CONSOLE_LOG_PATH=C:\Servers\sbox\logs\console.log
+NORTHLINE_SERVER_CONSOLE_LOG_PATH=C:\Servers\northline-data\server-console.log
 ```
 
-If this is not configured, the page still works, but it will show that console output is unavailable.
+You can override that path:
+
+```env
+NORTHLINE_SERVER_CONSOLE_LOG_PATH=C:\Servers\northline-data\server-console.log
+```
+
+Important behavior:
+
+- If the server was started manually from `Run-NorthboundRP.bat`, the website still cannot see that existing console output.
+- Use **Kill server**, then **Start server** from `/staff/server` once to begin web-managed log capture.
+- The panel now shows console hook diagnostics so you can see which log paths exist, whether they are readable, when they last changed, and why the console box is empty.
 
 ## Command bridge
 

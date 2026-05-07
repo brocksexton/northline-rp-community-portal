@@ -17471,3 +17471,92 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
     grid-template-columns: 1fr;
   }
 }
+
+.server-console-hint {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  background: rgba(255, 251, 235, 0.82);
+  color: #78350f;
+  font-size: 0.9rem;
+}
+
+.server-console-hint strong {
+  color: #92400e;
+  font-weight: 900;
+}
+
+.server-console-hint span {
+  line-height: 1.45;
+}
+
+.server-console-hint.is-warning {
+  margin: 0 0 1rem;
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(254, 242, 242, 0.82);
+  color: #7f1d1d;
+}
+
+.server-console-hint.is-warning strong {
+  color: #991b1b;
+}
+
+.server-console-diagnostics {
+  margin-top: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 252, 0.74);
+  overflow: hidden;
+}
+
+.server-console-diagnostics summary {
+  cursor: pointer;
+  padding: 0.78rem 0.9rem;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.server-console-diagnostic-list {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.server-console-diagnostic-list > div {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.server-console-diagnostic-list > div.is-readable {
+  border-color: rgba(22, 163, 74, 0.22);
+  background: rgba(240, 253, 244, 0.78);
+}
+
+.server-console-diagnostic-list strong,
+.server-console-diagnostic-list span,
+.server-console-diagnostic-list small {
+  overflow-wrap: anywhere;
+}
+
+.server-console-diagnostic-list strong {
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.server-console-diagnostic-list span {
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.server-console-diagnostic-list small {
+  color: #64748b;
+  font-size: 0.76rem;
+}

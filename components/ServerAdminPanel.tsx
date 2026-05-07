@@ -24,12 +24,21 @@ type QueueRecord = {
   delivery: 'script' | 'queue' | 'control';
   result?: string | null;
 };
+type ConsoleLogCandidate = {
+  path: string;
+  exists: boolean;
+  readable: boolean;
+  sizeBytes: number | null;
+  modifiedAt: string | null;
+  note: string | null;
+};
+
 type Snapshot = {
   generatedAt: string;
-  console: { source: string | null; readable: boolean; lines: ConsoleLine[] };
+  console: { source: string | null; readable: boolean; lines: ConsoleLine[]; candidates: ConsoleLogCandidate[]; hint: string | null };
   players: ConnectedServerPlayer[];
   queue: QueueRecord[];
-  capabilities: { consoleCommandScript: boolean; consoleLogConfigured: boolean; startScript: string; updateScript: string; commandQueuePath: string };
+  capabilities: { consoleCommandScript: boolean; consoleLogConfigured: boolean; startScript: string; updateScript: string; commandQueuePath: string; consoleLogPath: string; webManagedStartCapture: boolean };
 };
 
 type PlayerAction = 'kick' | 'ban';
@@ -52,6 +61,20 @@ function duration(seconds: number | null | undefined) {
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours) return `${hours}h ${minutes}m`;
   return `${minutes || 1}m`;
+}
+
+function formatBytes(value: number | null) {
+  if (value === null || value === undefined) return '—';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 102.4) / 10} KB`;
+  return `${Math.round(value / 1024 / 102.4) / 10} MB`;
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  return date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
 }
 
 export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl }: ServerAdminPanelProps) {
@@ -91,7 +114,7 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Action failed.');
-      setNotice(data.record?.status === 'queued' ? 'Action queued for the server command bridge.' : data.record?.status === 'failed' ? `Action failed: ${data.record?.result || 'unknown error'}` : 'Action sent.');
+      setNotice(data.record?.status === 'queued' ? 'Queued only — no console command bridge is configured, so this did not run in-game yet.' : data.record?.status === 'failed' ? `Action failed: ${data.record?.result || 'unknown error'}` : 'Action sent.');
       await refresh(true);
       return true;
     } catch (error) {
@@ -149,11 +172,24 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
           <div className="section-heading">
             <span className="kicker">Console</span>
             <h2>Current output</h2>
-            <p>{snapshot.console.readable ? `Reading ${snapshot.console.source}` : 'Set NORTHLINE_SERVER_CONSOLE_LOG_PATH to display live console output.'}</p>
+            <p>{snapshot.console.readable ? `Reading ${snapshot.console.source}` : 'No readable console log is attached yet.'}</p>
           </div>
+          {snapshot.console.hint ? <div className="server-console-hint"><strong>Why it is not changing</strong><span>{snapshot.console.hint}</span></div> : null}
           <pre className="server-console-output" aria-live="polite">
             {latestLines.length ? latestLines.map((line) => <span key={line.id} className={`console-line console-${line.level}`}>{line.text}</span>) : <span className="console-line console-warning">No console log lines are available yet.</span>}
           </pre>
+          <details className="server-console-diagnostics">
+            <summary>Console hook diagnostics</summary>
+            <div className="server-console-diagnostic-list">
+              {snapshot.console.candidates.map((candidate) => (
+                <div key={candidate.path} className={candidate.readable ? 'is-readable' : ''}>
+                  <strong>{candidate.path}</strong>
+                  <span>{candidate.readable ? 'Readable' : candidate.exists ? 'Found but not readable as a file' : 'Not found'} · {formatBytes(candidate.sizeBytes)} · Updated {formatDateTime(candidate.modifiedAt)}</span>
+                  {candidate.note ? <small>{candidate.note}</small> : null}
+                </div>
+              ))}
+            </div>
+          </details>
         </article>
 
         <aside className="staff-panel server-control-panel">
@@ -168,8 +204,10 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
             <button type="button" className="button button-soft danger-button" disabled={!canPowerControl || loading} onClick={() => submitAction({ type: 'server-control', action: 'restart' })}>Restart</button>
             <button type="button" className="button button-soft danger-button" disabled={!canPowerControl || loading} onClick={() => submitAction({ type: 'server-control', action: 'kill' })}>Kill server</button>
           </div>
+          {!snapshot.capabilities.consoleCommandScript ? <div className="server-console-hint is-warning"><strong>Moderation bridge not configured</strong><span>Kick, ban, and broadcast requests are written to the queue file but cannot execute in-game until NORTHLINE_CONSOLE_COMMAND_SCRIPT or a queue bridge is installed.</span></div> : null}
           <dl className="server-admin-config-list">
             <div><dt>Command bridge</dt><dd>{snapshot.capabilities.consoleCommandScript ? 'Script configured' : 'Queue file only'}</dd></div>
+            <div><dt>Console log</dt><dd>{snapshot.capabilities.consoleLogPath}</dd></div>
             <div><dt>Start script</dt><dd>{snapshot.capabilities.startScript}</dd></div>
             <div><dt>Update script</dt><dd>{snapshot.capabilities.updateScript}</dd></div>
             <div><dt>Queue</dt><dd>{snapshot.capabilities.commandQueuePath}</dd></div>
