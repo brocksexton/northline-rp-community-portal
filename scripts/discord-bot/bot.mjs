@@ -203,7 +203,8 @@ function isForumThreadChannel(channel) {
 
 function isForumStarterMessage(message) {
   // In Discord forum channels the starter message for a post usually has the same ID as the thread.
-  return message.channel?.id === message.id || message.type === 0 && message.channel?.messageCount === 1;
+  // Some gateway events do not have a reliable messageCount yet, so the ID equality is the primary signal.
+  return Boolean(message?.channel?.id && message.channel.id === message.id) || Boolean(message?.type === 0 && message?.channel?.messageCount === 1);
 }
 
 async function importDiscordForumMessage(message) {
@@ -214,10 +215,12 @@ async function importDiscordForumMessage(message) {
   const body = forumMessageBody(message);
   if (!body) return;
 
+  const starter = isForumStarterMessage(message);
   const payload = {
     discordThreadId: message.channel.id,
     discordMessageId: message.id,
-    discordStarterMessageId: message.id,
+    discordStarterMessageId: starter ? message.id : '',
+    isStarter: starter,
     discordUserId: message.author.id,
     discordUsername: message.author.tag || message.author.username,
     discordAvatarUrl: typeof message.author.displayAvatarURL === 'function' ? message.author.displayAvatarURL({ size: 128 }) : '',
@@ -249,7 +252,9 @@ async function importDiscordForumMessage(message) {
       await apiPost('/api/bot/forum/posts', payload);
       if (forumSyncLog) console.log(`[northline-discord-bot] Imported Discord forum reply ${message.id} after thread fallback.`);
     } catch (postError) {
-      if (forumSyncLog) console.warn(`[northline-discord-bot] Could not import Discord forum message ${message.id}:`, postError instanceof Error ? postError.message : postError);
+      const threadError = error instanceof Error ? error.message : String(error);
+      const replyError = postError instanceof Error ? postError.message : String(postError);
+      if (forumSyncLog) console.warn(`[northline-discord-bot] Could not import Discord forum message ${message.id}. Thread import: ${threadError}. Reply import: ${replyError}`);
     }
   }
 }
@@ -903,6 +908,17 @@ client.on('messageDelete', async (message) => {
 client.on('threadCreate', async (thread) => {
   if (!forumSyncEnabled || thread.parentId !== forumChannelId) return;
   if (forumSyncLog) console.log(`[northline-discord-bot] Forum thread detected: ${thread.name} (${thread.id}). Waiting for starter message event.`);
+  // Discord can fire threadCreate before messageCreate for the forum starter post,
+  // and sometimes the starter message event is missed entirely after a bot restart.
+  // Fetch it once after a short delay so the website can create/map the thread deterministically.
+  setTimeout(async () => {
+    try {
+      const starterMessage = typeof thread.fetchStarterMessage === 'function' ? await thread.fetchStarterMessage() : null;
+      if (starterMessage) await importDiscordForumMessage(starterMessage);
+    } catch (error) {
+      if (forumSyncLog) console.warn(`[northline-discord-bot] Could not fetch/import starter message for forum thread ${thread.id}:`, error instanceof Error ? error.message : error);
+    }
+  }, 1750).unref?.();
 });
 
 client.on('threadDelete', async (thread) => {

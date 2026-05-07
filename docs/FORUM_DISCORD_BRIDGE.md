@@ -157,3 +157,8 @@ The bot needs permission to manage/delete messages and threads in the configured
 The bot listens for Discord reaction add/remove events in the configured forum channel. Only the Discord default blue-heart reaction is synced into the website as a read-only **Love** reaction. This keeps Discord reactions separate from website reactions while still letting the website show Discord community feedback.
 
 Make sure the bot has the **Guild Message Reactions** intent available and can read forum thread messages.
+
+
+### v2.9.75 starter import behavior
+
+Discord can emit `threadCreate` before the forum starter message is available. The bot now fetches the starter message shortly after `threadCreate`, marks it as a starter import, and the website will create/map the website forum thread instead of treating that starter post as a reply that requires an existing mapping.

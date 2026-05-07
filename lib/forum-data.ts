@@ -611,6 +611,13 @@ export async function createDiscordImportedThread(input: {
   const existing = state.threads.find((thread) => thread.discordThreadId === input.discordThreadId);
   if (existing) {
     const starter = state.posts.find((post) => post.threadId === existing.id) ?? null;
+    const starterMessageId = cleanText(input.discordStarterMessageId, 80);
+    if (starter && starterMessageId && (!existing.discordStarterMessageId || !starter.discordMessageId)) {
+      existing.discordStarterMessageId = existing.discordStarterMessageId || starterMessageId;
+      starter.discordMessageId = starter.discordMessageId || starterMessageId;
+      existing.updatedAt = nowIso();
+      await writeState(state);
+    }
     return starter ? { thread: existing, starter } : null;
   }
 
