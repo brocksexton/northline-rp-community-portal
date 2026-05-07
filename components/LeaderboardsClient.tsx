@@ -14,6 +14,16 @@ type Props = {
 
 const categoryOrder: LeaderboardCategory[] = ['Economy', 'Activity', 'Stats', 'Property', 'Tweeter', 'Learning'];
 
+const categoryMeta: Record<LeaderboardCategory | 'All', { label: string; subtitle: string; icon: string }> = {
+  All: { label: 'All boards', subtitle: 'Every public ranking', icon: 'fa-solid fa-layer-group' },
+  Economy: { label: 'Economy', subtitle: 'Cash, bank, net worth', icon: 'fa-solid fa-sack-dollar' },
+  Activity: { label: 'Activity', subtitle: 'Time spent in city', icon: 'fa-solid fa-clock' },
+  Stats: { label: 'Character stats', subtitle: 'Levels, XP, chaos', icon: 'fa-solid fa-chart-simple' },
+  Property: { label: 'Property', subtitle: 'Layouts and builds', icon: 'fa-solid fa-house-chimney-window' },
+  Tweeter: { label: 'Tweeter', subtitle: 'Posts and reactions', icon: 'fa-brands fa-twitter' },
+  Learning: { label: 'Guides', subtitle: 'Onboarding progress', icon: 'fa-solid fa-map-signs' },
+};
+
 function bannerStyle(row: { coverImageUrl: string | null; coverGradient: string }): CSSProperties {
   if (row.coverImageUrl) {
     return {
@@ -58,6 +68,7 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
 
   const visibleBoards = category === 'All' ? boards : boards.filter((board) => board.category === category);
   const topThree = activeBoard.rows.slice(0, 3);
+  const categoryInfo = categoryMeta[category];
 
   return (
     <>
@@ -65,6 +76,7 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
         <div className="leaderboard-hero-copy">
           <span className="kicker">City scoreboards</span>
           <h1>Leaderboards for the locals who opt in.</h1>
+          <div className="leaderboard-hero-orbit" aria-hidden="true"><span /><span /><span /></div>
           <p>
             Compare money, playtime, building, Tweeter activity, stats, and more. Private profiles stay private,
             and some boards only show people who chose to share that kind of detail.
@@ -88,18 +100,25 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search this leaderboard..." />
         </label>
         <div className="leaderboard-category-tabs" aria-label="Leaderboard categories">
-          <button className={category === 'All' ? 'active' : ''} type="button" onClick={() => setCategory('All')}>All</button>
+          <button className={category === 'All' ? 'active' : ''} type="button" onClick={() => setCategory('All')}>
+            <i className={categoryMeta.All.icon} aria-hidden="true" />
+            <span><strong>{categoryMeta.All.label}</strong><small>{categoryMeta.All.subtitle}</small></span>
+          </button>
           {categoryOrder.map((item) => (
-            <button className={category === item ? 'active' : ''} type="button" key={item} onClick={() => setCategory(item)}>{item}</button>
+            <button className={category === item ? 'active' : ''} type="button" key={item} onClick={() => setCategory(item)}>
+              <i className={categoryMeta[item].icon} aria-hidden="true" />
+              <span><strong>{categoryMeta[item].label}</strong><small>{categoryMeta[item].subtitle}</small></span>
+            </button>
           ))}
         </div>
       </section>
 
       <section className="leaderboard-layout">
         <aside className="leaderboard-board-list" aria-label="Choose leaderboard">
-          <span className="kicker">Pick a board</span>
-          {visibleBoards.map((board) => (
-            <button className={board.id === activeBoard.id ? 'active' : ''} type="button" key={board.id} onClick={() => { setActiveBoardId(board.id); setQuery(''); }}>
+          <span className="kicker">{categoryInfo.label}</span>
+          <p className="leaderboard-board-list-note">{categoryInfo.subtitle}</p>
+          {visibleBoards.map((board, index) => (
+            <button className={board.id === activeBoard.id ? 'active' : ''} type="button" key={board.id} style={{ ['--board-index' as string]: index }} onClick={() => { setActiveBoardId(board.id); setQuery(''); }}>
               <i className={board.icon} aria-hidden="true" />
               <span><strong>{board.label}</strong><small>{board.rows.length.toLocaleString()} ranked</small></span>
             </button>
@@ -118,8 +137,8 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
 
           {topThree.length ? (
             <section className="leaderboard-podium" aria-label="Top three">
-              {topThree.map((row) => (
-                <Link className={`leaderboard-podium-card rank-${row.rank}`} href={row.profileHref} key={row.steamId} style={bannerStyle(row)}>
+              {topThree.map((row, index) => (
+                <Link className={`leaderboard-podium-card rank-${row.rank}`} href={row.profileHref} key={row.steamId} style={{ ...bannerStyle(row), ['--podium-index' as string]: index }}>
                   <span className="leaderboard-medal">{medal(row.rank)}</span>
                   <UserAvatar src={row.avatarUrl} name={row.displayName} size="lg" />
                   <strong>{row.displayName}</strong>
@@ -133,8 +152,8 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
 
           {filteredRows.length ? (
             <section className="leaderboard-table" aria-label={`${activeBoard.label} leaderboard`}>
-              {filteredRows.map((row) => (
-                <article className={`leaderboard-row ${row.isCurrentUser ? 'is-you' : ''}`} key={`${activeBoard.id}-${row.steamId}`}>
+              {filteredRows.map((row, index) => (
+                <article className={`leaderboard-row ${row.isCurrentUser ? 'is-you' : ''}`} key={`${activeBoard.id}-${row.steamId}`} style={{ ['--row-index' as string]: Math.min(index, 18) }}>
                   <div className="leaderboard-rank">{medal(row.rank)}</div>
                   <Link className="leaderboard-person" href={row.profileHref}>
                     <UserAvatar src={row.avatarUrl} name={row.displayName} size="md" />

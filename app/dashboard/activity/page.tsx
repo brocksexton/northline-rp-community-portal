@@ -1,0 +1,17 @@
+import Link from 'next/link';
+import { getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs } from '@/lib/ape-data';
+import { fullDate, relativeFromDate } from '@/lib/format';
+import { getSessionSteamId } from '@/lib/session';
+
+export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Account Activity' };
+
+export default async function ActivityPage() {
+  const steamId = await getSessionSteamId();
+  if (!steamId) return <main className="page-shell"><section className="card auth-panel"><span className="eyebrow">Activity</span><h1>Sign in required</h1><p>Sign in to view account activity.</p><a className="button button-primary" href="/api/auth/steam?returnTo=/dashboard/activity"><i className="fa-brands fa-steam" /> Sign in with Steam</a></section></main>;
+  const [chatLogs, adminLogs, damageLogs] = await Promise.all([getRecentChatLogs(80), getRecentAdminLogs(80), getRecentDamageLogs(80)]);
+  const ownChat = chatLogs.filter((log) => String(log.SenderSteamId) === steamId).slice(0, 15);
+  const ownAdmin = adminLogs.filter((log) => String(log.TargetSteamId) === steamId || String(log.AdminSteamId) === steamId).slice(0, 15);
+  const ownDamage = damageLogs.filter((log) => String(log.VictimSteamId) === steamId || String(log.AttackerSteamId ?? '') === steamId).slice(0, 15);
+  return <main className="page-shell dashboard-page account-command-page"><section className="card account-subpage-heading"><span className="eyebrow">Account activity</span><h1>Recent records involving your account</h1><p>This is an owner-only view for personal context, not a public profile section.</p><Link className="button button-soft" href="/dashboard"><i className="fa-solid fa-arrow-left" /> Back to profile hub</Link></section><section className="layout-three"><article className="card"><div className="section-heading"><span className="kicker">Recent chat</span><h2>Your messages</h2></div><div className="stack-list compact-stack">{ownChat.length ? ownChat.map((log) => <div key={`${log.Timestamp}-${log.Message}`}><strong>{log.Type}</strong><span>{log.Message}</span><small>{relativeFromDate(log.Timestamp)}</small></div>) : <div><strong>No recent chat found</strong><span>Your recent chat logs will appear here.</span></div>}</div></article><article className="card"><div className="section-heading"><span className="kicker">Moderation/admin</span><h2>Related actions</h2></div><div className="stack-list compact-stack">{ownAdmin.length ? ownAdmin.map((log) => <div key={`${log.Timestamp}-${log.ActionType}`}><strong>{log.ActionType}</strong><span>{log.Details || 'No details'}</span><small>{fullDate(log.Timestamp)}</small></div>) : <div><strong>No related actions</strong><span>Actions involving your account will appear here.</span></div>}</div></article><article className="card"><div className="section-heading"><span className="kicker">Damage timeline</span><h2>Recent incidents</h2></div><div className="stack-list compact-stack">{ownDamage.length ? ownDamage.map((log) => <div key={`${log.Timestamp}-${log.Cause}`}><strong>{log.Cause || 'Damage'}</strong><span>{log.VictimName} took {Math.round(Number(log.Damage ?? 0))} damage</span><small>{log.IsFatal ? 'Fatal · ' : ''}{relativeFromDate(log.Timestamp)}</small></div>) : <div><strong>No recent damage logs</strong><span>Recent damage involving your account will appear here.</span></div>}</div></article></section></main>;
+}

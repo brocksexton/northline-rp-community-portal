@@ -23,8 +23,8 @@ export default async function ForumThreadPage({ params }: Props) {
   const enabled = await isSiteFeatureEnabled('forum');
   if (!enabled) notFound();
   const { threadId } = await params;
-  const data = await getForumThread(threadId);
-  if (!data) notFound();
   const steamId = await getSessionSteamId();
+  const data = await getForumThread(threadId, steamId);
+  if (!data) notFound();
   return <main className="page-shell forum-page"><ForumThreadClient thread={data.thread} initialPosts={data.posts} signedIn={Boolean(steamId)} /></main>;
 }

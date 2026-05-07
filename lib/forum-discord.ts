@@ -22,6 +22,12 @@ function linkedRoleId() {
   return configured(process.env.NORTHLINE_DISCORD_LINKED_ROLE_ID);
 }
 
+function embedColor() {
+  const raw = String(process.env.NORTHLINE_BOT_EMBED_COLOR ?? '#1d9bf0').replace(/^#/, '');
+  const parsed = Number.parseInt(raw, 16);
+  return Number.isFinite(parsed) ? parsed : 0x1d9bf0;
+}
+
 async function discordRequest(path: string, init: RequestInit) {
   const token = botToken();
   if (!token) return null;
@@ -45,8 +51,33 @@ function siteUrl(path: string) {
   try { return new URL(path, base).toString(); } catch { return path; }
 }
 
-function authorLine(author: { displayName: string; steamId: string | null }) {
-  return `**${author.displayName}**${author.steamId ? ` · SteamID64 ${author.steamId}` : ''}`;
+function clean(value: unknown, max = 1800) {
+  const raw = String(value ?? '').trim();
+  return raw.length > max ? `${raw.slice(0, max - 1).trim()}…` : raw;
+}
+
+function authorLabel(author: { displayName: string; steamId: string | null }) {
+  return `${author.displayName}${author.steamId ? ` · SteamID64 ${author.steamId}` : ''}`;
+}
+
+function forumEmbed(thread: ForumThread, post: ForumPost, mode: 'thread' | 'reply') {
+  const url = siteUrl(`/forum/thread/${thread.id}`);
+  return {
+    color: embedColor(),
+    title: mode === 'thread' ? `${thread.title} · Northline RP` : `Reply in ${thread.title}`,
+    url,
+    description: clean(post.body, 1800) || 'No body supplied.',
+    author: {
+      name: authorLabel(post.author),
+      icon_url: post.author.avatarUrl || undefined,
+    },
+    fields: [
+      { name: 'Source', value: 'Northline website forum', inline: true },
+      { name: 'Open thread', value: `[View on Northline RP](${url})`, inline: true },
+    ],
+    footer: { text: mode === 'thread' ? 'Northline RP forum thread' : 'Northline RP forum reply' },
+    timestamp: post.createdAt,
+  };
 }
 
 export async function mirrorWebsiteThreadToDiscord(thread: ForumThread, starter: ForumPost): Promise<void> {
@@ -55,7 +86,8 @@ export async function mirrorWebsiteThreadToDiscord(thread: ForumThread, starter:
   const body = {
     name: thread.title.slice(0, 100),
     message: {
-      content: `${authorLine(thread.author)} started a forum thread on Northline RP.\n${siteUrl(`/forum/thread/${thread.id}`)}\n\n${starter.body.slice(0, 1800)}`,
+      content: `🧵 ${starter.author.displayName} started a forum thread from Northline RP: ${siteUrl(`/forum/thread/${thread.id}`)}`,
+      embeds: [forumEmbed(thread, starter, 'thread')],
       allowed_mentions: { parse: [] },
     },
   };
@@ -68,7 +100,8 @@ export async function mirrorWebsitePostToDiscord(thread: ForumThread, post: Foru
   await discordRequest(`/channels/${thread.discordThreadId}/messages`, {
     method: 'POST',
     body: JSON.stringify({
-      content: `${authorLine(post.author)} replied from the Northline website.\n${siteUrl(`/forum/thread/${thread.id}`)}\n\n${post.body.slice(0, 1800)}`,
+      content: `💬 ${post.author.displayName} replied from the Northline website: ${siteUrl(`/forum/thread/${thread.id}`)}`,
+      embeds: [forumEmbed(thread, post, 'reply')],
       allowed_mentions: { parse: [] },
     }),
   });

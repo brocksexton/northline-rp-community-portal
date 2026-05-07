@@ -176,7 +176,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'cash', label: 'Wallet cash', category: 'Economy', icon: 'fa-solid fa-money-bill-wave', unit: 'money',
-      description: 'Who is walking around with the most cash on hand.',
+      description: 'Wallet cash totals for public economy profiles.',
       privacyNote: 'Only includes public profiles with Economy enabled.',
       metric: (c) => c.cash,
       include: (c) => Boolean(c.showcase?.economy),
@@ -185,7 +185,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'bank', label: 'Bank balance', category: 'Economy', icon: 'fa-solid fa-building-columns', unit: 'money',
-      description: 'Long-term savings, rainy-day funds, and suspiciously responsible citizens.',
+      description: 'Banked funds for citizens who share economy details.',
       privacyNote: 'Only includes public profiles with Economy enabled.',
       metric: (c) => c.bank,
       include: (c) => Boolean(c.showcase?.economy),
@@ -204,7 +204,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'level', label: 'Highest level', category: 'Stats', icon: 'fa-solid fa-arrow-up-right-dots', unit: 'level',
-      description: 'Highest visible character level.',
+      description: 'Visible character levels for public stat profiles.',
       privacyNote: 'Only includes public profiles with Stats enabled.',
       metric: (c) => c.level,
       include: (c) => Boolean(c.showcase?.stats),
@@ -214,7 +214,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'xp', label: 'Total XP', category: 'Stats', icon: 'fa-solid fa-star', unit: 'xp',
-      description: 'Experience earned by citizens sharing stat details.',
+      description: 'Total XP earned by citizens who share character stats.',
       privacyNote: 'Only includes public profiles with Stats enabled.',
       metric: (c) => c.xp,
       include: (c) => Boolean(c.showcase?.stats),
@@ -223,7 +223,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'items', label: 'Items held', category: 'Stats', icon: 'fa-solid fa-box-open', unit: 'items',
-      description: 'A light inventory brag board for profiles that share inventory counts.',
+      description: 'Inventory volume for citizens who choose to share item counts.',
       privacyNote: 'Only includes public profiles with Inventory enabled.',
       metric: (c) => c.itemCount,
       include: (c) => Boolean(c.showcase?.inventory),
@@ -232,7 +232,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'layouts', label: 'Saved layouts', category: 'Property', icon: 'fa-solid fa-house-chimney-window', unit: 'layouts',
-      description: 'Builders, decorators, storefront enjoyers, and interior design criminals.',
+      description: 'Saved layouts from builders, decorators, homes, and storefronts.',
       privacyNote: 'Only includes public profiles with Properties enabled.',
       metric: (c) => c.layoutCount,
       include: (c) => Boolean(c.showcase?.properties),
@@ -241,7 +241,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'props', label: 'Saved props', category: 'Property', icon: 'fa-solid fa-cubes-stacked', unit: 'props',
-      description: 'Most saved property objects across public builders.',
+      description: 'Saved prop counts across public property profiles.',
       privacyNote: 'Only includes public profiles with Properties enabled.',
       metric: (c) => c.propCount,
       include: (c) => Boolean(c.showcase?.properties),
@@ -259,7 +259,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'tweetLikes', label: 'Tweeter likes earned', category: 'Tweeter', icon: 'fa-solid fa-heart', unit: 'likes',
-      description: 'Posts that people actually reacted to.',
+      description: 'Likes earned by citizens keeping the in-city timeline active.',
       privacyNote: 'Includes public profiles with liked Tweeter posts.',
       metric: (c) => c.tweetLikes,
       include: () => true,
@@ -268,7 +268,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'deaths', label: 'Fatal accidents', category: 'Stats', icon: 'fa-solid fa-skull', unit: 'deaths',
-      description: 'A silly “please be careful out there” board based on visible death counts.',
+      description: 'Visible fatal accident counts from citizens sharing stats.',
       privacyNote: 'Only includes public profiles with Stats enabled.',
       metric: (c) => c.deaths,
       include: (c) => Boolean(c.showcase?.stats),
@@ -277,7 +277,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'combatTags', label: 'Combat tags', category: 'Stats', icon: 'fa-solid fa-burst', unit: 'tags',
-      description: 'Player-caused fatal damage events. Mostly for staff/community context, not bragging rights.',
+      description: 'Visible player-caused fatal damage events for community context.',
       privacyNote: 'Only includes public profiles with Stats enabled.',
       metric: (c) => c.combatTags,
       include: (c) => Boolean(c.showcase?.stats),
@@ -286,7 +286,7 @@ function boardDefinitions(): BoardDefinition[] {
     },
     {
       id: 'guideProgress', label: 'Guide progress', category: 'Learning', icon: 'fa-solid fa-map-signs', unit: 'guides',
-      description: 'Who has checked off the starter guide path.',
+      description: 'Starter guide completion for profiles with onboarding progress.',
       privacyNote: 'Includes public profiles with guide progress recorded.',
       metric: (c) => c.guideCompleted,
       include: () => true,

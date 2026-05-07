@@ -45,10 +45,17 @@ const adminRoles = splitIds(process.env.NORTHLINE_BOT_ADMIN_ROLE_IDS);
 const modRoles = splitIds(process.env.NORTHLINE_BOT_MOD_ROLE_IDS);
 const announceRoles = splitIds(process.env.NORTHLINE_BOT_ANNOUNCE_ROLE_IDS);
 const linkedForumRoleId = String(process.env.NORTHLINE_DISCORD_LINKED_ROLE_ID || process.env.DISCORD_LINKED_ROLE_ID || '').trim();
+const forumChannelId = String(process.env.NORTHLINE_DISCORD_FORUM_CHANNEL_ID || '').trim();
+const forumSyncEnabled = Boolean(forumChannelId) && !/^false$/i.test(process.env.NORTHLINE_BOT_FORUM_SYNC_ENABLED || 'true');
+const forumSyncImportUnlinked = /^true$/i.test(process.env.NORTHLINE_BOT_FORUM_IMPORT_UNLINKED || '');
+const forumSyncLog = !/^false$/i.test(process.env.NORTHLINE_BOT_FORUM_SYNC_LOG || 'true');
 
 const botIntents = [GatewayIntentBits.Guilds];
-if (/^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
-  botIntents.push(GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages);
+if (linkedForumRoleId || /^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
+  botIntents.push(GatewayIntentBits.GuildMembers);
+}
+if (forumSyncEnabled || /^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
+  botIntents.push(GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent);
 }
 
 const client = new Client({ intents: botIntents });
@@ -166,6 +173,73 @@ function baseEmbed(title) {
     .setTimestamp(new Date());
   if (bannerUrl) embed.setImage(bannerUrl);
   return embed;
+}
+
+
+function forumMessageBody(message) {
+  const content = String(message.content || '').trim();
+  const attachments = [...(message.attachments?.values?.() || [])];
+  const attachmentLines = attachments.map((attachment) => attachment.url).filter(Boolean);
+  const stickerLines = [...(message.stickers?.values?.() || [])].map((sticker) => `[Sticker: ${sticker.name}]`).filter(Boolean);
+  const pieces = [content, ...stickerLines, ...attachmentLines].filter(Boolean);
+  return pieces.join('\n\n').trim();
+}
+
+function isForumThreadChannel(channel) {
+  return Boolean(channel?.isThread?.() && channel.parentId === forumChannelId);
+}
+
+function isForumStarterMessage(message) {
+  // In Discord forum channels the starter message for a post usually has the same ID as the thread.
+  return message.channel?.id === message.id || message.type === 0 && message.channel?.messageCount === 1;
+}
+
+async function importDiscordForumMessage(message) {
+  if (!forumSyncEnabled) return;
+  if (!message.guild || message.author?.bot || message.webhookId) return;
+  if (!isForumThreadChannel(message.channel)) return;
+
+  const body = forumMessageBody(message);
+  if (!body) return;
+
+  const payload = {
+    discordThreadId: message.channel.id,
+    discordMessageId: message.id,
+    discordStarterMessageId: message.id,
+    discordUserId: message.author.id,
+    discordUsername: message.author.tag || message.author.username,
+    discordAvatarUrl: typeof message.author.displayAvatarURL === 'function' ? message.author.displayAvatarURL({ size: 128 }) : '',
+    title: message.channel.name || 'Discord Forum Thread',
+    body,
+    categoryId: 'general',
+    importUnlinked: forumSyncImportUnlinked,
+  };
+
+  try {
+    // For normal replies in an already-mapped thread this succeeds.
+    // For the first message in a Discord-created forum thread, the website does not know the thread yet,
+    // so we fall back to creating/importing the thread with that message as the starter post.
+    if (!isForumStarterMessage(message)) {
+      await apiPost('/api/bot/forum/posts', payload);
+      if (forumSyncLog) console.log(`[northline-discord-bot] Imported Discord forum reply ${message.id} from thread ${message.channel.id}.`);
+      return;
+    }
+  } catch (error) {
+    if (forumSyncLog) console.warn(`[northline-discord-bot] Reply import fell back to thread import for ${message.id}:`, error instanceof Error ? error.message : error);
+  }
+
+  try {
+    await apiPost('/api/bot/forum/threads', payload);
+    if (forumSyncLog) console.log(`[northline-discord-bot] Imported Discord forum thread ${message.channel.id} from message ${message.id}.`);
+  } catch (error) {
+    // If the thread already exists and this was not the starter, try once more as a post.
+    try {
+      await apiPost('/api/bot/forum/posts', payload);
+      if (forumSyncLog) console.log(`[northline-discord-bot] Imported Discord forum reply ${message.id} after thread fallback.`);
+    } catch (postError) {
+      if (forumSyncLog) console.warn(`[northline-discord-bot] Could not import Discord forum message ${message.id}:`, postError instanceof Error ? postError.message : postError);
+    }
+  }
 }
 
 function statusEmoji(state) {
@@ -745,6 +819,17 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.commandName === 'northline') return handleNorthline(interaction);
   if (interaction.commandName === 'announce') return handleAnnounce(interaction);
   if (interaction.commandName === 'discordmod') return handleDiscordMod(interaction);
+});
+
+client.on('messageCreate', async (message) => {
+  await importDiscordForumMessage(message).catch((error) => {
+    console.error('[northline-discord-bot] Forum sync import failed:', error instanceof Error ? error.message : error);
+  });
+});
+
+client.on('threadCreate', async (thread) => {
+  if (!forumSyncEnabled || thread.parentId !== forumChannelId) return;
+  if (forumSyncLog) console.log(`[northline-discord-bot] Forum thread detected: ${thread.name} (${thread.id}). Waiting for starter message event.`);
 });
 
 client.on('error', (error) => console.error('[northline-discord-bot]', error));

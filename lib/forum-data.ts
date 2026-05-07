@@ -4,10 +4,26 @@ import path from 'path';
 import { getCitizenName, getPlayer } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSteamProfile } from '@/lib/steam-openid';
+import { FORUM_REACTION_CHOICES } from '@/lib/forum-shared';
 
 export type ForumThreadKind = 'discussion' | 'announcement';
 export type ForumThreadStatus = 'open' | 'locked' | 'hidden';
 export type ForumPostSource = 'website' | 'discord';
+
+export type ForumReaction = {
+  id: string;
+  postId: string;
+  steamId: string;
+  emoji: string;
+  createdAt: string;
+};
+
+export type ForumReactionSummary = {
+  emoji: string;
+  label: string;
+  count: number;
+  reactedByMe: boolean;
+};
 
 export type ForumAuthor = {
   steamId: string | null;
@@ -27,6 +43,7 @@ export type ForumPost = {
   createdAt: string;
   updatedAt: string;
   hidden: boolean;
+  reactions?: ForumReactionSummary[];
 };
 
 export type ForumThread = {
@@ -74,6 +91,7 @@ export type ForumState = {
   posts: ForumPost[];
   discordLinks: DiscordAccountLink[];
   linkCodes: DiscordLinkCode[];
+  reactions: ForumReaction[];
   updatedAt: string | null;
 };
 
@@ -141,6 +159,7 @@ function normalizeState(input: unknown): ForumState {
   const posts = Array.isArray(raw.posts) ? raw.posts : [];
   const discordLinks = Array.isArray(raw.discordLinks) ? raw.discordLinks : [];
   const linkCodes = Array.isArray(raw.linkCodes) ? raw.linkCodes : [];
+  const reactions = Array.isArray(raw.reactions) ? raw.reactions : [];
   return {
     categories: categories.map((category) => {
       const item = typeof category === 'object' && category !== null ? category as Record<string, unknown> : {};
@@ -155,6 +174,7 @@ function normalizeState(input: unknown): ForumState {
     posts: posts.map((post) => normalizePost(post)).filter(Boolean) as ForumPost[],
     discordLinks: discordLinks.map((link) => normalizeDiscordLink(link)).filter(Boolean) as DiscordAccountLink[],
     linkCodes: linkCodes.map((code) => normalizeLinkCode(code)).filter(Boolean) as DiscordLinkCode[],
+    reactions: reactions.map((reaction) => normalizeReaction(reaction)).filter(Boolean) as ForumReaction[],
     updatedAt: raw.updatedAt ? String(raw.updatedAt) : null,
   };
 }
@@ -243,13 +263,45 @@ function normalizeLinkCode(input: unknown): DiscordLinkCode | null {
   };
 }
 
+function normalizeReaction(input: unknown): ForumReaction | null {
+  const raw = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
+  const postId = cleanText(raw.postId, 80);
+  const steamId = String(raw.steamId ?? '').trim();
+  const emoji = cleanText(raw.emoji, 8);
+  if (!postId || !/^\d{15,20}$/.test(steamId) || !FORUM_REACTION_CHOICES.some((choice) => choice.emoji === emoji)) return null;
+  return {
+    id: cleanText(raw.id, 80) || id('react'),
+    postId,
+    steamId,
+    emoji,
+    createdAt: cleanText(raw.createdAt, 80) || nowIso(),
+  };
+}
+
+function decoratePostsWithReactions(posts: ForumPost[], state: ForumState, viewerSteamId?: string | null): ForumPost[] {
+  return posts.map((post) => {
+    const summaries = FORUM_REACTION_CHOICES
+      .map((choice) => {
+        const matching = state.reactions.filter((reaction) => reaction.postId === post.id && reaction.emoji === choice.emoji);
+        return {
+          emoji: choice.emoji,
+          label: choice.label,
+          count: matching.length,
+          reactedByMe: Boolean(viewerSteamId && matching.some((reaction) => reaction.steamId === viewerSteamId)),
+        };
+      })
+      .filter((summary) => summary.count > 0 || summary.reactedByMe);
+    return { ...post, reactions: summaries };
+  });
+}
+
 async function readState(): Promise<ForumState> {
   try {
     const raw = await readFile(statePath(), 'utf8');
     const normalized = normalizeState(JSON.parse(raw));
     return normalized.categories.length ? normalized : { ...normalized, categories: DEFAULT_CATEGORIES };
   } catch {
-    return { categories: DEFAULT_CATEGORIES, threads: [], posts: [], discordLinks: [], linkCodes: [], updatedAt: null };
+    return { categories: DEFAULT_CATEGORIES, threads: [], posts: [], discordLinks: [], linkCodes: [], reactions: [], updatedAt: null };
   }
 }
 
@@ -280,14 +332,14 @@ export async function getForumStateForUser(steamId?: string | null): Promise<Pub
   };
 }
 
-export async function getForumThread(threadId: string): Promise<{ categories: ForumCategory[]; thread: ForumThread; posts: ForumPost[] } | null> {
+export async function getForumThread(threadId: string, viewerSteamId?: string | null): Promise<{ categories: ForumCategory[]; thread: ForumThread; posts: ForumPost[] } | null> {
   const state = await readState();
   const thread = state.threads.find((item) => item.id === threadId && item.status !== 'hidden');
   if (!thread) return null;
   return {
     categories: state.categories,
     thread,
-    posts: state.posts.filter((post) => post.threadId === thread.id && !post.hidden).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    posts: decoratePostsWithReactions(state.posts.filter((post) => post.threadId === thread.id && !post.hidden).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()), state, viewerSteamId),
   };
 }
 
@@ -308,6 +360,18 @@ export async function buildForumAuthorForSteam(steamId: string): Promise<ForumAu
     steamId,
     displayName,
     avatarUrl: profile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null,
+  };
+}
+
+
+function buildForumAuthorForDiscord(input: { discordUserId: string; discordUsername: string; discordAvatarUrl?: string | null }): ForumAuthor {
+  const username = cleanText(input.discordUsername, 100) || `Discord ${String(input.discordUserId).slice(-6)}`;
+  return {
+    steamId: null,
+    discordUserId: String(input.discordUserId).trim() || null,
+    displayName: username,
+    avatarUrl: cleanText(input.discordAvatarUrl, 400) || null,
+    sourceName: 'Discord',
   };
 }
 
@@ -415,28 +479,73 @@ export async function createDiscordImportedThread(input: {
   discordStarterMessageId?: string | null;
   discordUserId: string;
   discordUsername: string;
+  discordAvatarUrl?: string | null;
   title: unknown;
   body: unknown;
   categoryId?: unknown;
+  importUnlinked?: boolean;
 }): Promise<{ thread: ForumThread; starter: ForumPost } | null> {
-  const link = await getDiscordLinkForDiscordUser(input.discordUserId);
-  if (!link) return null;
+  const title = cleanTitle(input.title);
+  const body = cleanText(input.body, 6000);
+  if (title.length < 4 || body.length < 2) return null;
+
   const state = await readState();
   const existing = state.threads.find((thread) => thread.discordThreadId === input.discordThreadId);
   if (existing) {
     const starter = state.posts.find((post) => post.threadId === existing.id) ?? null;
     return starter ? { thread: existing, starter } : null;
   }
-  const result = await createForumThread({
-    title: input.title,
-    body: input.body,
-    categoryId: input.categoryId,
-    steamId: link.steamId,
+
+  const link = await getDiscordLinkForDiscordUser(input.discordUserId);
+  if (link) {
+    const result = await createForumThread({
+      title,
+      body,
+      categoryId: input.categoryId,
+      steamId: link.steamId,
+      source: 'discord',
+      discordThreadId: input.discordThreadId,
+      discordStarterMessageId: input.discordStarterMessageId ?? null,
+    });
+    return { thread: result.thread, starter: result.starter };
+  }
+
+  if (!input.importUnlinked) return null;
+
+  const timestamp = nowIso();
+  const author = buildForumAuthorForDiscord(input);
+  const thread: ForumThread = {
+    id: id('thread'),
+    title,
+    excerpt: excerptFrom(body),
+    categoryId: normalizeCategoryId(input.categoryId),
+    kind: 'discussion',
+    status: 'open',
+    pinned: false,
+    author,
     source: 'discord',
     discordThreadId: input.discordThreadId,
     discordStarterMessageId: input.discordStarterMessageId ?? null,
-  });
-  return { thread: result.thread, starter: result.starter };
+    postCount: 1,
+    lastActivityAt: timestamp,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  const starter: ForumPost = {
+    id: id('post'),
+    threadId: thread.id,
+    body,
+    author,
+    source: 'discord',
+    discordMessageId: input.discordStarterMessageId ?? null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    hidden: false,
+  };
+  state.threads.push(thread);
+  state.posts.push(starter);
+  await writeState(state);
+  return { thread, starter };
 }
 
 export async function createDiscordImportedPost(input: {
@@ -444,26 +553,75 @@ export async function createDiscordImportedPost(input: {
   discordMessageId: string;
   discordUserId: string;
   discordUsername: string;
+  discordAvatarUrl?: string | null;
   body: unknown;
+  importUnlinked?: boolean;
 }): Promise<{ thread: ForumThread; post: ForumPost } | null> {
+  const body = cleanText(input.body, 6000);
+  if (body.length < 2) return null;
   const state = await readState();
   const thread = state.threads.find((item) => item.discordThreadId === input.discordThreadId && item.status !== 'hidden');
-  if (!thread) return null;
+  if (!thread || thread.status === 'locked') return null;
   if (state.posts.some((post) => post.discordMessageId === input.discordMessageId)) return null;
   const link = await getDiscordLinkForDiscordUser(input.discordUserId);
-  if (!link) return null;
-  const result = await createForumPost({
+
+  if (link) {
+    const result = await createForumPost({
+      threadId: thread.id,
+      body,
+      steamId: link.steamId,
+      source: 'discord',
+      discordMessageId: input.discordMessageId,
+    });
+    return { thread: result.thread, post: result.post };
+  }
+
+  if (!input.importUnlinked) return null;
+
+  const timestamp = nowIso();
+  const author = buildForumAuthorForDiscord(input);
+  const post: ForumPost = {
+    id: id('post'),
     threadId: thread.id,
-    body: input.body,
-    steamId: link.steamId,
+    body,
+    author,
     source: 'discord',
     discordMessageId: input.discordMessageId,
-  });
-  return { thread: result.thread, post: result.post };
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    hidden: false,
+  };
+  state.posts.push(post);
+  thread.postCount = state.posts.filter((item) => item.threadId === thread.id && !item.hidden).length;
+  thread.lastActivityAt = timestamp;
+  thread.updatedAt = timestamp;
+  await writeState(state);
+  return { thread, post };
 }
 
 function linkCodeHash(code: string) {
   return crypto.createHash('sha256').update(`northline.discord-link.${code.trim().toUpperCase()}`).digest('hex');
+}
+
+
+export async function toggleForumPostReaction(input: { postId: string; steamId: string; emoji: unknown }): Promise<ForumPost> {
+  const postId = cleanText(input.postId, 80);
+  const steamId = String(input.steamId ?? '').trim();
+  const emoji = cleanText(input.emoji, 8);
+  if (!/^\d{15,20}$/.test(steamId)) throw new Error('sign_in_required');
+  if (!FORUM_REACTION_CHOICES.some((choice) => choice.emoji === emoji)) throw new Error('invalid_reaction');
+  const state = await readState();
+  const post = state.posts.find((item) => item.id === postId && !item.hidden);
+  if (!post) throw new Error('post_not_found');
+  const existingIndex = state.reactions.findIndex((reaction) => reaction.postId === postId && reaction.steamId === steamId && reaction.emoji === emoji);
+  if (existingIndex >= 0) {
+    state.reactions.splice(existingIndex, 1);
+  } else {
+    state.reactions.push({ id: id('react'), postId, steamId, emoji, createdAt: nowIso() });
+  }
+  const next = await writeState(state);
+  const decorated = decoratePostsWithReactions([post], next, steamId)[0];
+  return decorated;
 }
 
 export async function generateDiscordLinkCode(steamId: string): Promise<{ code: string; expiresAt: string }> {

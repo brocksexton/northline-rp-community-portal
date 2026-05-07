@@ -14,7 +14,9 @@ export async function POST(request: NextRequest) {
     discordMessageId: String(body.discordMessageId ?? '').trim(),
     discordUserId: String(body.discordUserId ?? '').trim(),
     discordUsername: String(body.discordUsername ?? '').trim(),
+    discordAvatarUrl: String(body.discordAvatarUrl ?? '').trim() || null,
     body: body.body,
+    importUnlinked: Boolean(body.importUnlinked),
   });
   if (!result) return NextResponse.json({ error: 'Thread/user link not found, duplicate message, or body missing.' }, { status: 409, headers: noStoreHeaders() });
   return NextResponse.json({ ok: true, thread: result.thread, post: result.post }, { headers: noStoreHeaders() });

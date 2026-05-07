@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
     discordStarterMessageId: String(body.discordStarterMessageId ?? body.discordMessageId ?? '').trim() || null,
     discordUserId: String(body.discordUserId ?? '').trim(),
     discordUsername: String(body.discordUsername ?? '').trim(),
+    discordAvatarUrl: String(body.discordAvatarUrl ?? '').trim() || null,
     title: body.title,
     body: body.body,
     categoryId: body.categoryId ?? 'general',
+    importUnlinked: Boolean(body.importUnlinked),
   });
   if (!result) return NextResponse.json({ error: 'Discord user is not linked or thread already exists without a starter.' }, { status: 409, headers: noStoreHeaders() });
   return NextResponse.json({ ok: true, thread: result.thread, starter: result.starter }, { headers: noStoreHeaders() });
