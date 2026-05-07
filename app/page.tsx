@@ -24,6 +24,7 @@ import { getSiteConfig } from '@/lib/site-config';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
 import { buildPageMetadata } from '@/lib/embed-metadata';
+import { getPublicJobsState } from '@/lib/jobs-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -149,6 +150,10 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   };
 
   const personalFacts = hasSignedIn ? signedInFacts({ role, playerDeaths, guidePercent, playtimeSeconds, level }) : [];
+  const jobsState = jobsVisible ? await getPublicJobsState(steamId) : null;
+  const activeJobPostings = jobsState?.postings ?? [];
+  const applicantApplications = jobsState?.applications ?? [];
+  const openApplicantApplication = applicantApplications.find((application) => ['submitted', 'under_review', 'approved'].includes(application.status));
 
   return (
     <main className={`community-home ${hasSignedIn ? 'community-home-signed-in' : 'community-home-guest'}`}>
@@ -265,6 +270,25 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
           ) : null}
         </div>
       </section>
+
+      {hasSignedIn && jobsVisible && activeJobPostings.length ? (
+        <section className="community-card home-staff-applications-callout">
+          <div className="home-staff-applications-copy">
+            <span className="community-kicker">Staff applications</span>
+            <h2>{openApplicantApplication ? 'Your staff application is being tracked.' : 'Staff applications are open.'}</h2>
+            <p>{openApplicantApplication ? `${openApplicantApplication.jobTitle} is currently ${openApplicantApplication.status.replace('_', ' ')}. Open the portal to review your answers and staff notes.` : `There ${activeJobPostings.length === 1 ? 'is' : 'are'} ${activeJobPostings.length} active posting${activeJobPostings.length === 1 ? '' : 's'} available right now. Start with the role that fits you best.`}</p>
+          </div>
+          <div className="home-staff-applications-list">
+            {activeJobPostings.slice(0, 3).map((posting) => (
+              <Link className="home-staff-applications-role" href="/jobs" key={posting.id}>
+                <i className={posting.icon} aria-hidden="true" />
+                <span><strong>{posting.title}</strong><small>{posting.department} · {posting.commitment}</small></span>
+              </Link>
+            ))}
+          </div>
+          <Link className="button button-primary" href="/jobs"><i className="fa-solid fa-briefcase" aria-hidden="true" /> Open applications</Link>
+        </section>
+      ) : null}
 
       <CommunityHomeLiveStats initialSnapshot={initialLiveSnapshot} signedIn={hasSignedIn} featureVisibility={{ players: playersVisible, guides: guidesVisible, status: statusVisible, tweeter: tweeterVisible }} />
 
