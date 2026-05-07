@@ -19900,3 +19900,64 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
     line-height: 0.9 !important;
   }
 }
+
+/* v2.9.61 focused homepage spacing + symmetric live stat cards */
+.community-home .community-hero + .community-feature-hub {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.community-home .community-feature-hub {
+  margin-bottom: clamp(1.25rem, 2.4vw, 2rem);
+}
+
+.community-home .community-feature-hub + .community-stat-strip,
+.community-home .community-feature-hub + .live-stat-strip {
+  margin-top: 0;
+}
+
+.community-home .community-stat-strip.live-stat-strip {
+  align-items: stretch;
+  gap: clamp(0.95rem, 1.5vw, 1.2rem);
+  margin-bottom: clamp(1.35rem, 2.2vw, 2rem);
+}
+
+.community-home .community-stat-card.animated-stat-card {
+  min-height: 198px;
+  display: grid;
+  grid-template-rows: 2.6rem 2.15rem 3.05rem minmax(3.7rem, auto);
+  align-content: start;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.community-home .community-stat-card.animated-stat-card > i {
+  align-self: start;
+}
+
+.community-home .community-stat-card.animated-stat-card > span {
+  min-height: 2.15rem;
+  margin-top: 0;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1.12;
+}
+
+.community-home .community-stat-card.animated-stat-card > strong {
+  min-height: 3.05rem;
+  display: flex;
+  align-items: center;
+  line-height: 0.98;
+}
+
+.community-home .community-stat-card.animated-stat-card > small {
+  align-self: start;
+  display: block;
+  line-height: 1.45;
+}
+
+@media (max-width: 920px) {
+  .community-home .community-stat-card.animated-stat-card {
+    min-height: 174px;
+    grid-template-rows: 2.6rem 1.55rem 2.8rem minmax(3rem, auto);
+  }
+}
