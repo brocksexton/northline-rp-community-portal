@@ -48,7 +48,7 @@ function DiagnosticRow({ label, value, detail }: { label: string; value: string;
 
 export default async function StaffStatusPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
+  const allowed = identity ? canAccessServerAdministration(identity) : false;
 
   if (!identity || !allowed) {
     return (

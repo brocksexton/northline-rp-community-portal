@@ -9,7 +9,7 @@ export const metadata = { title: 'Tweeter Administration' };
 
 export default async function StaffTweeterPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
+  const allowed = identity ? canAccessServerAdministration(identity) : false;
 
   if (!identity || !allowed) {
     return (

@@ -19,7 +19,7 @@ function bytesToGb(bytes: number): string {
 
 export default async function StaffPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
+  const allowed = identity ? canAccessServerAdministration(identity) : false;
 
   if (!identity || !allowed) {
     return (

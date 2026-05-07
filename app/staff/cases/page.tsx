@@ -8,7 +8,7 @@ export const metadata = { title: 'Daily Drop Workspace' };
 
 export default async function StaffCasesWorkspacePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
+  const allowed = identity ? canAccessServerAdministration(identity) : false;
 
   if (!identity || !allowed) {
     return (

@@ -8,7 +8,7 @@ export const metadata = { title: 'Staff Applications Workspace' };
 
 export default async function StaffJobsWorkspacePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = Boolean(identity) && canAccessServerAdministration(identity);
+  const allowed = identity ? canAccessServerAdministration(identity) : false;
 
   if (!identity || !allowed) {
     return (
