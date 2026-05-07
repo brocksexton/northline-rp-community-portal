@@ -33,12 +33,28 @@ type ConsoleLogCandidate = {
   note: string | null;
 };
 
+type ManagedService = {
+  key: 'discord-bot' | 'server-bridge';
+  label: string;
+  description: string;
+  status: 'running' | 'stopped' | 'not-configured';
+  pid: number | null;
+  pidFile: string;
+  logPath: string | null;
+  logReadable: boolean;
+  updatedAt: string | null;
+  configuration: string[];
+  command: string;
+  lines: ConsoleLine[];
+};
+
 type Snapshot = {
   generatedAt: string;
   console: { source: string | null; readable: boolean; lines: ConsoleLine[]; candidates: ConsoleLogCandidate[]; hint: string | null };
   players: ConnectedServerPlayer[];
   queue: QueueRecord[];
-  capabilities: { consoleCommandScript: boolean; consoleLogConfigured: boolean; startScript: string; updateScript: string; commandQueuePath: string; consoleLogPath: string; webManagedStartCapture: boolean };
+  capabilities: { consoleCommandScript: boolean; consoleLogConfigured: boolean; startScript: string; updateScript: string; commandQueuePath: string; consoleLogPath: string; webManagedStartCapture: boolean; bridgeScript?: string | null };
+  services: { bot: ManagedService; bridge: ManagedService };
 };
 
 type PlayerAction = 'kick' | 'ban';
@@ -77,6 +93,14 @@ function formatDateTime(value: string | null) {
   return date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
 }
 
+function serviceTone(status: ManagedService['status']) {
+  return status === 'running' ? 'is-running' : status === 'not-configured' ? 'is-warning' : 'is-stopped';
+}
+
+function serviceStatusLabel(status: ManagedService['status']) {
+  return status === 'running' ? 'Running' : status === 'not-configured' ? 'Needs setup' : 'Stopped';
+}
+
 export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl }: ServerAdminPanelProps) {
   const [snapshot, setSnapshot] = useState<Snapshot>(initialSnapshot);
   const [loading, setLoading] = useState(false);
@@ -88,6 +112,7 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
   const [broadcast, setBroadcast] = useState('');
 
   const latestLines = useMemo(() => snapshot.console.lines.slice(-220), [snapshot.console.lines]);
+  const services = useMemo(() => [snapshot.services.bot, snapshot.services.bridge], [snapshot.services]);
 
   async function refresh(silent = false) {
     if (!silent) setLoading(true);
@@ -114,7 +139,13 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Action failed.');
-      setNotice(data.record?.status === 'queued' ? 'Queued only — no console command bridge is configured, so this did not run in-game yet.' : data.record?.status === 'failed' ? `Action failed: ${data.record?.result || 'unknown error'}` : 'Action sent.');
+      setNotice(
+        data.record?.status === 'queued'
+          ? 'Queued only — no console command bridge is configured, so this did not run in-game yet.'
+          : data.record?.status === 'failed'
+            ? `Action failed: ${data.record?.result || 'unknown error'}`
+            : data.record?.result || 'Action sent.',
+      );
       await refresh(true);
       return true;
     } catch (error) {
@@ -145,6 +176,10 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
   async function submitBroadcast() {
     const ok = await submitAction({ type: 'broadcast', message: broadcast });
     if (ok) setBroadcast('');
+  }
+
+  async function manageService(service: ManagedService['key'], action: 'start' | 'stop' | 'restart' | 'register') {
+    await submitAction({ type: 'service-control', service, action });
   }
 
   useEffect(() => {
@@ -206,13 +241,56 @@ export function ServerAdminPanel({ initialSnapshot, canModerate, canPowerControl
           </div>
           {!snapshot.capabilities.consoleCommandScript ? <div className="server-console-hint is-warning"><strong>Moderation bridge not configured</strong><span>Kick, ban, and broadcast requests are written to the queue file but cannot execute in-game until NORTHLINE_CONSOLE_COMMAND_SCRIPT or a queue bridge is installed.</span></div> : null}
           <dl className="server-admin-config-list">
-            <div><dt>Command bridge</dt><dd>{snapshot.capabilities.consoleCommandScript ? 'Script configured' : 'Queue file only'}</dd></div>
+            <div><dt>Command bridge</dt><dd>{snapshot.capabilities.consoleCommandScript ? 'Script configured' : snapshot.capabilities.bridgeScript ? 'Built-in bridge configured' : 'Queue file only'}</dd></div>
             <div><dt>Console log</dt><dd>{snapshot.capabilities.consoleLogPath}</dd></div>
             <div><dt>Start script</dt><dd>{snapshot.capabilities.startScript}</dd></div>
             <div><dt>Update script</dt><dd>{snapshot.capabilities.updateScript}</dd></div>
             <div><dt>Queue</dt><dd>{snapshot.capabilities.commandQueuePath}</dd></div>
           </dl>
         </aside>
+      </section>
+
+      <section className="staff-panel server-services-panel">
+        <div className="section-heading">
+          <span className="kicker">Remote process controls</span>
+          <h2>Discord bot & command bridge</h2>
+          <p>Manage the background helpers that keep Discord commands and in-game automation working when you cannot remote into the server.</p>
+        </div>
+        <div className="server-service-grid">
+          {services.map((service) => (
+            <section key={service.key} className={`server-service-card ${serviceTone(service.status)}`}>
+              <div className="server-service-header">
+                <div>
+                  <span className="kicker">{service.key === 'discord-bot' ? 'Discord' : 'Queue bridge'}</span>
+                  <h3>{service.label}</h3>
+                  <p>{service.description}</p>
+                </div>
+                <span className={`server-service-status ${serviceTone(service.status)}`}>{serviceStatusLabel(service.status)}</span>
+              </div>
+              <div className="server-service-actions">
+                <button type="button" className="button button-primary" disabled={!canPowerControl || loading} onClick={() => manageService(service.key, 'start')}>Start</button>
+                <button type="button" className="button button-soft" disabled={!canPowerControl || loading} onClick={() => manageService(service.key, 'restart')}>Restart</button>
+                <button type="button" className="button button-soft danger-button" disabled={!canPowerControl || loading} onClick={() => manageService(service.key, 'stop')}>Stop</button>
+                {service.key === 'discord-bot' ? <button type="button" className="button button-soft" disabled={!canPowerControl || loading} onClick={() => manageService(service.key, 'register')}>Register commands</button> : null}
+              </div>
+              <dl className="server-service-meta">
+                <div><dt>Status</dt><dd>{serviceStatusLabel(service.status)}</dd></div>
+                <div><dt>PID</dt><dd>{service.pid ?? '—'}</dd></div>
+                <div><dt>Updated</dt><dd>{formatDateTime(service.updatedAt)}</dd></div>
+                <div><dt>Log</dt><dd>{service.logPath || '—'}</dd></div>
+              </dl>
+              <ul className="server-service-config">
+                {service.configuration.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+              <details className="server-service-log">
+                <summary>{service.label} log tail</summary>
+                <pre className="server-console-output compact-console">
+                  {service.lines.length ? service.lines.map((line) => <span key={line.id} className={`console-line console-${line.level}`}>{line.text}</span>) : <span className="console-line console-warning">No log lines captured yet.</span>}
+                </pre>
+              </details>
+            </section>
+          ))}
+        </div>
       </section>
 
       <section className="server-admin-layout compact-layout">

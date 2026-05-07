@@ -17636,3 +17636,154 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
     justify-content: flex-start;
   }
 }
+
+/* v2.9.39 service controls */
+.server-services-panel {
+  margin-bottom: 1rem;
+  border: 1px solid var(--server-panel-border);
+  background: var(--server-panel-bg);
+}
+
+.server-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.server-service-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.server-service-card.is-running {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(135deg, rgba(34,197,94,0.09), rgba(255,255,255,0.82));
+}
+
+.server-service-card.is-warning {
+  border-color: rgba(245, 158, 11, 0.24);
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(255,255,255,0.82));
+}
+
+.server-service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.server-service-header h3 {
+  margin: 0.12rem 0 0.2rem;
+  color: var(--server-text);
+}
+
+.server-service-header p {
+  margin: 0;
+  color: var(--server-muted);
+}
+
+.server-service-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(148, 163, 184, 0.14);
+  color: #334155;
+}
+
+.server-service-status.is-running {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+}
+
+.server-service-status.is-warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+}
+
+.server-service-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.server-service-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.server-service-meta div {
+  padding: 0.7rem 0.8rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.server-service-meta dt,
+.server-service-config li {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.server-service-meta dd {
+  margin: 0.18rem 0 0;
+  color: var(--server-text);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.server-service-config {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.server-service-config li {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--server-muted);
+  font-size: 0.82rem;
+}
+
+.server-service-log {
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255,255,255,0.74);
+  overflow: hidden;
+}
+
+.server-service-log summary {
+  cursor: pointer;
+  padding: 0.76rem 0.9rem;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.compact-console {
+  min-height: 0;
+  max-height: 240px;
+}
+
+@media (max-width: 980px) {
+  .server-service-grid,
+  .server-service-meta {
+    grid-template-columns: 1fr;
+  }
+}

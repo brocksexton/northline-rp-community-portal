@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readFile, stat, writeFile } from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { getPopulationSummary, getPlayersBySteamId, getRecentAdminLogs, type AdminLog } from '@/lib/ape-data';
 import { notifyGameServerAction } from '@/lib/discord-webhooks';
@@ -49,6 +49,24 @@ export type ConsoleLogCandidate = {
   note: string | null;
 };
 
+export type ManagedServiceKey = 'discord-bot' | 'server-bridge';
+export type ManagedServiceAction = 'start' | 'stop' | 'restart' | 'register';
+
+export type ManagedServiceSnapshot = {
+  key: ManagedServiceKey;
+  label: string;
+  description: string;
+  status: 'running' | 'stopped' | 'not-configured';
+  pid: number | null;
+  pidFile: string;
+  logPath: string | null;
+  logReadable: boolean;
+  updatedAt: string | null;
+  configuration: string[];
+  command: string;
+  lines: ConsoleLine[];
+};
+
 export type ServerAdminSnapshot = {
   generatedAt: string;
   console: {
@@ -68,6 +86,11 @@ export type ServerAdminSnapshot = {
     commandQueuePath: string;
     consoleLogPath: string;
     webManagedStartCapture: boolean;
+    bridgeScript: string | null;
+  };
+  services: {
+    bot: ManagedServiceSnapshot;
+    bridge: ManagedServiceSnapshot;
   };
 };
 
@@ -105,6 +128,42 @@ function defaultUpdateScript() {
 
 function consoleCommandScript() {
   return process.env.NORTHLINE_CONSOLE_COMMAND_SCRIPT?.trim() || '';
+}
+
+function defaultBridgeScript() {
+  return process.env.NORTHLINE_SERVER_BRIDGE_SCRIPT?.trim() || '';
+}
+
+function startTargetScript() {
+  return defaultBridgeScript() || defaultStartScript();
+}
+
+function botScriptPath() {
+  return path.join(process.cwd(), 'scripts', 'discord-bot', 'bot.mjs');
+}
+
+function botRegisterScriptPath() {
+  return path.join(process.cwd(), 'scripts', 'discord-bot', 'register-commands.mjs');
+}
+
+function bridgeScriptPath() {
+  return path.join(process.cwd(), 'scripts', 'server-bridge', 'command-bridge.mjs');
+}
+
+function botLogPath() {
+  return process.env.NORTHLINE_BOT_LOG_PATH?.trim() || path.join(dataDir(), 'discord-bot.log');
+}
+
+function bridgeLogPath() {
+  return process.env.NORTHLINE_SERVER_BRIDGE_LOG_PATH?.trim() || path.join(dataDir(), 'server-bridge.log');
+}
+
+function botPidPath() {
+  return path.join(dataDir(), 'discord-bot.pid');
+}
+
+function bridgePidPath() {
+  return path.join(dataDir(), 'server-bridge.pid');
 }
 
 function configuredConsoleLogCandidates() {
@@ -323,6 +382,259 @@ export async function sendServerCommand(input: { command: string; actor: StaffId
   return queued;
 }
 
+async function readPidValue(pidPath: string): Promise<number | null> {
+  try {
+    const raw = (await readFile(pidPath, 'utf8')).trim();
+    const pid = Number(raw);
+    return Number.isFinite(pid) && pid > 0 ? pid : null;
+  } catch {
+    return null;
+  }
+}
+
+async function isPidRunning(pid: number | null): Promise<boolean> {
+  if (!pid) return false;
+  try {
+    if (process.platform === 'win32') {
+      const output = await execFileAsync('tasklist.exe', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], {
+        timeout: 10_000,
+        windowsHide: true,
+        maxBuffer: 1024 * 128,
+      });
+      return output.stdout.includes(`"${pid}"`);
+    }
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function tailLogFile(filePath: string | null, limit = 80): Promise<{ readable: boolean; modifiedAt: string | null; lines: ConsoleLine[] }> {
+  if (!filePath) return { readable: false, modifiedAt: null, lines: [] };
+  try {
+    const info = await stat(filePath);
+    if (!info.isFile()) return { readable: false, modifiedAt: null, lines: [] };
+    const maxBytes = 120_000;
+    const start = Math.max(0, info.size - maxBytes);
+    const handle = await fs.promises.open(filePath, 'r');
+    try {
+      const buffer = Buffer.alloc(info.size - start);
+      await handle.read(buffer, 0, buffer.length, start);
+      const raw = buffer.toString('utf8').replace(/\0/g, '');
+      const rows: string[] = raw.split(/\r?\n/).map((line: string) => line.trimEnd()).filter(Boolean).slice(-limit);
+      return {
+        readable: true,
+        modifiedAt: info.mtime.toISOString(),
+        lines: rows.map((row: string, index: number) => ({ id: `${filePath}-${start}-${index}`, text: row, level: lineLevel(row) })),
+      };
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    return { readable: false, modifiedAt: null, lines: [] };
+  }
+}
+
+async function removePidFile(pidPath: string) {
+  try { await fs.promises.unlink(pidPath); } catch {}
+}
+
+async function stopManagedProcess(pidPath: string): Promise<string> {
+  const pid = await readPidValue(pidPath);
+  if (!pid) {
+    await removePidFile(pidPath);
+    return 'No saved process ID was found.';
+  }
+  if (!(await isPidRunning(pid))) {
+    await removePidFile(pidPath);
+    return `Saved process ${pid} is no longer running.`;
+  }
+
+  if (process.platform === 'win32') {
+    const output = await execFileAsync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], {
+      timeout: 12_000,
+      windowsHide: true,
+      maxBuffer: 1024 * 128,
+    });
+    await removePidFile(pidPath);
+    return (output.stdout || output.stderr || `Stopped process ${pid}.`).trim();
+  }
+
+  process.kill(pid, 'SIGTERM');
+  await removePidFile(pidPath);
+  return `Stopped process ${pid}.`;
+}
+
+async function startManagedNodeProcess(opts: { pidPath: string; logPath: string; scriptPath: string; args?: string[]; env?: Record<string, string> }): Promise<string> {
+  const existingPid = await readPidValue(opts.pidPath);
+  if (await isPidRunning(existingPid)) return `Process is already running (PID ${existingPid}).`;
+
+  await ensureDataDir();
+  await mkdir(path.dirname(opts.logPath), { recursive: true });
+  await writeFile(opts.logPath, `[${new Date().toISOString()}] Starting ${path.basename(opts.scriptPath)}\n`, { encoding: 'utf8', flag: 'a' });
+
+  const args = [opts.scriptPath, ...(opts.args || [])];
+  const environment = { ...process.env, ...opts.env };
+
+  if (process.platform === 'win32') {
+    const ps = [
+      "$p = Start-Process -FilePath $env:NL_NODE_EXE -ArgumentList @($env:NL_ARGS -split \"`n\") -WorkingDirectory $env:NL_CWD -RedirectStandardOutput $env:NL_LOG_PATH -RedirectStandardError $env:NL_LOG_PATH -PassThru",
+      "$p.Id | Set-Content -Encoding ASCII -Path $env:NL_PID_PATH",
+      'Write-Output $p.Id',
+    ].join('; ');
+
+    const child = await execFileAsync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], {
+      windowsHide: true,
+      timeout: 15_000,
+      maxBuffer: 1024 * 128,
+      env: {
+        ...environment,
+        NL_NODE_EXE: process.execPath,
+        NL_ARGS: args.join('\n'),
+        NL_CWD: process.cwd(),
+        NL_LOG_PATH: opts.logPath,
+        NL_PID_PATH: opts.pidPath,
+      },
+    });
+
+    return `Started ${path.basename(opts.scriptPath)}${child.stdout?.trim() ? ` (PID ${child.stdout.trim()})` : ''}.`;
+  }
+
+  const out = fs.openSync(opts.logPath, 'a');
+  const child = spawn(process.execPath, args, {
+    cwd: process.cwd(),
+    env: environment,
+    detached: true,
+    stdio: ['ignore', out, out],
+  });
+  child.unref();
+  await writeFile(opts.pidPath, String(child.pid), 'utf8');
+  return `Started ${path.basename(opts.scriptPath)} (PID ${child.pid}).`;
+}
+
+function serviceLabel(key: ManagedServiceKey) {
+  return key === 'discord-bot' ? 'Discord bot' : 'Server bridge';
+}
+
+async function getManagedServiceSnapshot(key: ManagedServiceKey): Promise<ManagedServiceSnapshot> {
+  const isBot = key === 'discord-bot';
+  const pidPath = isBot ? botPidPath() : bridgePidPath();
+  const logPath = isBot ? botLogPath() : bridgeLogPath();
+  const pid = await readPidValue(pidPath);
+  const running = await isPidRunning(pid);
+  const tailed = await tailLogFile(logPath, 70);
+  const configured = isBot
+    ? Boolean(process.env.DISCORD_BOT_TOKEN && process.env.DISCORD_BOT_CLIENT_ID && (process.env.NORTHLINE_BOT_API_SECRET || process.env.DISCORD_BOT_API_SECRET))
+    : fs.existsSync(defaultStartScript());
+
+  return {
+    key,
+    label: serviceLabel(key),
+    description: isBot
+      ? 'Handles Discord slash commands, pretty embeds, announcements, and server-aware status replies.'
+      : 'Consumes queued website and Discord actions, launches the server, and delivers commands into the live S&box console.',
+    status: !configured ? 'not-configured' : running ? 'running' : 'stopped',
+    pid: running ? pid : null,
+    pidFile: pidPath,
+    logPath,
+    logReadable: tailed.readable,
+    updatedAt: tailed.modifiedAt,
+    configuration: isBot
+      ? [
+          process.env.DISCORD_BOT_TOKEN ? 'Bot token configured' : 'Missing DISCORD_BOT_TOKEN',
+          process.env.DISCORD_BOT_CLIENT_ID ? 'Client ID configured' : 'Missing DISCORD_BOT_CLIENT_ID',
+          process.env.NORTHLINE_BOT_API_SECRET || process.env.DISCORD_BOT_API_SECRET ? 'Bot API secret configured' : 'Missing NORTHLINE_BOT_API_SECRET',
+          process.env.DISCORD_BOT_GUILD_ID ? `Guild target: ${process.env.DISCORD_BOT_GUILD_ID}` : 'Global command registration (no guild override)',
+        ]
+      : [
+          fs.existsSync(defaultStartScript()) ? `Start script found: ${defaultStartScript()}` : `Missing start script: ${defaultStartScript()}`,
+          `Queue file: ${commandQueuePath()}`,
+          `Console log: ${defaultConsoleLogPath()}`,
+          `Bridge log: ${logPath}`,
+        ],
+    command: isBot ? `node ${botScriptPath()}` : `node ${bridgeScriptPath()}`,
+    lines: tailed.lines,
+  };
+}
+
+export async function runManagedServiceAction(service: ManagedServiceKey, action: ManagedServiceAction, actor: StaffIdentity): Promise<QueuedServerCommand> {
+  const id = makeId('service');
+  const createdAt = new Date().toISOString();
+  const label = serviceLabel(service);
+  let status: QueuedServerCommand['status'] = 'sent';
+  let result = '';
+
+  try {
+    if (service === 'discord-bot') {
+      const configured = Boolean(process.env.DISCORD_BOT_TOKEN && process.env.DISCORD_BOT_CLIENT_ID && (process.env.NORTHLINE_BOT_API_SECRET || process.env.DISCORD_BOT_API_SECRET));
+      if ((action === 'start' || action === 'restart' || action === 'register') && !configured) {
+        throw new Error('The Discord bot is not configured yet. Set DISCORD_BOT_TOKEN, DISCORD_BOT_CLIENT_ID, and NORTHLINE_BOT_API_SECRET in .env.local first.');
+      }
+
+      if (action === 'start') {
+        result = await startManagedNodeProcess({ pidPath: botPidPath(), logPath: botLogPath(), scriptPath: botScriptPath() });
+      } else if (action === 'stop') {
+        result = await stopManagedProcess(botPidPath());
+      } else if (action === 'restart') {
+        const stopped = await stopManagedProcess(botPidPath());
+        const started = await startManagedNodeProcess({ pidPath: botPidPath(), logPath: botLogPath(), scriptPath: botScriptPath() });
+        result = `${stopped}\n${started}`;
+      } else if (action === 'register') {
+        const output = await execFileAsync(process.execPath, [botRegisterScriptPath()], {
+          cwd: process.cwd(),
+          timeout: 120_000,
+          maxBuffer: 1024 * 512,
+          env: process.env,
+        });
+        result = `${output.stdout || ''}${output.stderr ? `\n${output.stderr}` : ''}`.trim() || 'Discord bot commands registered.';
+        await appendFile(botLogPath(), `\n[${new Date().toISOString()}] Register commands\n${result}\n`, 'utf8').catch(() => {});
+      }
+    } else {
+      if (action === 'register') throw new Error('Register is only available for the Discord bot.');
+      if (!fs.existsSync(defaultStartScript()) && (action === 'start' || action === 'restart')) {
+        throw new Error(`The bridge cannot start because the server start script was not found: ${defaultStartScript()}`);
+      }
+
+      if (action === 'start') {
+        result = await startManagedNodeProcess({
+          pidPath: bridgePidPath(),
+          logPath: bridgeLogPath(),
+          scriptPath: bridgeScriptPath(),
+          env: { NORTHLINE_SERVER_BRIDGE_LOG_PATH: bridgeLogPath() },
+        });
+      } else if (action === 'stop') {
+        result = await stopManagedProcess(bridgePidPath());
+      } else if (action === 'restart') {
+        const stopped = await stopManagedProcess(bridgePidPath());
+        const started = await startManagedNodeProcess({
+          pidPath: bridgePidPath(),
+          logPath: bridgeLogPath(),
+          scriptPath: bridgeScriptPath(),
+          env: { NORTHLINE_SERVER_BRIDGE_LOG_PATH: bridgeLogPath() },
+        });
+        result = `${stopped}\n${started}`;
+      }
+    }
+  } catch (error) {
+    status = 'failed';
+    result = error instanceof Error ? error.message : `${label} ${action} failed.`;
+  }
+
+  const record: QueuedServerCommand = {
+    id,
+    createdAt,
+    actorSteamId: actor.steamId,
+    actorName: actor.displayName,
+    command: `${label.toLowerCase()} ${action}`,
+    delivery: 'control',
+    status,
+    result,
+  };
+  await appendCommandRecord(record);
+  return record;
+}
+
 async function appendConsoleCaptureHeader(scriptPath: string, action: string) {
   const logPath = defaultConsoleLogPath();
   await mkdir(path.dirname(logPath), { recursive: true });
@@ -405,8 +717,8 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
 
   try {
     if (action === 'start') {
-      command = `start-server ${defaultStartScript()}`;
-      result = await runServerStartWithConsoleCapture(defaultStartScript());
+      command = `start-server ${startTargetScript()}`;
+      result = defaultBridgeScript() ? await runDetachedBatch(defaultBridgeScript()) : await runServerStartWithConsoleCapture(defaultStartScript());
     } else if (action === 'update') {
       command = `update-server ${defaultUpdateScript()}`;
       result = await runDetachedBatch(defaultUpdateScript());
@@ -414,10 +726,10 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
       command = `kill-server ${configuredProcessNames().join(',')}`;
       result = await killConfiguredServerProcesses();
     } else if (action === 'restart') {
-      command = `restart-server ${configuredProcessNames().join(',')} -> ${defaultStartScript()}`;
+      command = `restart-server ${configuredProcessNames().join(',')} -> ${startTargetScript()}`;
       const killed = await killConfiguredServerProcesses();
       await new Promise((resolve) => setTimeout(resolve, 2500));
-      const started = await runServerStartWithConsoleCapture(defaultStartScript());
+      const started = defaultBridgeScript() ? await runDetachedBatch(defaultBridgeScript()) : await runServerStartWithConsoleCapture(defaultStartScript());
       result = `${killed}\n${started}`;
     }
   } catch (error) {
@@ -499,11 +811,13 @@ export async function scanGameModerationActions(): Promise<{ sent: number; scann
 
 export async function getServerAdminSnapshot(): Promise<ServerAdminSnapshot> {
   await scanGameModerationActions().catch(() => ({ sent: 0, scanned: 0 }));
-  const [consoleOutput, consoleCandidates, players, queue] = await Promise.all([
+  const [consoleOutput, consoleCandidates, players, queue, botService, bridgeService] = await Promise.all([
     readConsoleOutput(),
     getConsoleLogCandidates(),
     getConnectedServerPlayers(),
     getRecentCommandQueue(30),
+    getManagedServiceSnapshot('discord-bot'),
+    getManagedServiceSnapshot('server-bridge'),
   ]);
 
   return {
@@ -519,6 +833,11 @@ export async function getServerAdminSnapshot(): Promise<ServerAdminSnapshot> {
       commandQueuePath: commandQueuePath(),
       consoleLogPath: defaultConsoleLogPath(),
       webManagedStartCapture: true,
+      bridgeScript: defaultBridgeScript() || null,
+    },
+    services: {
+      bot: botService,
+      bridge: bridgeService,
     },
   };
 }

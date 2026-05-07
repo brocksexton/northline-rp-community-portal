@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildModerationCommand, getServerAdminSnapshot, runServerPowerAction, sendServerCommand } from '@/lib/server-admin';
+import { buildModerationCommand, getServerAdminSnapshot, runManagedServiceAction, runServerPowerAction, sendServerCommand } from '@/lib/server-admin';
 import { canRunModerationActions, canRunServerPowerActions, requireServerAdministrationRequest } from '@/lib/staff-auth';
 import { jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { notifyAdminAudit, notifyWebServerAction } from '@/lib/discord-webhooks';
@@ -88,6 +88,26 @@ export async function POST(request: NextRequest) {
       actor: staff.identity,
       detail: record.result || record.command,
       severity: action === 'kill' || action === 'restart' ? 'danger' : action === 'update' ? 'warning' : 'success',
+      url: '/staff/server',
+    });
+
+    return jsonWithSession({ ok: record.status !== 'failed', record }, undefined, staff.identity.steamId, request);
+  }
+
+  if (type === 'service-control') {
+    if (!canRunServerPowerActions(staff.identity)) return NextResponse.json({ error: 'Developer or server settings permission is required.' }, { status: 403, headers: noStoreHeaders() });
+    const requestedService = stringValue(body.service);
+    const service = requestedService === 'discord-bot' || requestedService === 'server-bridge' ? requestedService : null;
+    const requestedAction = stringValue(body.action);
+    const action = requestedAction === 'start' || requestedAction === 'stop' || requestedAction === 'restart' || requestedAction === 'register' ? requestedAction : null;
+    if (!service || !action) return NextResponse.json({ error: 'Unsupported service action.' }, { status: 400, headers: noStoreHeaders() });
+
+    const record = await runManagedServiceAction(service, action, staff.identity);
+    await notifyAdminAudit({
+      action: `${service} ${action} from web panel`,
+      actor: staff.identity,
+      detail: record.result || record.command,
+      severity: action === 'stop' ? 'warning' : action === 'restart' ? 'warning' : 'success',
       url: '/staff/server',
     });
 
