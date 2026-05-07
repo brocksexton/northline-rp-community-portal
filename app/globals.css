@@ -18434,3 +18434,554 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
     grid-template-columns: 1fr;
   }
 }
+
+/* v2.9.57 ground-up homepage overhaul */
+.northstar-home {
+  --northstar-ink: #07111f;
+  --northstar-muted: #64748b;
+  --northstar-line: rgba(15, 23, 42, 0.1);
+  --northstar-blue: #0ea5e9;
+  --northstar-violet: #7c3aed;
+  --northstar-green: #16a34a;
+  --northstar-amber: #d97706;
+  position: relative;
+  display: grid;
+  gap: clamp(1rem, 2.4vw, 1.5rem);
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.northstar-home::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 8%, rgba(14, 165, 233, 0.2), transparent 28rem),
+    radial-gradient(circle at 85% 18%, rgba(124, 58, 237, 0.14), transparent 24rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.92));
+}
+
+.northstar-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(320px, 0.46fr);
+  gap: clamp(1rem, 2.2vw, 1.4rem);
+  align-items: stretch;
+}
+
+.northstar-hero-copy,
+.northstar-status-tower,
+.northstar-command-deck,
+.northstar-brief-card,
+.northstar-personal-board,
+.northstar-ape-tavern-callout,
+.northstar-home .community-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.09);
+}
+
+.northstar-hero-copy {
+  position: relative;
+  overflow: hidden;
+  min-height: 520px;
+  border-radius: 38px;
+  padding: clamp(1.6rem, 5vw, 4rem);
+  color: white;
+  background:
+    radial-gradient(circle at 16% 14%, rgba(56, 189, 248, 0.45), transparent 24rem),
+    radial-gradient(circle at 88% 20%, rgba(124, 58, 237, 0.45), transparent 22rem),
+    linear-gradient(135deg, #04111f 0%, #0b1b31 48%, #101827 100%);
+}
+
+.northstar-hero-copy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at 40% 22%, #000, transparent 76%);
+  opacity: 0.72;
+}
+
+.northstar-hero-copy::after {
+  content: '';
+  position: absolute;
+  width: min(44vw, 560px);
+  height: min(44vw, 560px);
+  right: -12%;
+  bottom: -34%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.34), transparent 62%),
+    conic-gradient(from 160deg, rgba(14, 165, 233, 0.6), rgba(124, 58, 237, 0.42), rgba(34, 197, 94, 0.36), rgba(14, 165, 233, 0.6));
+  filter: blur(0.3px);
+  opacity: 0.62;
+}
+
+.northstar-hero-copy > * {
+  position: relative;
+  z-index: 1;
+}
+
+.northstar-pill {
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.11) !important;
+  color: #dff7ff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.northstar-hero h1 {
+  max-width: 980px;
+  margin: 1.05rem 0 1rem;
+  color: white;
+  font-size: clamp(3.2rem, 8vw, 7.6rem);
+  line-height: 0.78;
+  letter-spacing: -0.085em;
+}
+
+.northstar-hero p {
+  max-width: 860px;
+  color: rgba(226, 232, 240, 0.84) !important;
+  font-size: clamp(1.05rem, 1.7vw, 1.24rem);
+}
+
+.northstar-hero-actions .button {
+  transform: translateZ(0);
+}
+
+.northstar-hero-microgrid,
+.northstar-intel-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: clamp(1.2rem, 3vw, 2rem);
+}
+
+.northstar-intel-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 0;
+}
+
+.northstar-pulse-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 0.36rem;
+  min-height: 132px;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--northstar-ink);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.northstar-hero-microgrid .northstar-pulse-card {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+}
+
+.northstar-pulse-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 165, 233, 0.38);
+  box-shadow: 0 20px 44px rgba(14, 165, 233, 0.14);
+}
+
+.northstar-pulse-card i {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--northstar-blue);
+}
+
+.northstar-pulse-card span {
+  color: var(--northstar-muted);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.northstar-hero-microgrid .northstar-pulse-card span,
+.northstar-hero-microgrid .northstar-pulse-card small {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.northstar-pulse-card strong {
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.northstar-pulse-card small {
+  color: var(--northstar-muted);
+  line-height: 1.4;
+}
+
+.northstar-pulse-card.tone-good i { background: rgba(34, 197, 94, 0.12); color: var(--northstar-green); }
+.northstar-pulse-card.tone-warn i { background: rgba(251, 191, 36, 0.16); color: var(--northstar-amber); }
+.northstar-pulse-card.tone-danger i { background: rgba(244, 63, 94, 0.14); color: #e11d48; }
+
+.northstar-status-tower {
+  position: relative;
+  overflow: hidden;
+  border-radius: 38px;
+  padding: clamp(1.2rem, 3vw, 1.6rem);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.16), transparent 22rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.92));
+  color: var(--northstar-ink);
+}
+
+.northstar-status-tower .community-mood {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+.northstar-status-tower .community-mood small {
+  color: var(--northstar-muted);
+}
+
+.northstar-orbital-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  gap: 1rem;
+  align-items: center;
+  margin: 1.15rem 0;
+}
+
+.northstar-orbit-ring {
+  --online-fill: 0%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at center, #fff 0 55%, transparent 56%),
+    conic-gradient(from -90deg, #0ea5e9 var(--online-fill), rgba(203, 213, 225, 0.6) 0);
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.16), 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.northstar-orbit-ring strong {
+  color: var(--northstar-ink);
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  line-height: 0.85;
+  letter-spacing: -0.08em;
+}
+
+.northstar-orbit-ring span,
+.northstar-capacity-stack span {
+  color: var(--northstar-muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.northstar-capacity-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.northstar-capacity-stack div {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.northstar-capacity-stack strong {
+  display: block;
+  color: var(--northstar-ink);
+  font-size: 1.35rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.northstar-player-chip,
+.northstar-guest-start {
+  background: white !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+.northstar-command-deck {
+  border-radius: 32px;
+  padding: clamp(1.2rem, 3vw, 1.7rem);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.1), transparent 23rem),
+    rgba(255, 255, 255, 0.92);
+}
+
+.northstar-command-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.northstar-command-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-content: start;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 26px;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.9);
+  color: var(--northstar-ink);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.northstar-command-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -18% -42% 42%;
+  height: 130px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.18), transparent 70%);
+}
+
+.northstar-command-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 165, 233, 0.34);
+  background: white;
+}
+
+.northstar-command-card.featured {
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(124, 58, 237, 0.08)),
+    rgba(255, 255, 255, 0.96);
+  border-color: rgba(14, 165, 233, 0.24);
+}
+
+.northstar-command-card strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--northstar-ink);
+  font-size: 1.1rem;
+}
+
+.northstar-command-card p {
+  margin: 0;
+  color: var(--northstar-muted);
+  line-height: 1.45;
+}
+
+.northstar-command-card em {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  font-style: normal;
+  color: var(--northstar-blue);
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.northstar-world-briefing {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr 1fr;
+  gap: 1rem;
+}
+
+.northstar-brief-card {
+  display: grid;
+  gap: 0.9rem;
+  border-radius: 28px;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.northstar-brief-card h2 {
+  margin: 0;
+  color: var(--northstar-ink);
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.northstar-brief-card p {
+  margin: 0;
+  color: var(--northstar-muted);
+}
+
+.northstar-brief-card small {
+  color: var(--northstar-muted);
+}
+
+.northstar-brief-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.northstar-brief-metrics div {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 16px;
+  padding: 0.75rem;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.northstar-brief-metrics strong,
+.northstar-brief-metrics span {
+  display: block;
+}
+
+.northstar-brief-metrics strong {
+  color: var(--northstar-ink);
+  font-size: 1.1rem;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.northstar-brief-metrics span {
+  margin-top: 0.3rem;
+  color: var(--northstar-muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.northstar-ape-tavern-callout {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(34, 197, 94, 0.16), transparent 20rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 244, 0.9));
+}
+
+.northstar-ape-tavern-callout::after {
+  content: '';
+  position: absolute;
+  inset: auto -6rem -8rem auto;
+  width: 20rem;
+  height: 20rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.16), transparent 70%);
+}
+
+.northstar-ape-tavern-callout .ape-tavern-callout-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.northstar-lower-grid {
+  align-items: stretch;
+}
+
+@media (prefers-color-scheme: dark) {
+  .northstar-home::before {
+    background:
+      radial-gradient(circle at 15% 8%, rgba(14, 165, 233, 0.16), transparent 28rem),
+      radial-gradient(circle at 85% 18%, rgba(124, 58, 237, 0.12), transparent 24rem),
+      linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.96));
+  }
+
+  .northstar-status-tower,
+  .northstar-command-deck,
+  .northstar-brief-card,
+  .northstar-pulse-card,
+  .northstar-command-card,
+  .northstar-home .community-card {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: #e2e8f0;
+  }
+
+  .northstar-status-tower .community-mood,
+  .northstar-capacity-stack div,
+  .northstar-player-chip,
+  .northstar-guest-start,
+  .northstar-brief-metrics div {
+    background: rgba(2, 6, 23, 0.46) !important;
+    border-color: rgba(148, 163, 184, 0.16) !important;
+  }
+
+  .northstar-command-card strong,
+  .northstar-brief-card h2,
+  .northstar-brief-metrics strong,
+  .northstar-pulse-card strong,
+  .northstar-orbit-ring strong,
+  .northstar-capacity-stack strong {
+    color: #f8fafc;
+  }
+
+  .northstar-command-card p,
+  .northstar-brief-card p,
+  .northstar-brief-card small,
+  .northstar-brief-metrics span,
+  .northstar-pulse-card small,
+  .northstar-pulse-card span,
+  .northstar-orbit-ring span,
+  .northstar-capacity-stack span {
+    color: #94a3b8;
+  }
+
+  .northstar-orbit-ring {
+    background:
+      radial-gradient(circle at center, #0f172a 0 55%, transparent 56%),
+      conic-gradient(from -90deg, #0ea5e9 var(--online-fill), rgba(51, 65, 85, 0.82) 0);
+  }
+}
+
+@media (max-width: 1160px) {
+  .northstar-hero,
+  .northstar-world-briefing {
+    grid-template-columns: 1fr;
+  }
+
+  .northstar-intel-strip,
+  .northstar-command-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .northstar-home {
+    padding: 0.8rem;
+  }
+
+  .northstar-hero-copy,
+  .northstar-status-tower,
+  .northstar-command-deck,
+  .northstar-home .community-card {
+    border-radius: 28px;
+  }
+
+  .northstar-hero h1 {
+    font-size: clamp(3rem, 16vw, 4.6rem);
+  }
+
+  .northstar-hero-microgrid,
+  .northstar-intel-strip,
+  .northstar-command-grid,
+  .northstar-brief-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .northstar-orbital-status {
+    grid-template-columns: 1fr;
+  }
+
+  .northstar-orbit-ring {
+    max-width: 270px;
+    margin: 0 auto;
+  }
+}
