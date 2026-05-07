@@ -15,6 +15,7 @@ type DiscordEmbed = {
   timestamp?: string;
   image?: { url: string };
   thumbnail?: { url: string };
+  author?: { name: string; icon_url?: string; url?: string };
   footer?: { text: string };
   fields?: DiscordEmbedField[];
 };
@@ -134,6 +135,147 @@ async function postDiscordWebhook(kind: 'status' | 'registration' | 'audit' | 'w
   } catch (error) {
     console.warn(`[discord-webhooks] ${kind} webhook delivery failed.`, error);
   }
+}
+
+
+function discordBotToken(): string | null {
+  return configured(process.env.DISCORD_BOT_TOKEN);
+}
+
+function liveFeedChannelId(): string | null {
+  return configured(process.env.NORTHLINE_BOT_CONNECTION_CHANNEL_ID);
+}
+
+function deathFeedChannelId(): string | null {
+  return configured(process.env.NORTHLINE_BOT_DEATH_CHANNEL_ID) ?? liveFeedChannelId();
+}
+
+function safeDiscordChannelId(value: string | null): string | null {
+  const raw = String(value ?? '').trim();
+  return /^\d{15,25}$/.test(raw) ? raw : null;
+}
+
+async function postDiscordBotChannel(channelId: string | null, payload: WebhookPayload): Promise<void> {
+  const token = discordBotToken();
+  const safeChannel = safeDiscordChannelId(channelId);
+  if (!token || !safeChannel) return;
+
+  try {
+    const response = await fetch(`https://discord.com/api/v10/channels/${safeChannel}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bot ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      console.warn(`[discord-webhooks] Discord bot channel message failed with ${response.status}.`);
+    }
+  } catch (error) {
+    console.warn('[discord-webhooks] Discord bot channel delivery failed.', error);
+  }
+}
+
+function actorDisplayName(actor?: Actor | null): string {
+  const widened = actor as (Actor & { displayName?: string }) | null | undefined;
+  return clean(widened?.name ?? widened?.displayName ?? widened?.steamId ?? 'Staff', 80);
+}
+
+async function steamSummary(steamId?: string | null): Promise<{ name?: string; avatar?: string; profileUrl?: string } | null> {
+  const id = String(steamId ?? '').trim();
+  const key = configured(process.env.STEAM_API_KEY);
+  if (!/^\d{15,20}$/.test(id) || !key) return id ? { profileUrl: `https://steamcommunity.com/profiles/${id}` } : null;
+
+  try {
+    const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${encodeURIComponent(key)}&steamids=${encodeURIComponent(id)}`;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) return { profileUrl: `https://steamcommunity.com/profiles/${id}` };
+    const data = await response.json() as { response?: { players?: Array<{ personaname?: string; avatarfull?: string; avatar?: string; profileurl?: string }> } };
+    const player = data.response?.players?.[0];
+    return {
+      name: player?.personaname,
+      avatar: player?.avatarfull || player?.avatar,
+      profileUrl: player?.profileurl || `https://steamcommunity.com/profiles/${id}`,
+    };
+  } catch {
+    return { profileUrl: `https://steamcommunity.com/profiles/${id}` };
+  }
+}
+
+export async function notifyLiveFeedServerControl(input: {
+  action: 'kill' | 'restart';
+  actor?: Actor | null;
+  status?: 'sent' | 'queued' | 'failed';
+}): Promise<void> {
+  const action = input.action;
+  const restarting = action === 'restart';
+  const failed = input.status === 'failed';
+
+  await postDiscordBotChannel(liveFeedChannelId(), {
+    username: 'Northline RP Server Watch',
+    embeds: [{
+      title: failed ? 'Server control failed' : restarting ? '🔄 Server restarting' : '🔴 Server stopping',
+      description: failed
+        ? `A staff server ${action} request failed before it could complete.`
+        : restarting
+          ? 'The server is restarting. Players may disconnect briefly while the city comes back online.'
+          : 'The server is being stopped. It may disappear from the server browser shortly.',
+      color: failed ? DISCORD_RED : restarting ? DISCORD_GOLD : DISCORD_RED,
+      timestamp: new Date().toISOString(),
+      fields: [
+        field('Requested by', actorDisplayName(input.actor), true),
+        field('Action', action, true),
+      ],
+      footer: { text: 'Northline RP • Live city feed' },
+    }],
+  });
+}
+
+export async function notifyDeathEventToDiscord(input: {
+  victimName?: string | null;
+  victimSteamId?: string | null;
+  killerName?: string | null;
+  killerSteamId?: string | null;
+  cause?: string | null;
+  occurredAt?: string | null;
+  source?: string | null;
+}): Promise<void> {
+  const [victimProfile, killerProfile] = await Promise.all([
+    steamSummary(input.victimSteamId),
+    steamSummary(input.killerSteamId),
+  ]);
+  const victimName = clean(victimProfile?.name ?? input.victimName ?? input.victimSteamId ?? 'Unknown player', 80);
+  const killerName = clean(killerProfile?.name ?? input.killerName ?? '', 80);
+  const victimUrl = victimProfile?.profileUrl || (input.victimSteamId ? `https://steamcommunity.com/profiles/${input.victimSteamId}` : null);
+  const killerUrl = killerProfile?.profileUrl || (input.killerSteamId ? `https://steamcommunity.com/profiles/${input.killerSteamId}` : null);
+  const involved = Boolean(killerName || input.killerSteamId);
+
+  const fields: DiscordEmbedField[] = [
+    field('Victim', victimName, true),
+    field('Cause', input.cause || 'Unknown', true),
+  ];
+  if (involved) fields.splice(1, 0, field('Involved player', killerName || input.killerSteamId || 'Unknown', true));
+  if (input.victimSteamId) fields.push(field('Victim SteamID64', `\`${input.victimSteamId}\``, true));
+  if (input.killerSteamId) fields.push(field('Other SteamID64', `\`${input.killerSteamId}\``, true));
+  if (victimUrl) fields.push(field('Victim profile', `[Open profile](${victimUrl})`, true));
+  if (killerUrl) fields.push(field('Other profile', `[Open profile](${killerUrl})`, true));
+
+  await postDiscordBotChannel(deathFeedChannelId(), {
+    username: 'Northline RP Incident Feed',
+    embeds: [{
+      title: involved ? '💀 Fatal encounter' : '💀 Player death',
+      description: involved
+        ? `**${victimName}** was killed by **${killerName || 'another player'}**.`
+        : `**${victimName}** died.`,
+      color: involved ? 0xff6b6b : DISCORD_GOLD,
+      timestamp: input.occurredAt || new Date().toISOString(),
+      thumbnail: victimProfile?.avatar ? { url: victimProfile.avatar } : undefined,
+      author: victimProfile?.avatar ? { name: victimName, icon_url: victimProfile.avatar, url: victimUrl || undefined } : undefined,
+      fields,
+      footer: { text: 'Northline RP • Incident feed' },
+    }],
+  });
 }
 
 export async function notifyStatusUpdatePosted(update: StatusUpdate, actor: Actor): Promise<void> {

@@ -161,3 +161,29 @@ The watcher recognizes common death lines containing SteamID64 values, including
 - `Alex [76561198000000000] killed Brock [76561198033862837] with rifle`
 
 Each detected death is posted as an embed and appended to the JSONL event history so it can be analyzed later.
+
+
+### Direct death event tracking
+
+If death events do not appear in the server console log, send them directly to the website instead:
+
+```http
+POST /api/game-events/death
+x-northline-game-event-secret: <NORTHLINE_GAME_EVENT_SECRET or NORTHLINE_BOT_API_SECRET>
+content-type: application/json
+```
+
+Example body:
+
+```json
+{
+  "victimName": "Brock",
+  "victimSteamId": "76561198033862837",
+  "killerName": "Example Player",
+  "killerSteamId": "76561198000000000",
+  "cause": "shotgun",
+  "source": "sbox-server"
+}
+```
+
+The website appends the event to `NORTHLINE_BOT_DEATH_EVENTS_PATH` and posts a Discord incident embed to `NORTHLINE_BOT_DEATH_CHANNEL_ID`, falling back to `NORTHLINE_BOT_CONNECTION_CHANNEL_ID`.

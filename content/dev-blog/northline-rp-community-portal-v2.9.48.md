@@ -1,10 +1,10 @@
 ---
-title: "Northline RP Community Portal v2.9.48"
+title: "Northline RP Community Portal v2.9.49"
 date: "2026-05-07T09:10:00-04:00"
-version: "2.9.48"
+version: "2.9.49"
 ---
 
-# v2.9.48 – Discord avatar embeds and death tracking
+# v2.9.49 – Discord avatar embeds and death tracking
 
 ## Added
 

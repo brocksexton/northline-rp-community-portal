@@ -424,7 +424,6 @@ async function connectionNoticeEmbed(event) {
   const fields = [{ name: 'Citizen', value: displayName, inline: true }];
   if (connectionIncludeSteamId && event.steamId) fields.push({ name: 'SteamID64', value: `\`${event.steamId}\``, inline: true });
   if (profile?.profileUrl) fields.push({ name: 'Steam profile', value: `[Open profile](${profile.profileUrl})`, inline: true });
-  if (joined) fields.push({ name: 'Status', value: 'Checking bags, tying shoes, entering RP.', inline: false });
   embed.addFields(...fields);
   return embed;
 }

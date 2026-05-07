@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildModerationCommand, getServerAdminSnapshot, runManagedServiceAction, runServerPowerAction, sendServerCommand } from '@/lib/server-admin';
 import { canRunModerationActions, canRunServerPowerActions, requireServerAdministrationRequest } from '@/lib/staff-auth';
 import { jsonWithSession, noStoreHeaders } from '@/lib/session';
-import { notifyAdminAudit, notifyWebServerAction } from '@/lib/discord-webhooks';
+import { notifyAdminAudit, notifyLiveFeedServerControl, notifyWebServerAction } from '@/lib/discord-webhooks';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -90,6 +90,13 @@ export async function POST(request: NextRequest) {
       severity: action === 'kill' || action === 'restart' ? 'danger' : action === 'update' ? 'warning' : 'success',
       url: '/staff/server',
     });
+    if (action === 'kill' || action === 'restart') {
+      await notifyLiveFeedServerControl({
+        action,
+        actor: { steamId: staff.identity.steamId, name: staff.identity.displayName },
+        status: record.status,
+      });
+    }
 
     return jsonWithSession({ ok: record.status !== 'failed', record }, undefined, staff.identity.steamId, request);
   }
