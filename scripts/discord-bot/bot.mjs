@@ -44,6 +44,7 @@ if (!apiSecret || apiSecret.length < 24) {
 const adminRoles = splitIds(process.env.NORTHLINE_BOT_ADMIN_ROLE_IDS);
 const modRoles = splitIds(process.env.NORTHLINE_BOT_MOD_ROLE_IDS);
 const announceRoles = splitIds(process.env.NORTHLINE_BOT_ANNOUNCE_ROLE_IDS);
+const linkedForumRoleId = String(process.env.NORTHLINE_DISCORD_LINKED_ROLE_ID || process.env.DISCORD_LINKED_ROLE_ID || '').trim();
 
 const botIntents = [GatewayIntentBits.Guilds];
 if (/^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
@@ -246,6 +247,41 @@ async function sendNorthlineAction(interaction, body) {
       { name: 'Status', value: clean(record.status || '—'), inline: true },
       { name: 'Result', value: clean(record.result || 'No result returned.', 1000), inline: false },
     );
+}
+
+
+async function handleLink(interaction) {
+  const code = clean(interaction.options.getString('code', true), 40).toUpperCase();
+  await interaction.deferReply({ ephemeral: true });
+  try {
+    const payload = await apiPost('/api/bot/discord-link', {
+      code,
+      discordUserId: interaction.user.id,
+      discordUsername: interaction.user.tag || interaction.user.username,
+    });
+
+    const link = payload.link || {};
+    const steamId = link.steamId || link.steamId64 || link.steamID || 'linked website account';
+    const roleAssigned = Boolean(payload.roleAssigned);
+
+    if (linkedForumRoleId && interaction.guild && !roleAssigned) {
+      const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+      if (member && !member.roles.cache.has(linkedForumRoleId)) {
+        await member.roles.add(linkedForumRoleId, 'Northline website account linked').catch((error) => {
+          console.warn('[northline-discord-bot] Could not add linked forum role:', error instanceof Error ? error.message : error);
+        });
+      }
+    }
+
+    return interaction.editReply({
+      content: `✅ Discord linked to Northline account \`${steamId}\`. You can now use the website/forum connection.`,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not link your Discord account.';
+    return interaction.editReply({
+      content: `❌ ${message}\nGenerate a fresh code from your Northline dashboard and run \`/link code:<code>\` within 5 minutes.`,
+    });
+  }
 }
 
 async function handleNorthline(interaction) {
@@ -705,6 +741,7 @@ client.once('ready', () => {
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName === 'link') return handleLink(interaction);
   if (interaction.commandName === 'northline') return handleNorthline(interaction);
   if (interaction.commandName === 'announce') return handleAnnounce(interaction);
   if (interaction.commandName === 'discordmod') return handleDiscordMod(interaction);

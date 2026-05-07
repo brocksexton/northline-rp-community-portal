@@ -4,6 +4,10 @@ The dedicated Discord bot works alongside the website and game-server admin pane
 
 ## What it can do
 
+### Account linking command
+
+- `/link code:` — links the Discord user to their Northline website account using a five-minute code from the website dashboard.
+
 ### Northline/game commands
 
 - `/northline status` — current game-server status, online count, fatality rate, and website link.
@@ -64,6 +68,9 @@ Run once after setting the token/client ID:
 
 ```powershell
 npm run bot:register
+
+# Then restart the bot so the new interaction handler is live
+npm run bot:start
 ```
 
 If `DISCORD_BOT_GUILD_ID` is set, commands are registered only to that guild and appear quickly. If omitted, commands are registered globally and can take longer to appear.

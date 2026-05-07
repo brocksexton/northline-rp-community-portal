@@ -20,7 +20,9 @@ NORTHLINE_DISCORD_LINKED_ROLE_ID=role_to_grant_after_link
 
 ## Bot link command
 
-When a user runs `/link NL-ABC12345`, have the bot call:
+The packaged Discord bot now registers a top-level `/link` slash command. After deploying this build, run `npm run bot:register` again and restart the bot.
+
+When a user runs `/link code:NL-ABC12345`, the bot calls:
 
 ```http
 POST /api/bot/discord-link
@@ -79,3 +81,14 @@ The website imports posts only when the Discord user has linked their website ac
 When a signed-in website user creates a forum thread, the website attempts to create a Discord forum post in `NORTHLINE_DISCORD_FORUM_CHANNEL_ID` using `DISCORD_BOT_TOKEN`. Replies are mirrored into the matching Discord thread once a Discord thread ID exists.
 
 The website stores source IDs so the bot should skip messages authored by itself to avoid sync loops.
+
+
+## If `/link` does not appear in Discord
+
+1. Confirm the bot has the `applications.commands` OAuth2 scope in the server.
+2. Confirm `.env.local` has `DISCORD_BOT_CLIENT_ID`, `DISCORD_BOT_TOKEN`, and usually `DISCORD_BOT_GUILD_ID` set.
+3. Run `npm run bot:register` after deploying this build.
+4. Restart the bot with `npm run bot:start`.
+5. If registering global commands instead of guild commands, Discord may take time to display them. Guild registration is immediate.
+
+The `/link` command is defined in `scripts/discord-bot/commands.mjs` and handled in `scripts/discord-bot/bot.mjs`.

@@ -1,5 +1,16 @@
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType } from 'discord.js';
 
+
+export const linkCommand = new SlashCommandBuilder()
+  .setName('link')
+  .setDescription('Link your Discord account to your Northline RP website account')
+  .addStringOption((opt) => opt
+    .setName('code')
+    .setDescription('The 5-minute link code generated from your Northline website dashboard')
+    .setRequired(true)
+    .setMinLength(4)
+    .setMaxLength(40));
+
 export const northlineCommand = new SlashCommandBuilder()
   .setName('northline')
   .setDescription('Northline RP website and game-server utilities')
@@ -80,4 +91,4 @@ export const discordModCommand = new SlashCommandBuilder()
     .addIntegerOption((opt) => opt.setName('amount').setDescription('Messages to delete, 1-100').setRequired(true).setMinValue(1).setMaxValue(100))
     .addStringOption((opt) => opt.setName('reason').setDescription('Reason').setRequired(false).setMaxLength(300)));
 
-export const commands = [northlineCommand, announceCommand, discordModCommand].map((command) => command.toJSON());
+export const commands = [linkCommand, northlineCommand, announceCommand, discordModCommand].map((command) => command.toJSON());
