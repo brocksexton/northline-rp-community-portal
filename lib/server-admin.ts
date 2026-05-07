@@ -466,6 +466,49 @@ async function stopManagedProcess(pidPath: string): Promise<string> {
   return `Stopped process ${pid}.`;
 }
 
+async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function tailPlainLog(filePath: string, limit = 24) {
+  try {
+    const raw = await readFile(filePath, 'utf8');
+    return raw.split(/\r?\n/).filter(Boolean).slice(-limit).join('\n');
+  } catch {
+    return '';
+  }
+}
+
+async function assertManagedProcessStillRunning(pidPath: string, logPath: string, label: string) {
+  await sleep(1800);
+  const pid = await readPidValue(pidPath);
+  if (await isPidRunning(pid)) return;
+  const tail = await tailPlainLog(logPath, 30);
+  await removePidFile(pidPath);
+  throw new Error(`${label} exited immediately after launch.${tail ? ` Recent log output:\n${tail}` : ' No log output was captured.'}`);
+}
+
+async function writeNodeProcessRunner(opts: { logPath: string; scriptPath: string; args: string[]; env?: Record<string, string> }) {
+  await ensureDataDir();
+  const runnerPath = path.join(dataDir(), `${path.basename(opts.scriptPath).replace(/[^a-z0-9_.-]/gi, '-')}-${Date.now().toString(36)}.cmd`);
+  const nodeExe = process.execPath;
+  const argLine = opts.args.map((arg) => `"${arg.replace(/"/g, '')}"`).join(' ');
+  const extraEnv = Object.entries(opts.env || {}).map(([key, value]) => `set "${key}=${String(value).replace(/"/g, '')}"`);
+  const lines = [
+    '@echo off',
+    'setlocal EnableExtensions',
+    `cd /d "${process.cwd()}"`,
+    ...extraEnv,
+    `echo [${new Date().toISOString()}] Starting ${path.basename(opts.scriptPath)}>> "${opts.logPath}"`,
+    `"${nodeExe}" ${argLine} >> "${opts.logPath}" 2>&1`,
+    'set "EXIT_CODE=%ERRORLEVEL%"',
+    `echo [${new Date().toISOString()}] ${path.basename(opts.scriptPath)} exited with code %EXIT_CODE%.>> "${opts.logPath}"`,
+    'exit /b %EXIT_CODE%',
+  ];
+  await writeFile(runnerPath, lines.join('\r\n'), 'utf8');
+  return runnerPath;
+}
+
 async function startManagedNodeProcess(opts: { pidPath: string; logPath: string; scriptPath: string; args?: string[]; env?: Record<string, string> }): Promise<string> {
   const existingPid = await readPidValue(opts.pidPath);
   if (await isPidRunning(existingPid)) return `Process is already running (PID ${existingPid}).`;
@@ -478,8 +521,9 @@ async function startManagedNodeProcess(opts: { pidPath: string; logPath: string;
   const environment = { ...process.env, ...opts.env };
 
   if (process.platform === 'win32') {
+    const runnerPath = await writeNodeProcessRunner({ logPath: opts.logPath, scriptPath: opts.scriptPath, args, env: opts.env });
     const ps = [
-      "$p = Start-Process -FilePath $env:NL_NODE_EXE -ArgumentList @($env:NL_ARGS -split \"`n\") -WorkingDirectory $env:NL_CWD -RedirectStandardOutput $env:NL_LOG_PATH -RedirectStandardError $env:NL_LOG_PATH -PassThru",
+      "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d','/s','/c', ('\"' + $env:NL_RUNNER_PATH + '\"')) -WorkingDirectory $env:NL_CWD -PassThru",
       "$p.Id | Set-Content -Encoding ASCII -Path $env:NL_PID_PATH",
       'Write-Output $p.Id',
     ].join('; ');
@@ -490,14 +534,12 @@ async function startManagedNodeProcess(opts: { pidPath: string; logPath: string;
       maxBuffer: 1024 * 128,
       env: {
         ...environment,
-        NL_NODE_EXE: process.execPath,
-        NL_ARGS: args.join('\n'),
         NL_CWD: process.cwd(),
-        NL_LOG_PATH: opts.logPath,
         NL_PID_PATH: opts.pidPath,
+        NL_RUNNER_PATH: runnerPath,
       },
     });
-
+    await assertManagedProcessStillRunning(opts.pidPath, opts.logPath, path.basename(opts.scriptPath));
     return `Started ${path.basename(opts.scriptPath)}${child.stdout?.trim() ? ` (PID ${child.stdout.trim()})` : ''}.`;
   }
 
@@ -510,6 +552,7 @@ async function startManagedNodeProcess(opts: { pidPath: string; logPath: string;
   });
   child.unref();
   await writeFile(opts.pidPath, String(child.pid), 'utf8');
+  await assertManagedProcessStillRunning(opts.pidPath, opts.logPath, path.basename(opts.scriptPath));
   return `Started ${path.basename(opts.scriptPath)} (PID ${child.pid}).`;
 }
 
@@ -546,6 +589,7 @@ async function getManagedServiceSnapshot(key: ManagedServiceKey): Promise<Manage
           process.env.DISCORD_BOT_CLIENT_ID ? 'Client ID configured' : 'Missing DISCORD_BOT_CLIENT_ID',
           process.env.NORTHLINE_BOT_API_SECRET || process.env.DISCORD_BOT_API_SECRET ? 'Bot API secret configured' : 'Missing NORTHLINE_BOT_API_SECRET',
           process.env.DISCORD_BOT_GUILD_ID ? `Guild target: ${process.env.DISCORD_BOT_GUILD_ID}` : 'Global command registration (no guild override)',
+          /^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '') ? 'Privileged Gateway intents enabled by env' : 'Using safe Gateway intents only',
         ]
       : [
           fs.existsSync(defaultStartScript()) ? `Start script found: ${defaultStartScript()}` : `Missing start script: ${defaultStartScript()}`,

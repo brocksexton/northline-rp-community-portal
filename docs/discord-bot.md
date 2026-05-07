@@ -99,3 +99,16 @@ NORTHLINE_SERVER_COMMAND_QUEUE_PATH=C:\Servers\northline-data\server-command-que
 ```
 
 Without a bridge, the bot can still queue and audit the request, but the game server will not receive the command yet.
+
+
+## Gateway intents
+
+The bot starts with safe Gateway intents by default. This avoids Discord login failures when privileged intents are not enabled in the Developer Portal.
+
+If you explicitly enable privileged Gateway intents for the bot application, you may add:
+
+```env
+NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS=true
+```
+
+Leave it false/blank unless you need those privileged events.

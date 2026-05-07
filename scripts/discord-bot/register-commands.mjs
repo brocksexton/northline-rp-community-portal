@@ -1,3 +1,5 @@
+import { loadNorthlineEnv } from '../shared/load-env.mjs';
+loadNorthlineEnv({ debug: true });
 import { REST, Routes } from 'discord.js';
 import { commands } from './commands.mjs';
 

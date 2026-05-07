@@ -1,3 +1,5 @@
+import { loadNorthlineEnv } from '../shared/load-env.mjs';
+loadNorthlineEnv({ debug: true });
 import {
   Client,
   GatewayIntentBits,
@@ -25,9 +27,12 @@ const adminRoles = splitIds(process.env.NORTHLINE_BOT_ADMIN_ROLE_IDS);
 const modRoles = splitIds(process.env.NORTHLINE_BOT_MOD_ROLE_IDS);
 const announceRoles = splitIds(process.env.NORTHLINE_BOT_ANNOUNCE_ROLE_IDS);
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
-});
+const botIntents = [GatewayIntentBits.Guilds];
+if (/^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
+  botIntents.push(GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages);
+}
+
+const client = new Client({ intents: botIntents });
 
 function splitIds(value) {
   return String(value || '').split(',').map((part) => part.trim()).filter(Boolean);

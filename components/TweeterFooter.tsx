@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { APP_VERSION } from '@/lib/app-version';
 
 export function TweeterFooter() {
   return (
@@ -15,6 +16,7 @@ export function TweeterFooter() {
           <Link href="/players">Players</Link>
           <Link href="/status">Status</Link>
           <Link href="/">Main site</Link>
+          <span className="tweeter-version-pill">v{APP_VERSION}</span>
         </nav>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSiteConfig } from '@/lib/site-config';
 import { enabledFeatureIds, getSiteFeatureSettings, type SiteFeatureId } from '@/lib/site-features-data';
+import { APP_VERSION } from '@/lib/app-version';
 
 type FooterLink = { label: string; href: string | null; icon: string; featureId?: SiteFeatureId };
 
@@ -96,6 +97,7 @@ export async function Footer() {
 
       <div className="footer-bottom-v3">
         <span>Community run, built for fun.</span>
+        <span className="footer-version-pill">v{APP_VERSION}</span>
         <span>Not affiliated with Valve, Steam, Facepunch, Garry&apos;s Mod, ApeTavern, or Northbound RP unless otherwise stated.</span>
       </div>
     </footer>
