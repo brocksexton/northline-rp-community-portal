@@ -42,6 +42,29 @@ function quoteForCmd(value) {
   return `"${cleanEnvValue(value).replace(/["]/g, '')}"`;
 }
 
+function cmdEscapeEcho(value) {
+  return String(value ?? '').replace(/[<>|&]/g, '^$&');
+}
+
+async function writeGameServerLaunchWrapper() {
+  const wrapperPath = path.join(dataDir, 'northline-bridge-launch-game-server.cmd');
+  const cwd = path.dirname(startScript);
+  const lines = [
+    '@echo off',
+    'setlocal EnableExtensions',
+    'title Northline RP - S&box Game Server (Bridge Managed)',
+    `echo [bridge-runner] Starting game server through command bridge.`,
+    `echo [bridge-runner] Script: ${cmdEscapeEcho(startScript)}`,
+    `cd /d "${cwd.replace(/"/g, '')}"`,
+    `call "${startScript.replace(/"/g, '')}"`,
+    'set "EXIT_CODE=%ERRORLEVEL%"',
+    'echo [bridge-runner] Game server script exited with code %EXIT_CODE%.',
+    'exit /b %EXIT_CODE%',
+  ];
+  await fsp.writeFile(wrapperPath, lines.join('\r\n'), 'utf8');
+  return wrapperPath;
+}
+
 let child = null;
 let queueOffset = 0;
 let shuttingDown = false;
@@ -128,11 +151,13 @@ async function launchGameServer() {
 
   const cwd = path.dirname(startScript);
   if (isWin) {
-    // Use CALL so .bat/.cmd files launch reliably and paths with spaces do not turn into literal quoted commands.
-    // /s keeps Windows quote handling predictable for a quoted .bat path.
-    const commandLine = `call ${quoteForCmd(startScript)}`;
-    await appendLog(`[bridge] Windows command line: cmd.exe /d /s /c ${commandLine}`);
-    child = spawn('cmd.exe', ['/d', '/s', '/c', commandLine], { cwd, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
+    // Avoid passing the quoted .bat path directly through cmd.exe. Some Windows/Node
+    // combinations preserve escaped quotes and try to run \"C:\\path\\file.bat\" literally.
+    // A small wrapper .cmd keeps the launch command boring and debuggable.
+    const wrapperPath = await writeGameServerLaunchWrapper();
+    await appendLog(`[bridge] Windows wrapper: ${wrapperPath}`);
+    await appendLog(`[bridge] Windows command line: cmd.exe /d /c ${quoteForCmd(wrapperPath)}`);
+    child = spawn('cmd.exe', ['/d', '/c', wrapperPath], { cwd: dataDir, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: false });
   } else {
     await appendLog(`[bridge] POSIX command line: ${startScript}`);
     child = spawn(startScript, [], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });

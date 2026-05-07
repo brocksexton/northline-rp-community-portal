@@ -492,11 +492,20 @@ async function writeNodeProcessRunner(opts: { logPath: string; scriptPath: strin
   await ensureDataDir();
   const runnerPath = path.join(dataDir(), `${path.basename(opts.scriptPath).replace(/[^a-z0-9_.-]/gi, '-')}-${Date.now().toString(36)}.cmd`);
   const nodeExe = process.execPath;
+  const scriptBase = path.basename(opts.scriptPath);
+  const windowTitle = scriptBase === 'bot.mjs'
+    ? 'Northline RP - Discord Bot'
+    : scriptBase === 'command-bridge.mjs'
+      ? 'Northline RP - Server Command Bridge'
+      : `Northline RP - ${scriptBase}`;
   const argLine = opts.args.map((arg) => `"${arg.replace(/"/g, '')}"`).join(' ');
   const extraEnv = Object.entries(opts.env || {}).map(([key, value]) => `set "${key}=${String(value).replace(/"/g, '')}"`);
   const lines = [
     '@echo off',
     'setlocal EnableExtensions',
+    `title ${windowTitle}`,
+    `echo Managing: ${windowTitle}`,
+    `echo Log: ${opts.logPath}`,
     `cd /d "${process.cwd()}"`,
     ...extraEnv,
     `echo [${new Date().toISOString()}] Starting ${path.basename(opts.scriptPath)}>> "${opts.logPath}"`,
@@ -523,7 +532,7 @@ async function startManagedNodeProcess(opts: { pidPath: string; logPath: string;
   if (process.platform === 'win32') {
     const runnerPath = await writeNodeProcessRunner({ logPath: opts.logPath, scriptPath: opts.scriptPath, args, env: opts.env });
     const ps = [
-      "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d','/s','/c', ('\"' + $env:NL_RUNNER_PATH + '\"')) -WorkingDirectory $env:NL_CWD -PassThru",
+      "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d','/c',$env:NL_RUNNER_PATH) -WorkingDirectory $env:NL_CWD -PassThru",
       "$p.Id | Set-Content -Encoding ASCII -Path $env:NL_PID_PATH",
       'Write-Output $p.Id',
     ].join('; ');
