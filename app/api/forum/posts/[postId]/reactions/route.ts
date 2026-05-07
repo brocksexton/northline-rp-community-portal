@@ -18,8 +18,10 @@ export async function POST(request: NextRequest, { params }: Params) {
     const reason = error instanceof Error ? error.message : 'reaction_failed';
     const message = reason === 'post_not_found'
       ? 'That post could not be found.'
-      : reason === 'invalid_reaction'
-        ? 'That reaction is not available.'
+      : reason === 'discord_only_reaction'
+        ? 'That reaction is synced from Discord and cannot be changed on the website.'
+        : reason === 'invalid_reaction'
+          ? 'That reaction is not available.'
         : 'Could not update that reaction.';
     return NextResponse.json({ message }, { status: 400, headers: noStoreHeaders() });
   }

@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { getCitizenName, getPlayer } from '@/lib/ape-data';
+import { getCitizenName, getPlayer, getRoleForSteamId } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSteamProfile } from '@/lib/steam-openid';
-import { FORUM_REACTION_CHOICES } from '@/lib/forum-shared';
+import { FORUM_REACTION_CHOICES, FORUM_DISCORD_REACTION_CHOICES, FORUM_DISCORD_LOVE_EMOJI, normalizeForumDiscordReactionEmoji } from '@/lib/forum-shared';
+import { resolveVerifiedBadgeKind } from '@/lib/ape-staff-data';
 
 export type ForumThreadKind = 'discussion' | 'announcement';
 export type ForumThreadStatus = 'open' | 'locked' | 'archived' | 'hidden' | 'deleted';
@@ -13,8 +14,10 @@ export type ForumPostSource = 'website' | 'discord';
 export type ForumReaction = {
   id: string;
   postId: string;
-  steamId: string;
+  steamId?: string | null;
+  actorId?: string | null;
   emoji: string;
+  source?: 'website' | 'discord';
   createdAt: string;
 };
 
@@ -23,6 +26,8 @@ export type ForumReactionSummary = {
   label: string;
   count: number;
   reactedByMe: boolean;
+  source?: 'website' | 'discord';
+  interactive?: boolean;
 };
 
 export type ForumAuthor = {
@@ -31,6 +36,7 @@ export type ForumAuthor = {
   displayName: string;
   avatarUrl: string | null;
   sourceName?: string | null;
+  badgeKind?: string | null;
 };
 
 export type ForumPost = {
@@ -189,6 +195,7 @@ function normalizeAuthor(value: unknown): ForumAuthor {
     displayName: cleanText(raw.displayName, 100) || 'Citizen',
     avatarUrl: cleanText(raw.avatarUrl, 400) || null,
     sourceName: cleanText(raw.sourceName, 100) || null,
+    badgeKind: cleanText(raw.badgeKind, 80) || null,
   };
 }
 
@@ -266,32 +273,63 @@ function normalizeLinkCode(input: unknown): DiscordLinkCode | null {
 function normalizeReaction(input: unknown): ForumReaction | null {
   const raw = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
   const postId = cleanText(raw.postId, 80);
-  const steamId = String(raw.steamId ?? '').trim();
-  const emoji = cleanText(raw.emoji, 8);
-  if (!postId || !/^\d{15,20}$/.test(steamId) || !FORUM_REACTION_CHOICES.some((choice) => choice.emoji === emoji)) return null;
+  const source = raw.source === 'discord' ? 'discord' : 'website';
+  const emoji = normalizeForumDiscordReactionEmoji(raw.emoji);
+  if (!postId) return null;
+  if (source === 'discord') {
+    const actorId = String(raw.actorId ?? raw.discordUserId ?? raw.steamId ?? '').trim();
+    if (!/^\d{5,25}$/.test(actorId) || emoji !== FORUM_DISCORD_LOVE_EMOJI) return null;
+    return {
+      id: cleanText(raw.id, 80) || id('react'),
+      postId,
+      steamId: null,
+      actorId,
+      emoji,
+      source,
+      createdAt: cleanText(raw.createdAt, 80) || nowIso(),
+    };
+  }
+  const steamId = String(raw.steamId ?? raw.actorId ?? '').trim();
+  if (!/^\d{15,20}$/.test(steamId) || !FORUM_REACTION_CHOICES.some((choice) => choice.emoji === emoji)) return null;
   return {
     id: cleanText(raw.id, 80) || id('react'),
     postId,
     steamId,
+    actorId: steamId,
     emoji,
+    source,
     createdAt: cleanText(raw.createdAt, 80) || nowIso(),
   };
 }
 
 function decoratePostsWithReactions(posts: ForumPost[], state: ForumState, viewerSteamId?: string | null): ForumPost[] {
   return posts.map((post) => {
-    const summaries = FORUM_REACTION_CHOICES
+    const discordSummaries = FORUM_DISCORD_REACTION_CHOICES.map((choice) => {
+      const matching = state.reactions.filter((reaction) => reaction.postId === post.id && reaction.source === 'discord' && reaction.emoji === choice.emoji);
+      return {
+        emoji: choice.emoji,
+        label: choice.label,
+        count: matching.length,
+        reactedByMe: false,
+        source: 'discord' as const,
+        interactive: false,
+      };
+    }).filter((summary) => summary.count > 0);
+
+    const websiteSummaries = FORUM_REACTION_CHOICES
       .map((choice) => {
-        const matching = state.reactions.filter((reaction) => reaction.postId === post.id && reaction.emoji === choice.emoji);
+        const matching = state.reactions.filter((reaction) => reaction.postId === post.id && reaction.source !== 'discord' && reaction.emoji === choice.emoji);
         return {
           emoji: choice.emoji,
           label: choice.label,
           count: matching.length,
           reactedByMe: Boolean(viewerSteamId && matching.some((reaction) => reaction.steamId === viewerSteamId)),
+          source: 'website' as const,
+          interactive: true,
         };
       })
       .filter((summary) => summary.count > 0 || summary.reactedByMe);
-    return { ...post, reactions: summaries };
+    return { ...post, reactions: [...discordSummaries, ...websiteSummaries] };
   });
 }
 
@@ -354,12 +392,13 @@ export async function getDiscordLinkForDiscordUser(discordUserId: string): Promi
 }
 
 export async function buildForumAuthorForSteam(steamId: string): Promise<ForumAuthor> {
-  const [player, profile, steamProfile] = await Promise.all([getPlayer(steamId), getCommunityProfile(steamId), getSteamProfile(steamId)]);
+  const [player, profile, steamProfile, role] = await Promise.all([getPlayer(steamId), getCommunityProfile(steamId), getSteamProfile(steamId), getRoleForSteamId(steamId)]);
   const displayName = getCitizenName(player, steamId);
   return {
     steamId,
     displayName,
     avatarUrl: profile?.customAvatarUrl || steamProfile?.avatarMedium || steamProfile?.avatarFull || null,
+    badgeKind: await resolveVerifiedBadgeKind(steamId, role, role !== 'User' ? role : 'None'),
   };
 }
 
@@ -372,6 +411,7 @@ function buildForumAuthorForDiscord(input: { discordUserId: string; discordUsern
     displayName: username,
     avatarUrl: cleanText(input.discordAvatarUrl, 400) || null,
     sourceName: 'Discord',
+    badgeKind: null,
   };
 }
 
@@ -687,6 +727,7 @@ export async function toggleForumPostReaction(input: { postId: string; steamId: 
   const steamId = String(input.steamId ?? '').trim();
   const emoji = cleanText(input.emoji, 8);
   if (!/^\d{15,20}$/.test(steamId)) throw new Error('sign_in_required');
+  if (emoji === FORUM_DISCORD_LOVE_EMOJI) throw new Error('discord_only_reaction');
   if (!FORUM_REACTION_CHOICES.some((choice) => choice.emoji === emoji)) throw new Error('invalid_reaction');
   const state = await readState();
   const post = state.posts.find((item) => item.id === postId && !item.hidden);
@@ -695,11 +736,34 @@ export async function toggleForumPostReaction(input: { postId: string; steamId: 
   if (existingIndex >= 0) {
     state.reactions.splice(existingIndex, 1);
   } else {
-    state.reactions.push({ id: id('react'), postId, steamId, emoji, createdAt: nowIso() });
+    state.reactions.push({ id: id('react'), postId, steamId, actorId: steamId, emoji, source: 'website', createdAt: nowIso() });
   }
   const next = await writeState(state);
   const decorated = decoratePostsWithReactions([post], next, steamId)[0];
   return decorated;
+}
+
+
+export async function setDiscordForumReaction(input: { discordThreadId?: string | null; discordMessageId?: string | null; discordUserId: string; emoji: unknown; active: boolean }): Promise<{ post: ForumPost; thread: ForumThread } | null> {
+  const discordMessageId = cleanText(input.discordMessageId, 80);
+  const discordThreadId = cleanText(input.discordThreadId, 80);
+  const discordUserId = String(input.discordUserId ?? '').trim();
+  const emoji = normalizeForumDiscordReactionEmoji(input.emoji);
+  if (!/^\d{5,25}$/.test(discordUserId) || emoji !== FORUM_DISCORD_LOVE_EMOJI) return null;
+  const state = await readState();
+  const post = state.posts.find((item) => !item.hidden && (
+    (discordMessageId && item.discordMessageId === discordMessageId) ||
+    (!discordMessageId && discordThreadId && state.threads.some((thread) => thread.id === item.threadId && thread.discordThreadId === discordThreadId))
+  ));
+  if (!post) return null;
+  const thread = state.threads.find((item) => item.id === post.threadId);
+  if (!thread) return null;
+  state.reactions = state.reactions.filter((reaction) => !(reaction.postId === post.id && reaction.source === 'discord' && reaction.actorId === discordUserId && reaction.emoji === emoji));
+  if (input.active) {
+    state.reactions.push({ id: id('react'), postId: post.id, steamId: null, actorId: discordUserId, emoji, source: 'discord', createdAt: nowIso() });
+  }
+  const next = await writeState(state);
+  return { thread, post: decoratePostsWithReactions([post], next, null)[0] };
 }
 
 export async function generateDiscordLinkCode(steamId: string): Promise<{ code: string; expiresAt: string }> {

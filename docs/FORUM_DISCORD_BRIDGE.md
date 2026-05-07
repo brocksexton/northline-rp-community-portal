@@ -29,7 +29,7 @@ For Discord → website imports, the bot must receive `messageCreate` events ins
 - Server Members Intent, if you want the bot to grant the linked role.
 - Message Content Intent, required so the bot can read forum post/reply text and import it to the website.
 
-The packaged bot automatically requests `GuildMessages` and `MessageContent` when `NORTHLINE_DISCORD_FORUM_CHANNEL_ID` is set and `NORTHLINE_BOT_FORUM_SYNC_ENABLED` is not `false`. After changing intents, restart the bot.
+The packaged bot automatically requests `GuildMessages`, `MessageContent`, and `GuildMessageReactions` when `NORTHLINE_DISCORD_FORUM_CHANNEL_ID` is set and `NORTHLINE_BOT_FORUM_SYNC_ENABLED` is not `false`. After changing intents, restart the bot.
 
 ## Bot link command
 
@@ -127,7 +127,7 @@ Website-created forum threads and replies now mirror into Discord as embeds inst
 
 Discord custom emotes such as `<:name:id>` and `<a:name:id>` render on the website thread page when Discord messages are imported. Image attachment URLs also render as inline forum attachments.
 
-The website forum has its own lightweight reaction system. These reactions are stored on the website and are intentionally not synced to Discord reactions because Discord reactions cannot be controlled reliably from mirrored website posts.
+The website forum has its own lightweight reaction system. Website reactions are stored on the website. Discord blue-heart reactions (`:blue_heart:` / 💙) are imported as a Discord-only **Love** pill on the website, but website users cannot click or change that specific reaction from the website.
 
 ## Forum moderation sync
 
@@ -150,3 +150,10 @@ NORTHLINE_DISCORD_FORUM_CHANNEL_ID=1501987950492258414
 ```
 
 The bot needs permission to manage/delete messages and threads in the configured Discord forum channel for website moderation actions to remove Discord content.
+
+
+## Discord reactions on website posts
+
+The bot listens for Discord reaction add/remove events in the configured forum channel. Only the Discord default blue-heart reaction is synced into the website as a read-only **Love** reaction. This keeps Discord reactions separate from website reactions while still letting the website show Discord community feedback.
+
+Make sure the bot has the **Guild Message Reactions** intent available and can read forum thread messages.

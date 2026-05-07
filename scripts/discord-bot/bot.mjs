@@ -6,6 +6,7 @@ import {
   GatewayIntentBits,
   EmbedBuilder,
   PermissionFlagsBits,
+  Partials,
 } from 'discord.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
@@ -55,10 +56,10 @@ if (linkedForumRoleId || /^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILE
   botIntents.push(GatewayIntentBits.GuildMembers);
 }
 if (forumSyncEnabled || /^true$/i.test(process.env.NORTHLINE_BOT_ENABLE_PRIVILEGED_INTENTS || '')) {
-  botIntents.push(GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent);
+  botIntents.push(GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions);
 }
 
-const client = new Client({ intents: botIntents });
+const client = new Client({ intents: botIntents, partials: [Partials.Message, Partials.Channel, Partials.Reaction] });
 
 function splitIds(value) {
   return String(value || '').split(',').map((part) => part.trim()).filter(Boolean);
@@ -253,6 +254,36 @@ async function importDiscordForumMessage(message) {
   }
 }
 
+
+
+function normalizedForumReactionName(reaction) {
+  const raw = reaction?.emoji?.name || String(reaction?.emoji || '').trim();
+  if (raw === '💙' || raw === 'blue_heart' || raw === ':blue_heart:') return '💙';
+  return raw;
+}
+
+async function syncDiscordForumReaction(reaction, user, active) {
+  if (!forumSyncEnabled || user?.bot) return;
+  try {
+    if (reaction?.partial) reaction = await reaction.fetch();
+    const message = reaction?.message;
+    if (message?.partial) await message.fetch();
+    if (!message?.guild || !isForumThreadChannel(message.channel)) return;
+    const emoji = normalizedForumReactionName(reaction);
+    if (emoji !== '💙') return;
+    const payload = {
+      discordThreadId: message.channel.id,
+      discordMessageId: message.id,
+      discordUserId: user.id,
+      emoji,
+    };
+    if (active) await apiPost('/api/bot/forum/reactions', payload);
+    else await apiDelete('/api/bot/forum/reactions', payload);
+    if (forumSyncLog) console.log(`[northline-discord-bot] ${active ? 'Synced' : 'Removed'} Discord forum reaction ${emoji} for message ${message.id}.`);
+  } catch (error) {
+    if (forumSyncLog) console.warn('[northline-discord-bot] Could not sync Discord forum reaction:', error instanceof Error ? error.message : error);
+  }
+}
 
 async function deleteDiscordForumWebsitePost(message) {
   if (!forumSyncEnabled) return;
@@ -878,6 +909,14 @@ client.on('threadDelete', async (thread) => {
   await deleteDiscordForumWebsiteThread(thread).catch((error) => {
     console.error('[northline-discord-bot] Forum thread delete sync failed:', error instanceof Error ? error.message : error);
   });
+});
+
+client.on('messageReactionAdd', async (reaction, user) => {
+  await syncDiscordForumReaction(reaction, user, true);
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+  await syncDiscordForumReaction(reaction, user, false);
 });
 
 client.on('error', (error) => console.error('[northline-discord-bot]', error));

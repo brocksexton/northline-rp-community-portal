@@ -86,7 +86,7 @@ export async function mirrorWebsiteThreadToDiscord(thread: ForumThread, starter:
   const body = {
     name: thread.title.slice(0, 100),
     message: {
-      content: `🧵 ${starter.author.displayName} started a forum thread from Northline RP: ${siteUrl(`/forum/thread/${thread.id}`)}`,
+      content: `🧵 New Northline forum thread from ${starter.author.displayName}`,
       embeds: [forumEmbed(thread, starter, 'thread')],
       allowed_mentions: { parse: [] },
     },
@@ -100,7 +100,7 @@ export async function mirrorWebsitePostToDiscord(thread: ForumThread, post: Foru
   const data = await discordRequest(`/channels/${thread.discordThreadId}/messages`, {
     method: 'POST',
     body: JSON.stringify({
-      content: `💬 ${post.author.displayName} replied from the Northline website: ${siteUrl(`/forum/thread/${thread.id}`)}`,
+      content: `💬 New Northline forum reply from ${post.author.displayName}`,
       embeds: [forumEmbed(thread, post, 'reply')],
       allowed_mentions: { parse: [] },
     }),
