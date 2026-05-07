@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getCommunityProfile } from '@/lib/community-data';
 import { getSessionSteamId } from '@/lib/session';
 import { isSiteFeatureEnabled } from '@/lib/site-features-data';
+import { TweeterFooter } from '@/components/TweeterFooter';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export default async function TweeterLayout({ children }: { children: React.Reac
   return (
     <div className="tweeter-mode" data-era={era} data-color-mode={mode}>
       {children}
+      <TweeterFooter />
     </div>
   );
 }
