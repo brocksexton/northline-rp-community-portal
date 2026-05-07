@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { ApeStaffState } from '@/lib/ape-staff-data';
+import type { ApeStaffState } from '@/lib/ape-staff-shared';
 
 type Props = {
   initialState: ApeStaffState;

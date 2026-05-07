@@ -1,4 +1,4 @@
-import { APE_TAVERN_BADGE_KIND, APE_TAVERN_BADGE_IMAGE_PATH } from '@/lib/ape-staff-data';
+import { APE_TAVERN_BADGE_KIND, APE_TAVERN_BADGE_IMAGE_PATH } from '@/lib/ape-staff-shared';
 
 export function TweeterVerifiedBadge({ kind, className = '' }: { kind?: string | null; className?: string }) {
   if (!kind || kind === 'None') return null;

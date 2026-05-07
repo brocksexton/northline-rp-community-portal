@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPermissionsForSteamId, getPlayer, getRoleForSteamId } from '@/lib/ape-data';
 import { getSessionSteamId, getSessionSteamIdFromRequest, noStoreHeaders } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
-import { APE_TAVERN_BADGE_KIND, isApeStaffSteamId } from '@/lib/ape-staff-data';
+import { isApeStaffSteamId } from '@/lib/ape-staff-data';
+import { APE_TAVERN_BADGE_KIND } from '@/lib/ape-staff-shared';
 
 export type StaffIdentity = {
   steamId: string;
