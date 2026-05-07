@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { CharacterCard } from '@/components/CharacterCard';
 import { ProfileSettingsForm } from '@/components/ProfileSettingsForm';
+import { DiscordLinkPanel } from '@/components/DiscordLinkPanel';
 import { UserAvatar } from '@/components/UserAvatar';
 import { getAllGuideProgress, getCitizenName, getGuideProgress, getPermissionsForSteamId, getPhoneMessageSummary, getPlayer, getPropertyLayoutsForSteamId, getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs, getRoleForSteamId, GUIDE_CATALOG } from '@/lib/ape-data';
 import { getCommunityProfile } from '@/lib/community-data';
@@ -8,6 +9,7 @@ import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { createProfileEditToken, getSessionSteamId } from '@/lib/session';
 import { getSteamProfile } from '@/lib/steam-openid';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
+import { getDiscordLinkForSteamId } from '@/lib/forum-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +32,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [player, role, permissions, steamProfile, layouts, communityProfile, guideProgress, phoneSummary, chatLogs, adminLogs, damageLogs, featureSettings] = await Promise.all([
+  const [player, role, permissions, steamProfile, layouts, communityProfile, guideProgress, phoneSummary, chatLogs, adminLogs, damageLogs, featureSettings, discordLink] = await Promise.all([
     getPlayer(steamId),
     getRoleForSteamId(steamId),
     getPermissionsForSteamId(steamId),
@@ -43,6 +45,7 @@ export default async function DashboardPage() {
     getRecentAdminLogs(50),
     getRecentDamageLogs(50),
     getSiteFeatureSettings(),
+    getDiscordLinkForSteamId(steamId),
   ]);
 
   const displayName = getCitizenName(player, steamId);
@@ -77,6 +80,8 @@ export default async function DashboardPage() {
           <div className="dashboard-progress-bar" aria-hidden="true"><span style={{ width: `${guideProgress.percent}%` }} /></div>
         </aside>
       </section>
+
+      <DiscordLinkPanel initialLink={discordLink} />
 
       <section className="layout-two dashboard-layout">
         <CharacterCard player={player} steamId={steamId} layouts={layouts} />

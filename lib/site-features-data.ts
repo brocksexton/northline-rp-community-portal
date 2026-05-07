@@ -8,6 +8,7 @@ export type SiteFeatureId =
   | 'leaderboards'
   | 'dailyDrops'
   | 'jobs'
+  | 'forum'
   | 'guides'
   | 'rules'
   | 'bans'
@@ -44,6 +45,7 @@ export const SITE_FEATURE_DEFINITIONS: SiteFeatureDefinition[] = [
   { id: 'leaderboards', label: 'Leaderboards', href: '/leaderboards', icon: 'fa-solid fa-ranking-star', description: 'Public rankings and brag boards.', area: 'community' },
   { id: 'dailyDrops', label: 'Daily Drops', href: '/cases', icon: 'fa-solid fa-gift', description: 'Daily case claims and reward inventory.', area: 'community' },
   { id: 'jobs', label: 'Staff Apps', href: '/jobs', icon: 'fa-solid fa-briefcase', description: 'Staff job postings and guided applications.', area: 'community' },
+  { id: 'forum', label: 'Forum', href: '/forum', icon: 'fa-solid fa-comments', description: 'Website forum synced with the Discord forum channel.', area: 'community' },
   { id: 'guides', label: 'Guides', href: '/guides', icon: 'fa-solid fa-book-open-reader', description: 'Getting started, onboarding, and tips.', area: 'navigation' },
   { id: 'rules', label: 'Rules', href: '/rules', icon: 'fa-solid fa-scale-balanced', description: 'Community rules and roleplay expectations.', area: 'navigation' },
   { id: 'bans', label: 'Bans', href: '/bans', icon: 'fa-solid fa-gavel', description: 'Public moderation records.', area: 'navigation' },
@@ -59,6 +61,7 @@ const DEFAULT_ENABLED: Record<SiteFeatureId, boolean> = {
   leaderboards: true,
   dailyDrops: true,
   jobs: true,
+  forum: true,
   guides: true,
   rules: true,
   bans: true,

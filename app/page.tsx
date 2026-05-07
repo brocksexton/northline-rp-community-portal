@@ -120,6 +120,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const bansVisible = enabledFeatures.has('bans');
   const supportVisible = enabledFeatures.has('support');
   const jobsVisible = enabledFeatures.has('jobs');
+  const forumVisible = enabledFeatures.has('forum');
   const latestTweets = tweeterVisible ? tweets.slice(0, 3) : [];
   const tweetSteamIds = [...new Set(latestTweets.map((tweet) => String(tweet.AuthorSteamId)))];
   const steamProfiles = await getSteamProfiles(tweetSteamIds);
@@ -275,6 +276,12 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
             <Link className="community-feature-card" href="/jobs">
               <span className="feature-card-icon"><i className="fa-solid fa-briefcase" aria-hidden="true" /></span>
               <div><strong>Staff applications</strong><p>Browse open staff roles and submit a guided application when hiring is live.</p></div>
+            </Link>
+          ) : null}
+          {forumVisible ? (
+            <Link className="community-feature-card" href="/forum">
+              <span className="feature-card-icon"><i className="fa-solid fa-comments" aria-hidden="true" /></span>
+              <div><strong>Forum</strong><p>Start discussions, read announcements, and bridge replies with the Discord forum channel.</p></div>
             </Link>
           ) : null}
         </div>
