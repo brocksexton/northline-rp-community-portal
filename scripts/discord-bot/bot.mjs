@@ -164,6 +164,17 @@ async function apiPost(path, body) {
   return data;
 }
 
+async function apiDelete(path, body) {
+  const response = await fetch(`${apiBase}${path}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'x-northline-bot-secret': apiSecret },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Website API returned ${response.status}`);
+  return data;
+}
+
 function baseEmbed(title) {
   const embed = new EmbedBuilder()
     .setColor(defaultColor)
@@ -239,6 +250,31 @@ async function importDiscordForumMessage(message) {
     } catch (postError) {
       if (forumSyncLog) console.warn(`[northline-discord-bot] Could not import Discord forum message ${message.id}:`, postError instanceof Error ? postError.message : postError);
     }
+  }
+}
+
+
+async function deleteDiscordForumWebsitePost(message) {
+  if (!forumSyncEnabled) return;
+  if (!message.guild || !isForumThreadChannel(message.channel)) return;
+  try {
+    await apiDelete('/api/bot/forum/posts', {
+      discordThreadId: message.channel.id,
+      discordMessageId: message.id,
+    });
+    if (forumSyncLog) console.log(`[northline-discord-bot] Marked Discord forum message ${message.id} hidden on website.`);
+  } catch (error) {
+    if (forumSyncLog) console.warn(`[northline-discord-bot] Could not hide deleted Discord forum message ${message.id}:`, error instanceof Error ? error.message : error);
+  }
+}
+
+async function deleteDiscordForumWebsiteThread(thread) {
+  if (!forumSyncEnabled || thread.parentId !== forumChannelId) return;
+  try {
+    await apiDelete('/api/bot/forum/threads', { discordThreadId: thread.id });
+    if (forumSyncLog) console.log(`[northline-discord-bot] Marked deleted Discord forum thread ${thread.id} hidden on website.`);
+  } catch (error) {
+    if (forumSyncLog) console.warn(`[northline-discord-bot] Could not hide deleted Discord forum thread ${thread.id}:`, error instanceof Error ? error.message : error);
   }
 }
 
@@ -827,9 +863,21 @@ client.on('messageCreate', async (message) => {
   });
 });
 
+client.on('messageDelete', async (message) => {
+  await deleteDiscordForumWebsitePost(message).catch((error) => {
+    console.error('[northline-discord-bot] Forum sync delete failed:', error instanceof Error ? error.message : error);
+  });
+});
+
 client.on('threadCreate', async (thread) => {
   if (!forumSyncEnabled || thread.parentId !== forumChannelId) return;
   if (forumSyncLog) console.log(`[northline-discord-bot] Forum thread detected: ${thread.name} (${thread.id}). Waiting for starter message event.`);
+});
+
+client.on('threadDelete', async (thread) => {
+  await deleteDiscordForumWebsiteThread(thread).catch((error) => {
+    console.error('[northline-discord-bot] Forum thread delete sync failed:', error instanceof Error ? error.message : error);
+  });
 });
 
 client.on('error', (error) => console.error('[northline-discord-bot]', error));

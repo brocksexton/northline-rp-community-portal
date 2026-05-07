@@ -7,7 +7,7 @@ import { getSteamProfile } from '@/lib/steam-openid';
 import { FORUM_REACTION_CHOICES } from '@/lib/forum-shared';
 
 export type ForumThreadKind = 'discussion' | 'announcement';
-export type ForumThreadStatus = 'open' | 'locked' | 'hidden';
+export type ForumThreadStatus = 'open' | 'locked' | 'archived' | 'hidden' | 'deleted';
 export type ForumPostSource = 'website' | 'discord';
 
 export type ForumReaction = {
@@ -197,7 +197,7 @@ function normalizeThread(input: unknown): ForumThread | null {
   const threadId = cleanText(raw.id, 80);
   const title = cleanTitle(raw.title);
   if (!threadId || !title) return null;
-  const status = raw.status === 'locked' || raw.status === 'hidden' ? raw.status : 'open';
+  const status = raw.status === 'locked' || raw.status === 'archived' || raw.status === 'hidden' || raw.status === 'deleted' ? raw.status : 'open';
   const kind = raw.kind === 'announcement' ? 'announcement' : 'discussion';
   return {
     id: threadId,
@@ -313,7 +313,7 @@ async function writeState(state: ForumState): Promise<ForumState> {
 }
 
 function visibleThreads(state: ForumState) {
-  return state.threads.filter((thread) => thread.status !== 'hidden');
+  return state.threads.filter((thread) => thread.status !== 'hidden' && thread.status !== 'deleted');
 }
 
 export async function getForumStateForUser(steamId?: string | null): Promise<PublicForumState> {
@@ -334,7 +334,7 @@ export async function getForumStateForUser(steamId?: string | null): Promise<Pub
 
 export async function getForumThread(threadId: string, viewerSteamId?: string | null): Promise<{ categories: ForumCategory[]; thread: ForumThread; posts: ForumPost[] } | null> {
   const state = await readState();
-  const thread = state.threads.find((item) => item.id === threadId && item.status !== 'hidden');
+  const thread = state.threads.find((item) => item.id === threadId && item.status !== 'hidden' && item.status !== 'deleted');
   if (!thread) return null;
   return {
     categories: state.categories,
@@ -442,9 +442,9 @@ export async function createForumPost(input: {
   const body = cleanText(input.body, 6000);
   if (body.length < 2) throw new Error('body_required');
   const state = await readState();
-  const thread = state.threads.find((item) => item.id === input.threadId && item.status !== 'hidden');
+  const thread = state.threads.find((item) => item.id === input.threadId && item.status !== 'hidden' && item.status !== 'deleted');
   if (!thread) throw new Error('thread_not_found');
-  if (thread.status === 'locked') throw new Error('thread_locked');
+  if (thread.status === 'locked' || thread.status === 'archived') throw new Error('thread_locked');
   const author = await buildForumAuthorForSteam(input.steamId);
   const timestamp = nowIso();
   const post: ForumPost = {
@@ -470,8 +470,86 @@ export async function setForumThreadDiscordIds(threadId: string, discordThreadId
   const thread = state.threads.find((item) => item.id === threadId);
   if (!thread) return;
   thread.discordThreadId = discordThreadId;
-  if (discordStarterMessageId) thread.discordStarterMessageId = discordStarterMessageId;
+  if (discordStarterMessageId) {
+    thread.discordStarterMessageId = discordStarterMessageId;
+    const starter = state.posts.find((item) => item.threadId === threadId);
+    if (starter && !starter.discordMessageId) starter.discordMessageId = discordStarterMessageId;
+  }
   await writeState(state);
+}
+
+export async function setForumPostDiscordId(postId: string, discordMessageId: string): Promise<void> {
+  const state = await readState();
+  const post = state.posts.find((item) => item.id === postId);
+  if (!post) return;
+  post.discordMessageId = cleanText(discordMessageId, 80) || post.discordMessageId;
+  await writeState(state);
+}
+
+export async function moderateForumThread(input: { threadId: string; action: 'open' | 'lock' | 'archive' | 'hide' | 'unhide' | 'delete' | 'pin' | 'unpin' }): Promise<{ thread: ForumThread; posts: ForumPost[] } | null> {
+  const state = await readState();
+  const thread = state.threads.find((item) => item.id === cleanText(input.threadId, 80));
+  if (!thread) return null;
+  const timestamp = nowIso();
+  if (input.action === 'pin') thread.pinned = true;
+  if (input.action === 'unpin') thread.pinned = false;
+  if (input.action === 'open') thread.status = 'open';
+  if (input.action === 'lock') thread.status = 'locked';
+  if (input.action === 'archive') thread.status = 'archived';
+  if (input.action === 'hide') thread.status = 'hidden';
+  if (input.action === 'unhide') thread.status = 'open';
+  if (input.action === 'delete') {
+    thread.status = 'deleted';
+    state.posts.forEach((post) => { if (post.threadId === thread.id) post.hidden = true; });
+    state.reactions = state.reactions.filter((reaction) => !state.posts.some((post) => post.threadId === thread.id && post.id === reaction.postId));
+  }
+  thread.updatedAt = timestamp;
+  thread.lastActivityAt = timestamp;
+  await writeState(state);
+  return { thread, posts: state.posts.filter((post) => post.threadId === thread.id) };
+}
+
+export async function moderateForumPost(input: { postId: string; action: 'hide' | 'unhide' | 'delete' }): Promise<{ post: ForumPost; thread: ForumThread; starterDeleted: boolean } | null> {
+  const state = await readState();
+  const post = state.posts.find((item) => item.id === cleanText(input.postId, 80));
+  if (!post) return null;
+  const thread = state.threads.find((item) => item.id === post.threadId);
+  if (!thread) return null;
+  const threadPosts = state.posts.filter((item) => item.threadId === thread.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const starterDeleted = threadPosts[0]?.id === post.id && input.action !== 'unhide';
+  if (input.action === 'unhide') post.hidden = false;
+  if (input.action === 'hide' || input.action === 'delete') post.hidden = true;
+  if (input.action === 'delete') state.reactions = state.reactions.filter((reaction) => reaction.postId !== post.id);
+  if (starterDeleted) {
+    thread.status = input.action === 'delete' ? 'deleted' : 'hidden';
+    state.posts.forEach((item) => { if (item.threadId === thread.id) item.hidden = true; });
+  }
+  thread.postCount = state.posts.filter((item) => item.threadId === thread.id && !item.hidden).length;
+  thread.updatedAt = nowIso();
+  await writeState(state);
+  return { post, thread, starterDeleted };
+}
+
+export async function hideDiscordImportedPost(input: { discordThreadId?: string | null; discordMessageId?: string | null }): Promise<{ ok: boolean }> {
+  const state = await readState();
+  const discordMessageId = cleanText(input.discordMessageId, 80);
+  const discordThreadId = cleanText(input.discordThreadId, 80);
+  if (discordThreadId && !discordMessageId) {
+    const thread = state.threads.find((item) => item.discordThreadId === discordThreadId);
+    if (thread) {
+      thread.status = 'deleted';
+      state.posts.forEach((post) => { if (post.threadId === thread.id) post.hidden = true; });
+      await writeState(state);
+      return { ok: true };
+    }
+  }
+  const post = state.posts.find((item) => item.discordMessageId === discordMessageId);
+  if (!post) return { ok: false };
+  post.hidden = true;
+  const thread = state.threads.find((item) => item.id === post.threadId);
+  if (thread) thread.postCount = state.posts.filter((item) => item.threadId === thread.id && !item.hidden).length;
+  await writeState(state);
+  return { ok: true };
 }
 
 export async function createDiscordImportedThread(input: {
@@ -560,8 +638,8 @@ export async function createDiscordImportedPost(input: {
   const body = cleanText(input.body, 6000);
   if (body.length < 2) return null;
   const state = await readState();
-  const thread = state.threads.find((item) => item.discordThreadId === input.discordThreadId && item.status !== 'hidden');
-  if (!thread || thread.status === 'locked') return null;
+  const thread = state.threads.find((item) => item.discordThreadId === input.discordThreadId && item.status !== 'hidden' && item.status !== 'deleted');
+  if (!thread || thread.status === 'locked' || thread.status === 'archived') return null;
   if (state.posts.some((post) => post.discordMessageId === input.discordMessageId)) return null;
   const link = await getDiscordLinkForDiscordUser(input.discordUserId);
 

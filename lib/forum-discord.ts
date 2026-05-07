@@ -1,5 +1,5 @@
 import type { ForumPost, ForumThread } from '@/lib/forum-data';
-import { setForumThreadDiscordIds } from '@/lib/forum-data';
+import { setForumPostDiscordId, setForumThreadDiscordIds } from '@/lib/forum-data';
 
 function configured(value: string | undefined): string | null {
   const raw = String(value ?? '').trim();
@@ -97,14 +97,30 @@ export async function mirrorWebsiteThreadToDiscord(thread: ForumThread, starter:
 
 export async function mirrorWebsitePostToDiscord(thread: ForumThread, post: ForumPost): Promise<void> {
   if (post.source === 'discord' || !thread.discordThreadId) return;
-  await discordRequest(`/channels/${thread.discordThreadId}/messages`, {
+  const data = await discordRequest(`/channels/${thread.discordThreadId}/messages`, {
     method: 'POST',
     body: JSON.stringify({
       content: `💬 ${post.author.displayName} replied from the Northline website: ${siteUrl(`/forum/thread/${thread.id}`)}`,
       embeds: [forumEmbed(thread, post, 'reply')],
       allowed_mentions: { parse: [] },
     }),
-  });
+  }) as { id?: string } | null;
+  if (data?.id) await setForumPostDiscordId(post.id, data.id);
+}
+
+export async function deleteDiscordForumMessage(channelId: string | null | undefined, messageId: string | null | undefined): Promise<boolean> {
+  const cleanChannelId = String(channelId ?? '').trim();
+  const cleanMessageId = String(messageId ?? '').trim();
+  if (!cleanChannelId || !cleanMessageId) return false;
+  const response = await discordRequest(`/channels/${cleanChannelId}/messages/${cleanMessageId}`, { method: 'DELETE' });
+  return response !== null;
+}
+
+export async function deleteDiscordForumThread(threadId: string | null | undefined): Promise<boolean> {
+  const cleanThreadId = String(threadId ?? '').trim();
+  if (!cleanThreadId) return false;
+  const response = await discordRequest(`/channels/${cleanThreadId}`, { method: 'DELETE' });
+  return response !== null;
 }
 
 export async function assignLinkedForumRole(discordUserId: string): Promise<boolean> {

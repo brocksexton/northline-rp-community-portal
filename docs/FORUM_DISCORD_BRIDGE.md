@@ -128,3 +128,25 @@ Website-created forum threads and replies now mirror into Discord as embeds inst
 Discord custom emotes such as `<:name:id>` and `<a:name:id>` render on the website thread page when Discord messages are imported. Image attachment URLs also render as inline forum attachments.
 
 The website forum has its own lightweight reaction system. These reactions are stored on the website and are intentionally not synced to Discord reactions because Discord reactions cannot be controlled reliably from mirrored website posts.
+
+## Forum moderation sync
+
+v2.9.73 adds website-side moderation controls on forum threads for staff identities that can run moderation actions. Moderators can pin/unpin, lock/unlock, archive, hide, or delete a thread, and can hide/delete individual replies.
+
+When a website moderator hides or deletes a synced thread, the website requests deletion of the matching Discord forum thread. When a website moderator hides or deletes a synced reply, the website requests deletion of the matching Discord message. Website-created replies now store the Discord message ID returned by the bot/API mirror call so future moderation actions can remove them from Discord as well.
+
+The Discord bot also listens for Discord-side deletions:
+
+- `messageDelete` marks the matching website forum post hidden.
+- `threadDelete` marks the matching website forum thread deleted/hidden.
+
+For this to work, keep these enabled for the bot:
+
+```env
+NORTHLINE_BOT_FORUM_SYNC_ENABLED=true
+NORTHLINE_BOT_API_BASE_URL=https://northline.lol
+NORTHLINE_BOT_API_SECRET=the_same_secret_used_by_the_website
+NORTHLINE_DISCORD_FORUM_CHANNEL_ID=1501987950492258414
+```
+
+The bot needs permission to manage/delete messages and threads in the configured Discord forum channel for website moderation actions to remove Discord content.

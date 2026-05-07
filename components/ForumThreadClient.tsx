@@ -7,7 +7,7 @@ import type { ForumPost, ForumThread } from '@/lib/forum-data';
 import { FORUM_REACTION_CHOICES } from '@/lib/forum-shared';
 import { UserAvatar } from '@/components/UserAvatar';
 
-type Props = { thread: ForumThread; initialPosts: ForumPost[]; signedIn: boolean };
+type Props = { thread: ForumThread; initialPosts: ForumPost[]; signedIn: boolean; canModerate?: boolean };
 
 function format(value: string) {
   const date = new Date(value);
@@ -62,12 +62,14 @@ function PostBody({ body }: { body: string }) {
   return <div className="forum-post-body">{renderRichText(body)}</div>;
 }
 
-export function ForumThreadClient({ thread, initialPosts, signedIn }: Props) {
+export function ForumThreadClient({ thread: initialThread, initialPosts, signedIn, canModerate = false }: Props) {
+  const [thread, setThread] = useState(initialThread);
   const [posts, setPosts] = useState(initialPosts);
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [reactionBusy, setReactionBusy] = useState('');
   const [message, setMessage] = useState('');
+  const [moderationBusy, setModerationBusy] = useState('');
 
   const starter = posts[0];
   const replies = useMemo(() => posts.slice(1), [posts]);
@@ -122,6 +124,58 @@ export function ForumThreadClient({ thread, initialPosts, signedIn }: Props) {
     }
   }
 
+  async function moderatePost(postId: string, action: 'hide' | 'delete') {
+    if (!canModerate || moderationBusy) return;
+    if (action === 'delete' && !window.confirm('Delete this forum post and remove its Discord mirror if one exists?')) return;
+    setModerationBusy(`${action}:${postId}`);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/forum/moderation/posts/${encodeURIComponent(postId)}`, {
+        method: action === 'delete' ? 'DELETE' : 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: action === 'delete' ? undefined : JSON.stringify({ action }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not moderate that post.');
+      if (data.thread) setThread(data.thread);
+      setPosts((current) => current.filter((post) => post.id !== postId));
+      setMessage(action === 'delete' ? 'Post deleted and Discord mirror removal was requested.' : 'Post hidden and Discord mirror removal was requested.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not moderate that post.');
+    } finally {
+      setModerationBusy('');
+    }
+  }
+
+  async function moderateThread(action: 'open' | 'lock' | 'archive' | 'hide' | 'delete' | 'pin' | 'unpin') {
+    if (!canModerate || moderationBusy) return;
+    if ((action === 'delete' || action === 'hide') && !window.confirm('This will remove the website thread from public view and request Discord removal. Continue?')) return;
+    setModerationBusy(`thread:${action}`);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/forum/moderation/threads/${encodeURIComponent(thread.id)}`, {
+        method: action === 'delete' ? 'DELETE' : 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: action === 'delete' ? undefined : JSON.stringify({ action }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not moderate that thread.');
+      if (data.thread) setThread(data.thread);
+      if (action === 'hide' || action === 'delete') {
+        setPosts([]);
+        setMessage('Thread removed from the website and Discord removal was requested.');
+      } else {
+        setMessage('Thread moderation updated.');
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not moderate that thread.');
+    } finally {
+      setModerationBusy('');
+    }
+  }
+
   function reactionBar(post: ForumPost) {
     const summaries = post.reactions ?? [];
     return (
@@ -160,7 +214,15 @@ export function ForumThreadClient({ thread, initialPosts, signedIn }: Props) {
             <time dateTime={post.createdAt}>{relative(post.createdAt)} · {format(post.createdAt)}</time>
           </header>
           <PostBody body={post.body} />
-          {reactionBar(post)}
+          <div className="forum-post-footer-actions">
+            {reactionBar(post)}
+            {canModerate ? (
+              <div className="forum-moderation-actions">
+                <button type="button" disabled={Boolean(moderationBusy)} onClick={() => moderatePost(post.id, 'hide')}>Hide</button>
+                <button type="button" disabled={Boolean(moderationBusy)} onClick={() => moderatePost(post.id, 'delete')}>Delete + sync</button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </article>
     );
@@ -178,6 +240,15 @@ export function ForumThreadClient({ thread, initialPosts, signedIn }: Props) {
           </div>
           <h1>{thread.title}</h1>
           <p>{thread.excerpt}</p>
+          {canModerate ? (
+            <div className="forum-thread-moderation-toolbar">
+              <button type="button" onClick={() => moderateThread(thread.pinned ? 'unpin' : 'pin')} disabled={Boolean(moderationBusy)}>{thread.pinned ? 'Unpin' : 'Pin'}</button>
+              <button type="button" onClick={() => moderateThread(thread.status === 'locked' ? 'open' : 'lock')} disabled={Boolean(moderationBusy)}>{thread.status === 'locked' ? 'Unlock' : 'Lock'}</button>
+              <button type="button" onClick={() => moderateThread('archive')} disabled={Boolean(moderationBusy)}>Archive</button>
+              <button type="button" onClick={() => moderateThread('hide')} disabled={Boolean(moderationBusy)}>Hide + sync</button>
+              <button type="button" className="danger" onClick={() => moderateThread('delete')} disabled={Boolean(moderationBusy)}>Delete + sync</button>
+            </div>
+          ) : null}
         </div>
         <aside className="forum-stats-card thread-summary-card">
           <span>Thread activity</span>
@@ -198,10 +269,10 @@ export function ForumThreadClient({ thread, initialPosts, signedIn }: Props) {
 
       <form className="forum-reply-card" onSubmit={reply}>
         <span className="kicker">Reply</span>
-        <h2>{thread.status === 'locked' ? 'This thread is locked.' : 'Add to the discussion.'}</h2>
-        <textarea value={body} onChange={(event) => setBody(event.target.value)} disabled={!signedIn || busy || thread.status === 'locked'} rows={7} maxLength={6000} placeholder="Write a thoughtful reply… Discord emotes and image links will render cleanly when imported." />
+        <h2>{thread.status === 'locked' || thread.status === 'archived' ? 'This thread is closed.' : 'Add to the discussion.'}</h2>
+        <textarea value={body} onChange={(event) => setBody(event.target.value)} disabled={!signedIn || busy || thread.status === 'locked' || thread.status === 'archived'} rows={7} maxLength={6000} placeholder="Write a thoughtful reply… Discord emotes and image links will render cleanly when imported." />
         {message ? <p className={`notice ${message.includes('Could not') || message.includes('Sign in') ? 'warning' : 'success'}`}>{message}</p> : null}
-        {signedIn ? <button className="button button-primary" type="submit" disabled={busy || thread.status === 'locked'}><i className="fa-solid fa-reply" aria-hidden="true" /> {busy ? 'Posting…' : 'Post reply'}</button> : <a className="button button-primary" href={`/api/auth/steam?returnTo=/forum/thread/${thread.id}`}><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in to reply</a>}
+        {signedIn ? <button className="button button-primary" type="submit" disabled={busy || thread.status === 'locked' || thread.status === 'archived'}><i className="fa-solid fa-reply" aria-hidden="true" /> {busy ? 'Posting…' : 'Post reply'}</button> : <a className="button button-primary" href={`/api/auth/steam?returnTo=/forum/thread/${thread.id}`}><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in to reply</a>}
       </form>
     </div>
   );
