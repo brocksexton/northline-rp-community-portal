@@ -1,6 +1,6 @@
 {
   "name": "northline-rp-community-portal",
-  "version": "2.9.34",
+  "version": "2.9.35",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
@@ -10,12 +10,15 @@
     "typecheck": "tsc --noEmit",
     "validate": "npm run typecheck && npm run build",
     "clean": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\"",
-    "rebuild": "npm run clean && npm run build"
+    "rebuild": "npm run clean && npm run build",
+    "bot:start": "node scripts/discord-bot/bot.mjs",
+    "bot:register": "node scripts/discord-bot/register-commands.mjs"
   },
   "dependencies": {
     "next": "15.5.15",
     "react": "19.1.4",
-    "react-dom": "19.1.4"
+    "react-dom": "19.1.4",
+    "discord.js": "^14.19.3"
   },
   "devDependencies": {
     "@types/node": "22.15.3",
