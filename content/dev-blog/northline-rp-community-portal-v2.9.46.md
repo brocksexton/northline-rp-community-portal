@@ -1,10 +1,10 @@
 ---
-title: "Northline RP Community Portal v2.9.46"
+title: "Northline RP Community Portal v2.9.47"
 date: "2026-05-07T04:00:00-04:00"
-version: "2.9.46"
+version: "2.9.47"
 ---
 
-# v2.9.46 – Discord join and leave notices
+# v2.9.47 – Discord join and leave notices
 
 ## Added
 

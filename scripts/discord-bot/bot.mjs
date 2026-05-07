@@ -303,14 +303,22 @@ function parseConnectionLine(line) {
   const text = String(line || '').replace(/\u001b\[[0-9;]*m/g, '').trim();
   if (!text) return null;
 
-  const lower = text.toLowerCase();
-  let action = null;
-  if (/\b(disconnected|disconnecting|left|has left)\b/i.test(text)) action = 'leave';
-  else if (/\b(is connecting|connected|joined|has joined)\b/i.test(text)) action = 'join';
-  if (!action) return null;
-
   const steamMatch = text.match(/\[(\d{15,20})\]/);
   const steamId = steamMatch?.[1] || null;
+
+  if (/\bconnected\s+to\s+steam\b/i.test(text) && !steamId) {
+    return { action: 'server-started', name: 'Northline RP', steamId: null, raw: text };
+  }
+
+  let action = null;
+  if (/\b(disconnected|disconnecting|left|has left)\b/i.test(text)) action = 'leave';
+  else if (/\b(is connecting|joined|has joined)\b/i.test(text) || (/\bconnected\b/i.test(text) && steamId)) action = 'join';
+  if (!action) return null;
+
+  // User-facing join/leave notices should only be emitted for real player lines.
+  // Server lifecycle lines such as "Connected to Steam" do not include a SteamID64 and are handled above.
+  if (!steamId) return null;
+
   let name = 'Unknown player';
 
   if (steamMatch && typeof steamMatch.index === 'number') {
@@ -322,13 +330,6 @@ function parseConnectionLine(line) {
     if (doubleSpaceParts.length) before = doubleSpaceParts[doubleSpaceParts.length - 1];
     before = before.replace(/^(generic|info|log|server|client|trace|debug|warning|warn|notice)\s+/i, '').trim();
     if (before) name = before;
-  } else {
-    const fallback = text
-      .replace(/^\[?\d{1,2}:\d{2}:\d{2}\]?\s*/i, '')
-      .replace(/\b(is connecting|connected|joined|has joined|disconnected|disconnecting|left|has left)\b.*$/i, '')
-      .replace(/^(generic|info|log|server|client|trace|debug|warning|warn|notice)\s+/i, '')
-      .trim();
-    if (fallback) name = fallback;
   }
 
   name = clean(name.replace(/[`*_~|]/g, ''), 80) || 'Unknown player';
@@ -348,8 +349,16 @@ function shouldSendConnectionNotice(event) {
 }
 
 function connectionNoticeEmbed(event) {
+  if (event.action === 'server-started') {
+    return new EmbedBuilder()
+      .setColor(0x57f287)
+      .setTitle('Server started')
+      .setDescription('The server has started and should appear in the server browser shortly.')
+      .setFooter({ text: 'Northline RP Server Watch' })
+      .setTimestamp(new Date());
+  }
+
   const joined = event.action === 'join';
-  const title = joined ? `${event.name} joined Northline RP` : `${event.name} left Northline RP`;
   const embed = new EmbedBuilder()
     .setColor(joined ? 0x57f287 : 0xed4245)
     .setTitle(joined ? 'Player joined' : 'Player left')
@@ -359,7 +368,6 @@ function connectionNoticeEmbed(event) {
   if (event.steamId && connectionProfileBaseUrl) embed.setURL(`${connectionProfileBaseUrl}/${event.steamId}`);
   const fields = [{ name: 'Player', value: event.name, inline: true }];
   if (connectionIncludeSteamId && event.steamId) fields.push({ name: 'SteamID64', value: `\`${event.steamId}\``, inline: true });
-  fields.push({ name: 'Detected from', value: '`server-console.log`', inline: false });
   embed.addFields(...fields);
   return embed;
 }

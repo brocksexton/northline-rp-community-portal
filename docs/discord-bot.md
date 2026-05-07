@@ -135,3 +135,8 @@ NORTHLINE_BOT_PROFILE_BASE_URL=https://northline.lol/tweeter/profile
 ```
 
 The watcher starts at the end of the log when the bot starts, so it does not replay old historical joins and leaves after each restart.
+
+
+### Server-start connection watcher behavior
+
+When connection notices are enabled, the bot treats a server log line like `Connected to Steam` as a server lifecycle event, not as a player join. It posts a concise server-started embed to the configured connection notice channel. Player join/leave notices require a SteamID64 in the log line.
