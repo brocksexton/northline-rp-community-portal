@@ -10,6 +10,7 @@ import {
   getBookmarkState,
   toggleBookmarkState,
 } from "@/lib/tweeter-social-data";
+import { cleanTweetId } from "@/lib/tweeter-validators";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,13 @@ async function tweetExists(tweetId: string) {
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
-  const { tweetId } = await params;
+  const raw = (await params).tweetId;
+  const tweetId = cleanTweetId(raw);
+  if (!tweetId)
+    return NextResponse.json(
+      { error: "Invalid post." },
+      { status: 400, headers: noStoreHeaders() },
+    );
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   if (!(await tweetExists(tweetId)))
     return NextResponse.json(
@@ -50,7 +57,13 @@ export async function POST(request: NextRequest, { params }: Params) {
       { status: 403, headers: noStoreHeaders() },
     );
 
-  const { tweetId } = await params;
+  const raw = (await params).tweetId;
+  const tweetId = cleanTweetId(raw);
+  if (!tweetId)
+    return NextResponse.json(
+      { error: "Invalid post." },
+      { status: 400, headers: noStoreHeaders() },
+    );
   if (!(await tweetExists(tweetId)))
     return jsonWithSession(
       { error: "Tweet not found" },

@@ -25397,3 +25397,298 @@ body:has(.tweeter-mode)::before {
 .tweeter-message-thread {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
+
+/* ==============================
+   v2.9.94 Tweeter stability pass
+   ============================== */
+html:has(body[data-app-section='tweeter']),
+body[data-app-section='tweeter'] {
+  min-height: 100%;
+  background: var(--tw-bg, #15202b) !important;
+  color: var(--tw-text, #e7eef5) !important;
+}
+
+body[data-app-section='tweeter']::before,
+body[data-app-section='tweeter']::after {
+  display: none !important;
+  content: none !important;
+}
+
+body[data-app-section='tweeter'] .site-header,
+body[data-app-section='tweeter'] .site-footer,
+body[data-app-section='tweeter'] .skip-link {
+  display: none !important;
+}
+
+body[data-app-section='tweeter'] #main-content {
+  min-height: 100vh;
+  background: var(--tw-bg, #15202b) !important;
+}
+
+body[data-app-section='tweeter'][data-tweeter-color-mode='light'] {
+  --tw-bg: #edf3f8;
+  --tw-bg-elevated: #ffffff;
+  --tw-bg-panel: #f5f8fa;
+  --tw-card: #ffffff;
+  --tw-card-soft: rgba(15, 20, 25, 0.04);
+  --tw-border: rgba(15, 20, 25, 0.16);
+  --tw-border-soft: rgba(15, 20, 25, 0.1);
+  --tw-text: #0f1419;
+  --tw-muted: #536471;
+  --tw-link: #1d9bf0;
+  --tw-accent: #1d9bf0;
+  color-scheme: light;
+  --scrollbar-track: #d8e3ec;
+  --scrollbar-thumb: #8fb3cf;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+body[data-app-section='tweeter'][data-tweeter-color-mode='blue'] {
+  --tw-bg: #d7e7f5;
+  --tw-bg-elevated: #f9fcff;
+  --tw-bg-panel: #eef7ff;
+  --tw-card: #ffffff;
+  --tw-card-soft: rgba(29, 155, 240, 0.07);
+  --tw-border: rgba(39, 94, 145, 0.2);
+  --tw-border-soft: rgba(39, 94, 145, 0.13);
+  --tw-text: #102a43;
+  --tw-muted: #486581;
+  --tw-link: #0969b8;
+  --tw-accent: #1d9bf0;
+  color-scheme: light;
+  --scrollbar-track: #c8deef;
+  --scrollbar-thumb: #7dabd0;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+body[data-app-section='tweeter'][data-tweeter-color-mode='dark'] {
+  --tw-bg: #15202b;
+  --tw-bg-elevated: #1e2732;
+  --tw-bg-panel: #202b37;
+  --tw-card: #1f2935;
+  --tw-card-soft: rgba(255,255,255,0.04);
+  --tw-border: rgba(255,255,255,0.1);
+  --tw-border-soft: rgba(255,255,255,0.06);
+  --tw-text: #e7eef5;
+  --tw-muted: #8b98a5;
+  --tw-link: #1d9bf0;
+  --tw-accent: #1d9bf0;
+  color-scheme: dark;
+  --scrollbar-track: #0f1720;
+  --scrollbar-thumb: #2d536e;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+body[data-app-section='tweeter'] .tweeter-mode {
+  background: var(--tw-bg) !important;
+  color: var(--tw-text) !important;
+  min-height: 100vh;
+}
+
+body[data-app-section='tweeter'] .tweeter-shell,
+body[data-app-section='tweeter'] .tweeter-grid,
+body[data-app-section='tweeter'] .tweeter-left-rail,
+body[data-app-section='tweeter'] .tweeter-right-rail {
+  background: var(--tw-bg) !important;
+  color: var(--tw-text) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-main-column,
+body[data-app-section='tweeter'] .tweeter-topbar,
+body[data-app-section='tweeter'] .tweeter-tabs,
+body[data-app-section='tweeter'] .tweeter-compose-card,
+body[data-app-section='tweeter'] .tweet-card-v2,
+body[data-app-section='tweeter'] .tweeter-panel,
+body[data-app-section='tweeter'] .tweeter-search-box,
+body[data-app-section='tweeter'] .tweeter-current-user,
+body[data-app-section='tweeter'] .tweeter-login-card,
+body[data-app-section='tweeter'] .tweeter-legacy-profile-card,
+body[data-app-section='tweeter'] .tweet-quoted-card,
+body[data-app-section='tweeter'] .thread-card,
+body[data-app-section='tweeter'] .thread-mini-card,
+body[data-app-section='tweeter'] .tweeter-profile-hero,
+body[data-app-section='tweeter'] .tweeter-profile-info-card,
+body[data-app-section='tweeter'] .profile-info-empty,
+body[data-app-section='tweeter'] .tweeter-private-profile-card,
+body[data-app-section='tweeter'] .tweeter-message-thread,
+body[data-app-section='tweeter'] .tweeter-messages-list {
+  background: var(--tw-bg-elevated) !important;
+  color: var(--tw-text) !important;
+  border-color: var(--tw-border) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-topbar {
+  background: color-mix(in srgb, var(--tw-bg-elevated) 92%, transparent) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-tabs button {
+  color: var(--tw-muted) !important;
+  min-width: 0;
+}
+
+body[data-app-section='tweeter'] .tweeter-tabs .active,
+body[data-app-section='tweeter'] .tweeter-tabs button[aria-selected='true'] {
+  color: var(--tw-text) !important;
+}
+
+body[data-app-section='tweeter'] .tweet-actions-row {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+body[data-app-section='tweeter'] .tweet-actions-row a,
+body[data-app-section='tweeter'] .tweet-actions-row button,
+body[data-app-section='tweeter'] .tweeter-like-button,
+body[data-app-section='tweeter'] .tweeter-bookmark-button {
+  color: var(--tw-muted) !important;
+  min-width: 0;
+}
+
+body[data-app-section='tweeter'] .tweeter-bookmark-button.bookmarked,
+body[data-app-section='tweeter'] .tweet-actions-row .bookmarked {
+  color: var(--tw-accent) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-like-button.liked,
+body[data-app-section='tweeter'] .tweet-actions-row .liked {
+  color: var(--tw-danger, #f91880) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-nav a,
+body[data-app-section='tweeter'] .tweeter-nav button,
+body[data-app-section='tweeter'] .tweeter-legacy-topnav a,
+body[data-app-section='tweeter'] .tweeter-legacy-topnav button,
+body[data-app-section='tweeter'] .tweet-author-link,
+body[data-app-section='tweeter'] .tweet-card-text,
+body[data-app-section='tweeter'] .tweeter-panel-header strong,
+body[data-app-section='tweeter'] .tweeter-profile-copy h1,
+body[data-app-section='tweeter'] .tweeter-profile-copy p,
+body[data-app-section='tweeter'] .tweeter-suggestion strong,
+body[data-app-section='tweeter'] h1,
+body[data-app-section='tweeter'] h2,
+body[data-app-section='tweeter'] h3,
+body[data-app-section='tweeter'] strong,
+body[data-app-section='tweeter'] dd {
+  color: var(--tw-text) !important;
+}
+
+body[data-app-section='tweeter'] small,
+body[data-app-section='tweeter'] dt,
+body[data-app-section='tweeter'] .tweeter-brand small,
+body[data-app-section='tweeter'] .tweet-card-authorline,
+body[data-app-section='tweeter'] .tweet-meta-note,
+body[data-app-section='tweeter'] .tweeter-suggestion span,
+body[data-app-section='tweeter'] .tweeter-suggestion small,
+body[data-app-section='tweeter'] .tweeter-current-user span,
+body[data-app-section='tweeter'] .tweeter-login-card p,
+body[data-app-section='tweeter'] .tweeter-panel-empty,
+body[data-app-section='tweeter'] .tweeter-topbar small {
+  color: var(--tw-muted) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-hashtag,
+body[data-app-section='tweeter'] .tweeter-link,
+body[data-app-section='tweeter'] .tweeter-mention,
+body[data-app-section='tweeter'] .tweet-thread-link,
+body[data-app-section='tweeter'] .tweeter-filter-bar button,
+body[data-app-section='tweeter'] .tweeter-legacy-logo,
+body[data-app-section='tweeter'][data-tweeter-era='retro'] .tweeter-legacy-logo,
+body[data-app-section='tweeter'][data-tweeter-era='retro'] .tweeter-legacy-logo i {
+  color: var(--tw-link) !important;
+}
+
+body[data-app-section='tweeter'] input,
+body[data-app-section='tweeter'] textarea {
+  color: var(--tw-text) !important;
+}
+
+body[data-app-section='tweeter'] input::placeholder,
+body[data-app-section='tweeter'] textarea::placeholder {
+  color: var(--tw-muted) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-refresh-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--tw-border);
+  background: color-mix(in srgb, #f59e0b 13%, var(--tw-bg-elevated));
+  color: var(--tw-text);
+}
+
+body[data-app-section='tweeter'] .tweeter-refresh-alert i {
+  color: #f59e0b;
+}
+
+body[data-app-section='tweeter'] .tweeter-refresh-alert button {
+  margin-left: auto;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-bg-elevated);
+  color: var(--tw-text);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+body[data-app-section='tweeter'] .tweeter-current-user .avatar,
+body[data-app-section='tweeter'] .legacy-mini-avatar .avatar {
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+  min-width: 2.35rem !important;
+  max-width: 2.35rem !important;
+  flex: 0 0 2.35rem !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-current-user .avatar img,
+body[data-app-section='tweeter'] .legacy-mini-avatar .avatar img,
+body[data-app-section='tweeter'] .tweet-card-avatar .avatar img,
+body[data-app-section='tweeter'] .tweeter-suggestion .avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-current-user > div,
+body[data-app-section='tweeter'] .tweeter-suggestion-main > div,
+body[data-app-section='tweeter'] .tweet-card-body {
+  min-width: 0;
+}
+
+body[data-app-section='tweeter'] .tweeter-trend-list button,
+body[data-app-section='tweeter'] .tweeter-suggestion {
+  border-top-color: var(--tw-border-soft) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-post-button,
+body[data-app-section='tweeter'] .tweeter-inline-post,
+body[data-app-section='tweeter'] .legacy-tweet-button {
+  background: var(--tw-accent) !important;
+  color: #fff !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-live-pill,
+body[data-app-section='tweeter'] .tweeter-suggestion button,
+body[data-app-section='tweeter'] .tweeter-follow-button {
+  border: 1px solid var(--tw-border) !important;
+}
+
+body[data-app-section='tweeter'] .tweeter-mode[data-era='classic'] .tweeter-shell,
+body[data-app-section='tweeter'][data-tweeter-era='classic'] .tweeter-shell {
+  background: linear-gradient(90deg, rgba(255,255,255,0.14), transparent 18%, transparent 82%, rgba(255,255,255,0.14)), #98c2bf !important;
+}
+
+@media (max-width: 720px) {
+  body[data-app-section='tweeter'] .tweet-actions-row {
+    gap: 0.15rem;
+  }
+  body[data-app-section='tweeter'] .tweet-actions-row a,
+  body[data-app-section='tweeter'] .tweet-actions-row button,
+  body[data-app-section='tweeter'] .tweeter-like-button,
+  body[data-app-section='tweeter'] .tweeter-bookmark-button {
+    justify-content: center;
+  }
+}

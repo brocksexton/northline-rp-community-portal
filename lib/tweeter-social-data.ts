@@ -55,6 +55,21 @@ const EMPTY_STORE: SocialStore = {
   bookmarks: [],
 };
 
+let storeMutationQueue: Promise<unknown> = Promise.resolve();
+
+async function withStoreMutation<T>(mutation: (store: SocialStore) => Promise<T> | T): Promise<T> {
+  const run = async () => {
+    const store = await readStore();
+    const result = await mutation(store);
+    await writeStore(store);
+    return result;
+  };
+
+  const next = storeMutationQueue.then(run, run);
+  storeMutationQueue = next.catch(() => undefined);
+  return next;
+}
+
 function dataDir() {
   return (
     process.env.NORTHLINE_DATA_PATH?.trim() ||
@@ -288,33 +303,34 @@ export async function toggleBookmarkState(
   bookmark?: boolean,
 ): Promise<BookmarkState> {
   const viewer = cleanSteamId(steamId);
-  const target = String(tweetId ?? "").trim();
+  const target = String(tweetId ?? "").trim().slice(0, 120);
   if (!viewer || !target) throw new Error("invalid_bookmark_target");
 
-  const store = await readStore();
-  const existing = store.bookmarks.some(
-    (record) => record.steamId === viewer && record.tweetId === target,
-  );
-  const shouldBookmark = typeof bookmark === "boolean" ? bookmark : !existing;
-
-  if (shouldBookmark && !existing) {
-    store.bookmarks.push({
-      steamId: viewer,
-      tweetId: target,
-      createdAt: new Date().toISOString(),
-    });
-  } else if (!shouldBookmark && existing) {
-    store.bookmarks = store.bookmarks.filter(
-      (record) => !(record.steamId === viewer && record.tweetId === target),
+  return withStoreMutation((store) => {
+    const existing = store.bookmarks.some(
+      (record) => record.steamId === viewer && record.tweetId === target,
     );
-  }
+    const shouldBookmark = typeof bookmark === "boolean" ? bookmark : !existing;
 
-  await writeStore(store);
-  return {
-    bookmarked: shouldBookmark,
-    bookmarkCount: bookmarkCount(store, target),
-  };
+    if (shouldBookmark && !existing) {
+      store.bookmarks.push({
+        steamId: viewer,
+        tweetId: target,
+        createdAt: new Date().toISOString(),
+      });
+    } else if (!shouldBookmark && existing) {
+      store.bookmarks = store.bookmarks.filter(
+        (record) => !(record.steamId === viewer && record.tweetId === target),
+      );
+    }
+
+    return {
+      bookmarked: shouldBookmark,
+      bookmarkCount: bookmarkCount(store, target),
+    };
+  });
 }
+
 
 export async function getFollowState(
   viewerSteamId: string | null | undefined,
@@ -366,32 +382,33 @@ export async function setFollowState(
   if (!viewer || !target || viewer === target)
     throw new Error("invalid_follow_target");
 
-  const store = await readStore();
-  const existing = store.follows.some(
-    (record) => record.fromSteamId === viewer && record.toSteamId === target,
-  );
-  const shouldFollow = typeof follow === "boolean" ? follow : !existing;
-
-  if (shouldFollow && !existing) {
-    store.follows.push({
-      fromSteamId: viewer,
-      toSteamId: target,
-      createdAt: new Date().toISOString(),
-    });
-  } else if (!shouldFollow && existing) {
-    store.follows = store.follows.filter(
-      (record) =>
-        !(record.fromSteamId === viewer && record.toSteamId === target),
+  return withStoreMutation((store) => {
+    const existing = store.follows.some(
+      (record) => record.fromSteamId === viewer && record.toSteamId === target,
     );
-  }
+    const shouldFollow = typeof follow === "boolean" ? follow : !existing;
 
-  await writeStore(store);
-  return {
-    following: shouldFollow,
-    followerCount: followerCount(store, target),
-    followingCount: followingCount(store, target),
-  };
+    if (shouldFollow && !existing) {
+      store.follows.push({
+        fromSteamId: viewer,
+        toSteamId: target,
+        createdAt: new Date().toISOString(),
+      });
+    } else if (!shouldFollow && existing) {
+      store.follows = store.follows.filter(
+        (record) =>
+          !(record.fromSteamId === viewer && record.toSteamId === target),
+      );
+    }
+
+    return {
+      following: shouldFollow,
+      followerCount: followerCount(store, target),
+      followingCount: followingCount(store, viewer),
+    };
+  });
 }
+
 
 function sameConversation(
   message: DirectMessage,
@@ -432,11 +449,12 @@ export async function getConversation(
     );
 
   if (markRead) {
-    store.reads[current] = {
-      ...(store.reads[current] ?? {}),
-      [other]: new Date().toISOString(),
-    };
-    await writeStore(store);
+    await withStoreMutation((latest) => {
+      latest.reads[current] = {
+        ...(latest.reads[current] ?? {}),
+        [other]: new Date().toISOString(),
+      };
+    });
   }
 
   return messages;
@@ -495,30 +513,30 @@ export async function sendDirectMessage(
   if (!from || !to || from === to) throw new Error("invalid_recipient");
   if (!cleanBody) throw new Error("empty_message");
 
-  const store = await readStore();
-  const message: DirectMessage = {
-    id: crypto.randomUUID(),
-    fromSteamId: from,
-    toSteamId: to,
-    body: cleanBody,
-    createdAt: new Date().toISOString(),
-  };
-  store.messages.push(message);
+  return withStoreMutation((store) => {
+    const message: DirectMessage = {
+      id: crypto.randomUUID(),
+      fromSteamId: from,
+      toSteamId: to,
+      body: cleanBody,
+      createdAt: new Date().toISOString(),
+    };
+    store.messages.push(message);
 
-  // Keep the JSON file from growing forever in the early website-only implementation.
-  if (store.messages.length > 5000) {
-    store.messages = store.messages
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-      .slice(0, 5000)
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-  }
+    // Keep the JSON file from growing forever in the early website-only implementation.
+    if (store.messages.length > 5000) {
+      store.messages = store.messages
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .slice(0, 5000)
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+    }
 
-  await writeStore(store);
-  return message;
+    return message;
+  });
 }

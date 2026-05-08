@@ -50,7 +50,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       </head>
-      <body data-site-style={websiteStyle} data-maintenance-active={maintenanceBlocked ? 'true' : 'false'} data-tweeter-maintenance-active={tweeterMaintenanceBlocked ? 'true' : 'false'}>
+      <body
+        data-site-style={websiteStyle}
+        data-app-section={isTweeterPath ? 'tweeter' : 'site'}
+        data-tweeter-era={isTweeterPath ? (profile?.tweeterTheme ?? 'modern') : undefined}
+        data-tweeter-color-mode={isTweeterPath ? (profile?.tweeterMode ?? 'dark') : undefined}
+        data-maintenance-active={maintenanceBlocked ? 'true' : 'false'}
+        data-tweeter-maintenance-active={tweeterMaintenanceBlocked ? 'true' : 'false'}
+      >
         {maintenanceBlocked ? (
           <MaintenancePage settings={maintenance} />
         ) : tweeterMaintenanceBlocked ? (

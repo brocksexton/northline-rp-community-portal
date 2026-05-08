@@ -3,6 +3,7 @@ import { getTweeterData } from '@/lib/ape-data';
 import { getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { getTweeterWebLikeState, toggleTweeterWebLike } from '@/lib/community-data';
 import { getTweeterActorActionLock } from '@/lib/tweeter-access';
+import { cleanTweetId } from '@/lib/tweeter-validators';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,11 +27,13 @@ async function getLikeSummary(tweetId: string, steamId: string | null) {
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
-  const { tweetId } = await params;
+  const raw = (await params).tweetId;
+  const tweetId = cleanTweetId(raw);
+  if (!tweetId) return NextResponse.json({ error: 'Invalid post.' }, { status: 400, headers: noStoreHeaders() });
   const sessionSteamId = getSessionSteamIdFromRequest(request);
   const summary = await getLikeSummary(tweetId, sessionSteamId);
   if (!summary) return NextResponse.json({ error: 'Tweet not found' }, { status: 404, headers: noStoreHeaders() });
-  return jsonWithSession(summary, undefined, sessionSteamId, request);
+  return jsonWithSession(summary, { headers: noStoreHeaders() }, sessionSteamId, request);
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -44,12 +47,15 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: actorLockReason }, { status: 403, headers: noStoreHeaders() });
   }
 
-  const { tweetId } = await params;
+  const raw = (await params).tweetId;
+  const tweetId = cleanTweetId(raw);
+  if (!tweetId) return NextResponse.json({ error: 'Invalid post.' }, { status: 400, headers: noStoreHeaders() });
+
   const tweeter = await getTweeterData();
   const tweet = tweeter.Tweets.find((item) => item.Id === tweetId);
-  if (!tweet) return jsonWithSession({ error: 'Tweet not found' }, { status: 404 }, sessionSteamId, request);
+  if (!tweet) return jsonWithSession({ error: 'Tweet not found' }, { status: 404, headers: noStoreHeaders() }, sessionSteamId, request);
 
   await toggleTweeterWebLike(tweetId, sessionSteamId);
   const summary = await getLikeSummary(tweetId, sessionSteamId);
-  return jsonWithSession(summary, undefined, sessionSteamId, request);
+  return jsonWithSession(summary, { headers: noStoreHeaders() }, sessionSteamId, request);
 }

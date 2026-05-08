@@ -146,6 +146,8 @@ export function TweeterClient({
     "for-you" | "latest" | "bookmarks"
   >("latest");
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState("");
+  const [copiedTweetId, setCopiedTweetId] = useState<string | null>(null);
   const [composerMessage, setComposerMessage] = useState("");
   const initialGeneratedMs = Number.isFinite(
     Date.parse(initialData.generatedAt),
@@ -160,6 +162,7 @@ export function TweeterClient({
   async function refreshFeed() {
     if (refreshing) return;
     setRefreshing(true);
+    setRefreshError("");
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 6000);
     try {
@@ -168,20 +171,30 @@ export function TweeterClient({
         credentials: "same-origin",
         signal: controller.signal,
       });
-      if (response.ok) {
-        const next = (await response.json()) as TweeterPayload;
-        setData(next);
-        const nextMs = Number.isFinite(Date.parse(next.generatedAt))
-          ? Date.parse(next.generatedAt)
-          : Date.now();
-        setClockMs(nextMs);
-        setLastRefreshed(new Date(nextMs));
-      }
+      if (!response.ok) throw new Error("refresh_failed");
+      const next = (await response.json()) as TweeterPayload;
+      setData(next);
+      const nextMs = Number.isFinite(Date.parse(next.generatedAt))
+        ? Date.parse(next.generatedAt)
+        : Date.now();
+      setClockMs(nextMs);
+      setLastRefreshed(new Date(nextMs));
     } catch {
-      // leave last good timeline intact
+      setRefreshError("Could not refresh Tweeter. Showing the last good timeline.");
     } finally {
       window.clearTimeout(timeout);
       setRefreshing(false);
+    }
+  }
+
+  async function copyTweetLink(tweetId: string) {
+    const url = `${window.location.origin}/tweeter/tweet/${tweetId}`;
+    try {
+      await navigator.clipboard?.writeText(url);
+      setCopiedTweetId(tweetId);
+      window.setTimeout(() => setCopiedTweetId((current) => (current === tweetId ? null : current)), 1600);
+    } catch {
+      window.prompt("Copy this Tweeter link", url);
     }
   }
 
@@ -197,7 +210,12 @@ export function TweeterClient({
     const clean = query.trim().toLowerCase();
     const working = [...data.tweets].filter((tweet) => {
       if (activeTab === "bookmarks" && !tweet.bookmarkedByMe) return false;
-      if (tag && !tweet.body.toLowerCase().includes(tag.toLowerCase()))
+      if (
+        tag &&
+        !`${tweet.body} ${tweet.retweetOfBody ?? ""}`
+          .toLowerCase()
+          .includes(tag.toLowerCase())
+      )
         return false;
       if (!clean) return true;
       return (
@@ -490,6 +508,14 @@ export function TweeterClient({
             </section>
           ) : null}
 
+          {refreshError ? (
+            <div className="tweeter-refresh-alert" role="status">
+              <Icon className="fa-solid fa-triangle-exclamation" />
+              <span>{refreshError}</span>
+              <button type="button" onClick={() => setRefreshError("")}>Dismiss</button>
+            </div>
+          ) : null}
+
           <div
             className="tweeter-tabs"
             role="tablist"
@@ -506,6 +532,8 @@ export function TweeterClient({
               className={activeTab === "latest" ? "active" : ""}
               onClick={() => setActiveTab("latest")}
               type="button"
+              role="tab"
+              aria-selected={activeTab === "latest"}
             >
               Latest
             </button>
@@ -513,6 +541,8 @@ export function TweeterClient({
               className={activeTab === "bookmarks" ? "active" : ""}
               onClick={() => setActiveTab("bookmarks")}
               type="button"
+              role="tab"
+              aria-selected={activeTab === "bookmarks"}
             >
               Bookmarks
             </button>
@@ -712,14 +742,11 @@ export function TweeterClient({
                       />
                       <button
                         type="button"
-                        aria-label="Copy post link"
-                        onClick={() => {
-                          void navigator.clipboard?.writeText(
-                            `${window.location.origin}/tweeter/tweet/${tweet.id}`,
-                          );
-                        }}
+                        aria-label={copiedTweetId === tweet.id ? "Post link copied" : "Copy post link"}
+                        title={copiedTweetId === tweet.id ? "Copied" : "Copy post link"}
+                        onClick={() => void copyTweetLink(tweet.id)}
                       >
-                        <Icon className="fa-solid fa-arrow-up-from-bracket" />
+                        <Icon className={copiedTweetId === tweet.id ? "fa-solid fa-check" : "fa-solid fa-arrow-up-from-bracket"} />
                       </button>
                     </footer>
                     <Link

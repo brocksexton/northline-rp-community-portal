@@ -4,6 +4,7 @@ import { getCommunityProfile } from '@/lib/community-data';
 import { getConversation, getConversationSummaries, sendDirectMessage } from '@/lib/tweeter-social-data';
 import { getSessionSteamIdFromRequest, noStoreHeaders, jsonWithSession } from '@/lib/session';
 import { hasGameServerIdentity, getTweeterActorActionLock, getTweeterTargetMessageLock } from '@/lib/tweeter-access';
+import { cleanSteamId } from '@/lib/tweeter-validators';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,10 @@ export async function GET(request: NextRequest) {
   const actorLockReason = await getTweeterActorActionLock(sessionSteamId);
   if (actorLockReason) return NextResponse.json({ error: actorLockReason }, { status: 403, headers: noStoreHeaders() });
 
-  const withSteamId = request.nextUrl.searchParams.get('with');
+  const withSteamId = cleanSteamId(request.nextUrl.searchParams.get('with'));
+  if (request.nextUrl.searchParams.has('with') && !withSteamId) {
+    return NextResponse.json({ error: 'Invalid conversation.' }, { status: 400, headers: noStoreHeaders() });
+  }
   if (withSteamId) {
     const targetLockReason = await getTweeterTargetMessageLock(withSteamId);
     if (targetLockReason) return NextResponse.json({ error: targetLockReason }, { status: 403, headers: noStoreHeaders() });
@@ -37,7 +41,9 @@ export async function POST(request: NextRequest) {
 
   let body: Record<string, unknown> = {};
   try { body = await request.json(); } catch { body = {}; }
-  const toSteamId = String(body.toSteamId ?? '').trim();
+  const toSteamId = cleanSteamId(body.toSteamId);
+  if (!toSteamId) return NextResponse.json({ error: 'Invalid recipient.' }, { status: 400, headers: noStoreHeaders() });
+  if (toSteamId === sessionSteamId) return NextResponse.json({ error: 'You cannot message yourself.' }, { status: 400, headers: noStoreHeaders() });
 
   if (!(await hasGameServerIdentity(toSteamId))) return NextResponse.json({ error: 'That account needs to join the game server before messages are available.' }, { status: 400, headers: noStoreHeaders() });
   if (!(await getCommunityProfile(toSteamId))) return NextResponse.json({ error: 'That citizen has not signed into the website yet, so website DMs are locked for now.' }, { status: 400, headers: noStoreHeaders() });
