@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+type GuideMediaLayout = 'grid' | 'wide-top' | 'stacked';
+
 type GuideStep = {
   title: string;
   body: string;
   image?: string;
   alt?: string;
   images?: { src: string; alt: string }[];
+  mediaLayout?: GuideMediaLayout;
   bullets?: string[];
 };
 
@@ -127,8 +130,10 @@ const systemGuides: JobGuide[] = [
     steps: [
       {
         title: 'Understand what you are carrying',
-        body: 'There are three core things to keep in mind: cash on your character, items in your inventory, and money stored in the bank. You can also drop cash from your wallet and drop items from your inventory when roleplay calls for it.',
-        bullets: ['Cash on hand is what you are physically carrying.', 'Items stay in your inventory until you drop, store, or use them.', 'Bank money is safer than walking around with a pocket full of cash.'],
+        body: 'There are three core things to keep in mind: cash on your character, items in your inventory, and money stored in the bank. You can also drop cash from your wallet and drop items from your inventory when roleplay calls for it. If an item is outlined in red in your inventory, it is currently illegal contraband and police can seize it if they catch you with it.',
+        image: '/guides/basics/inventory-illegal.png',
+        alt: 'Northline inventory screen showing a red outlined illegal item and body armor equipment.',
+        bullets: ['Cash on hand is what you are physically carrying.', 'Items stay in your inventory until you drop, store, or use them.', 'Red-outlined items are illegal and can get you searched, seized, or arrested.', 'Bank money is safer than walking around with a pocket full of cash.'],
       },
       {
         title: 'Use an ATM for your bank account',
@@ -208,10 +213,8 @@ const mayorSteps: GuideStep[] = [
   {
     title: 'Start the election with Michael at the Police Department',
     body: 'All mayoral elections begin at the Police Department with Michael. Talk to him to open a new election cycle for the city. Starting the election does not automatically put you on the ballot.',
-    images: [
-      { src: '/guides/mayor/michael-portrait.jpg', alt: 'Michael standing at City Hall / Police Department, used to start mayoral elections.' },
-      { src: '/guides/mayor/michael-dialogue.png', alt: 'Michael dialogue screen offering to start a new mayoral election.' },
-    ],
+    image: '/guides/mayor/michael-dialogue.png',
+    alt: 'Michael dialogue screen offering to start a new mayoral election.',
     bullets: ['Michael is the first stop for every election.', 'Starting the election only opens registration.', 'You still need to enter yourself as a candidate afterward.'],
   },
   {
@@ -230,6 +233,7 @@ const mayorSteps: GuideStep[] = [
       { src: '/guides/mayor/elections-register.png', alt: 'Elections app screen with fields for running for mayor and entering a campaign slogan.' },
       { src: '/guides/mayor/elections-candidates.png', alt: 'Elections app showing a registered candidate and slogan.' },
     ],
+    mediaLayout: 'wide-top',
     bullets: ['Set a slogan people will actually remember.', 'Registration stays open for a bit so rivals can join too.', 'Check the candidate list to make sure you appear there.'],
   },
   {
@@ -248,6 +252,7 @@ const mayorSteps: GuideStep[] = [
       { src: '/guides/mayor/elections-vote.png', alt: 'Elections app screen showing a candidate card with a Vote button.' },
       { src: '/guides/mayor/vote-recorded.png', alt: 'Confirmation in the Elections app that a vote has been recorded.' },
     ],
+    mediaLayout: 'wide-top',
     bullets: ['Registration and voting are separate phases.', 'People vote through the Elections app on their phone.', 'You still need to campaign if you want turnout in your favour.'],
   },
   {
@@ -261,7 +266,12 @@ const mayorSteps: GuideStep[] = [
   {
     title: 'Stay alive and expect pushback',
     body: 'Being mayor paints a target on your back. Unhappy people in the city may come after you, so do not wander around carelessly. When you become mayor, you receive body armor that reduces damage by 25%, but it will not save you from every bad situation.',
-    bullets: ['If you die, you lose the mayor title immediately.', 'When that happens, laws, tax rate, and policy all return to the default settings.', 'The best mayors keep the city active without making half the server want them gone.'],
+    images: [
+      { src: '/guides/mayor/dead-screen.png', alt: 'Northline death screen showing the player has died.' },
+      { src: '/guides/mayor/body-armor-inventory.png', alt: 'Inventory screen showing mayor body armor and its 25 percent damage reduction.' },
+    ],
+    mediaLayout: 'stacked',
+    bullets: ['If you die, you lose the mayor title immediately.', 'When that happens, laws, tax rate, and policy all return to the default settings.', 'The body armor cuts damage by 25%, but it is not a free pass to ignore danger.', 'The best mayors keep the city active without making half the server want them gone.'],
   },
 ];
 
@@ -515,7 +525,7 @@ export default function GuideJobSection() {
                 ) : null}
               </div>
               {activeStep.images?.length ? (
-                <figure className="guide-modal-media guide-modal-media-grid">
+                <figure className={`guide-modal-media guide-modal-media-grid${activeStep.mediaLayout ? ` guide-modal-media-${activeStep.mediaLayout}` : ''}`}>
                   {activeStep.images.map((item) => (
                     <div className="guide-modal-media-tile" key={`${activeStep.title}-${item.src}`}>
                       <img src={item.src} alt={item.alt} />

@@ -27479,6 +27479,31 @@ body.guide-modal-open {
   grid-column: 1 / -1;
 }
 
+
+.guide-modal-media-wide-top {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.guide-modal-media-wide-top .guide-modal-media-tile:first-child {
+  grid-column: 1 / -1;
+}
+
+.guide-modal-media-wide-top .guide-modal-media-tile:first-child img {
+  max-height: 260px;
+}
+
+.guide-modal-media-stacked {
+  grid-template-columns: 1fr;
+}
+
+.guide-modal-media-stacked .guide-modal-media-tile {
+  min-height: 150px;
+}
+
+.guide-modal-media-stacked img {
+  max-height: 240px;
+}
+
 .guide-modal-placeholder {
   align-content: center;
   gap: 0.35rem;

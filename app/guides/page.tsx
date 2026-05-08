@@ -86,7 +86,7 @@ export default async function GuidesPage() {
               : 'Sign in with Steam to track which guides you have already worked through.'}
           </p>
           <div className="guides-progress-bar" aria-hidden="true">
-            <i style={{ width: `${steamId ? Math.max(percent, 8) : 12}%` }} />
+            <i style={{ width: `${steamId ? Math.max(Math.min(percent, 100), 8) : 12}%` }} />
           </div>
           {!steamId ? <a className="button button-soft" href="/api/auth/steam?returnTo=/guides">Sign in with Steam</a> : null}
         </aside>

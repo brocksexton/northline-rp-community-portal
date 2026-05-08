@@ -939,32 +939,40 @@ export async function getScheduledServerMessages(): Promise<unknown[]> {
 
 export async function getGuideProgress(steamId: string): Promise<GuideProgress> {
   const data = await readJson<{ SeenGuides?: Record<string, string[]> }>('guides_seen.json', { SeenGuides: {} });
-  const seen = data.SeenGuides?.[steamId] ?? [];
-  const allIds = GUIDE_CATALOG.map((guide) => guide.id);
+  const rawSeen = data.SeenGuides?.[steamId] ?? [];
+  const allIds = [...new Set(GUIDE_CATALOG.map((guide) => guide.id))];
+  const validIds = new Set(allIds);
+  const seen = [...new Set(rawSeen.filter((id) => validIds.has(id)))];
   const missing = allIds.filter((id) => !seen.includes(id));
+  const completed = Math.min(seen.length, allIds.length);
+  const percent = allIds.length ? Math.min(100, Math.round((completed / allIds.length) * 100)) : 0;
   return {
     steamId,
     seen,
-    completed: seen.length,
+    completed,
     total: allIds.length,
     missing,
-    percent: allIds.length ? Math.round((seen.length / allIds.length) * 100) : 0,
+    percent,
   };
 }
 
 export async function getAllGuideProgress(): Promise<Map<string, GuideProgress>> {
   const data = await readJson<{ SeenGuides?: Record<string, string[]> }>('guides_seen.json', { SeenGuides: {} });
   const map = new Map<string, GuideProgress>();
-  const allIds = GUIDE_CATALOG.map((guide) => guide.id);
-  for (const [steamId, seen] of Object.entries(data.SeenGuides ?? {})) {
+  const allIds = [...new Set(GUIDE_CATALOG.map((guide) => guide.id))];
+  const validIds = new Set(allIds);
+  for (const [steamId, rawSeen] of Object.entries(data.SeenGuides ?? {})) {
+    const seen = [...new Set((rawSeen ?? []).filter((id) => validIds.has(id)))];
     const missing = allIds.filter((id) => !seen.includes(id));
+    const completed = Math.min(seen.length, allIds.length);
+    const percent = allIds.length ? Math.min(100, Math.round((completed / allIds.length) * 100)) : 0;
     map.set(steamId, {
       steamId,
       seen,
-      completed: seen.length,
+      completed,
       total: allIds.length,
       missing,
-      percent: allIds.length ? Math.round((seen.length / allIds.length) * 100) : 0,
+      percent,
     });
   }
   return map;
