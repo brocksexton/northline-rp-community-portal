@@ -63,7 +63,6 @@ export default async function GuidesPage() {
   const rulesVisible = enabledFeatures.has('rules');
   const statusVisible = enabledFeatures.has('status');
   const supportVisible = enabledFeatures.has('support');
-  const dashboardVisible = enabledFeatures.has('dashboard');
 
   const steamId = await getSessionSteamId();
   const progress = steamId ? await getGuideProgress(steamId) : null;
@@ -102,7 +101,7 @@ export default async function GuidesPage() {
       </section>
 
       <section className="guides-quickbar" aria-label="Useful links">
-        {dashboardVisible ? <Link href="/dashboard"><strong>Dashboard</strong><span>Profile, privacy, and account tools.</span></Link> : null}
+        <Link href="/dashboard"><strong>Dashboard</strong><span>Profile, privacy, and account tools.</span></Link>
         {statusVisible ? <Link href="/status"><strong>Status</strong><span>Check the live server before you join.</span></Link> : null}
         {rulesVisible ? <Link href="/rules"><strong>Rules</strong><span>Read the server rules and roleplay expectations.</span></Link> : null}
         {supportVisible ? <Link href="/support"><strong>Support</strong><span>Get help with bugs, account issues, or reports.</span></Link> : null}
