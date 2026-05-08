@@ -27705,3 +27705,27 @@ body.guide-modal-open {
 .tweeter-mode[data-color-mode='blue'] .tweeter-profile-claim-banner.profile.compact {
   background: color-mix(in srgb, var(--tw-bg-elevated, #fff) 90%, var(--tw-accent, #1d9bf0) 10%) !important;
 }
+
+/* v2.9.112 Tweeter cover image rendering repair
+   Keep the CSS background as a fallback, but render the selected cover as a real image
+   so CDN-hosted S&box cover art is not hidden by theme/background overrides. */
+.tweeter-profile-banner {
+  isolation: isolate;
+}
+
+.tweeter-profile-cover-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.tweeter-profile-banner::after {
+  z-index: 1;
+}

@@ -111,6 +111,11 @@ function profileCoverKind(user: Awaited<ReturnType<typeof buildTweeterUser>>) {
   return getProfileCoverPreset(user.coverPreset).kind;
 }
 
+function profileCoverImageUrl(user: Awaited<ReturnType<typeof buildTweeterUser>>) {
+  const preset = getProfileCoverPreset(user.coverPreset);
+  return user.customCoverUrl || preset.imageUrl || '';
+}
+
 function profileThemeLabel(value?: string | null) {
   return PROFILE_THEMES.find((theme) => theme.id === value)?.label ?? 'Clean';
 }
@@ -249,6 +254,7 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
   const hiddenSectionText = publicProfile.hiddenSections.length ? publicProfile.hiddenSections.join(', ') : 'Nothing hidden';
   const joinedLabel = publicProfile.activity?.joined ?? formatShortDate(user.joinedAt);
   const roleLabel = user.verifiedKind && user.verifiedKind !== 'None' ? user.verifiedKind : (publicProfile.role || 'Citizen');
+  const coverImageUrl = profileCoverImageUrl(user);
   const tweeterFallbackEditor = isOwner && isMaintenanceActive(maintenance) && maintenance.allowTweeterDuringMaintenance && !isTweeterMaintenanceActive(maintenance);
   const profileHasServerIdentity = !!user.hasPlayedInServer || !!user.joinedAt;
   const profileHasClaimedSiteProfile = Boolean(communityProfile);
@@ -323,7 +329,9 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
           </header>
 
           <section className={`tweeter-profile-hero tweeter-profile-skin-${user.profileTheme ?? 'clean'}`}>
-            <div className={`tweeter-profile-banner cover-kind-${profileCoverKind(user)}`} style={profileCoverStyle(user)} />
+            <div className={`tweeter-profile-banner cover-kind-${profileCoverKind(user)}`} style={profileCoverStyle(user)}>
+              {coverImageUrl ? <img className="tweeter-profile-cover-image" src={coverImageUrl} alt="" aria-hidden="true" loading="eager" /> : null}
+            </div>
             <div className="tweeter-profile-main">
               <div className="tweeter-profile-avatar"><UserAvatar src={user.avatarUrl ?? null} name={user.displayName} size="xl" /></div>
               <div className="tweeter-profile-actions">
