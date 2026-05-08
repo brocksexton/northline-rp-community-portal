@@ -25139,3 +25139,261 @@ body:has(.tweeter-mode[data-color-mode='blue']) { background: var(--tw-bg) !impo
     z-index: 30 !important;
   }
 }
+
+
+/* ==============================
+   v2.9.93 Tweeter light-mode repair + themed scrollbars
+   ============================== */
+:root {
+  --scrollbar-track: rgba(15, 23, 42, 0.55);
+  --scrollbar-thumb: rgba(56, 189, 248, 0.45);
+  --scrollbar-thumb-hover: rgba(56, 189, 248, 0.7);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar { width: 12px; height: 12px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 3px solid var(--scrollbar-track);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+html:has(.tweeter-mode[data-color-mode='light']),
+body:has(.tweeter-mode[data-color-mode='light']) {
+  background: #edf3f8 !important;
+  color: #0f1419 !important;
+  color-scheme: light;
+  --scrollbar-track: #d8e3ec;
+  --scrollbar-thumb: #8fb3cf;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+html:has(.tweeter-mode[data-color-mode='blue']),
+body:has(.tweeter-mode[data-color-mode='blue']) {
+  background: #d7e7f5 !important;
+  color: #102a43 !important;
+  color-scheme: light;
+  --scrollbar-track: #c8deef;
+  --scrollbar-thumb: #7dabd0;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+html:has(.tweeter-mode[data-color-mode='dark']),
+body:has(.tweeter-mode[data-color-mode='dark']) {
+  color-scheme: dark;
+  --scrollbar-track: #0f1720;
+  --scrollbar-thumb: #2d536e;
+  --scrollbar-thumb-hover: #1d9bf0;
+}
+
+/* The global Northline background grid was leaking through light Tweeter pages. */
+body:has(.tweeter-mode)::before {
+  display: none !important;
+  content: none !important;
+}
+
+.tweeter-mode {
+  background: var(--tw-bg) !important;
+  color: var(--tw-text) !important;
+  min-height: 100vh;
+  --scrollbar-track: color-mix(in srgb, var(--tw-bg) 88%, var(--tw-border) 12%);
+  --scrollbar-thumb: color-mix(in srgb, var(--tw-accent) 45%, var(--tw-muted) 55%);
+  --scrollbar-thumb-hover: var(--tw-accent);
+}
+
+.tweeter-mode[data-color-mode='light'],
+.tweeter-mode[data-color-mode='blue'] {
+  color-scheme: light;
+}
+
+.tweeter-mode[data-color-mode='dark'] {
+  color-scheme: dark;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-shell,
+.tweeter-mode[data-color-mode='blue'] .tweeter-shell {
+  background: var(--tw-bg) !important;
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-grid,
+.tweeter-mode[data-color-mode='blue'] .tweeter-grid,
+.tweeter-mode[data-color-mode='light'] .tweeter-left-rail,
+.tweeter-mode[data-color-mode='blue'] .tweeter-left-rail,
+.tweeter-mode[data-color-mode='light'] .tweeter-right-rail,
+.tweeter-mode[data-color-mode='blue'] .tweeter-right-rail {
+  background: var(--tw-bg) !important;
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-main-column,
+.tweeter-mode[data-color-mode='blue'] .tweeter-main-column {
+  background: var(--tw-bg-elevated) !important;
+  color: var(--tw-text) !important;
+  border-color: var(--tw-border) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-topbar,
+.tweeter-mode[data-color-mode='blue'] .tweeter-topbar,
+.tweeter-mode[data-color-mode='light'] .tweeter-tabs,
+.tweeter-mode[data-color-mode='blue'] .tweeter-tabs,
+.tweeter-mode[data-color-mode='light'] .tweeter-compose-card,
+.tweeter-mode[data-color-mode='blue'] .tweeter-compose-card,
+.tweeter-mode[data-color-mode='light'] .tweet-card-v2,
+.tweeter-mode[data-color-mode='blue'] .tweet-card-v2,
+.tweeter-mode[data-color-mode='light'] .tweeter-panel,
+.tweeter-mode[data-color-mode='blue'] .tweeter-panel,
+.tweeter-mode[data-color-mode='light'] .tweeter-search-box,
+.tweeter-mode[data-color-mode='blue'] .tweeter-search-box,
+.tweeter-mode[data-color-mode='light'] .tweeter-current-user,
+.tweeter-mode[data-color-mode='blue'] .tweeter-current-user,
+.tweeter-mode[data-color-mode='light'] .tweeter-login-card,
+.tweeter-mode[data-color-mode='blue'] .tweeter-login-card,
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-profile-card,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-profile-card,
+.tweeter-mode[data-color-mode='light'] .tweet-quoted-card,
+.tweeter-mode[data-color-mode='blue'] .tweet-quoted-card,
+.tweeter-mode[data-color-mode='light'] .thread-card,
+.tweeter-mode[data-color-mode='blue'] .thread-card,
+.tweeter-mode[data-color-mode='light'] .thread-mini-card,
+.tweeter-mode[data-color-mode='blue'] .thread-mini-card {
+  background: var(--tw-bg-elevated) !important;
+  color: var(--tw-text) !important;
+  border-color: var(--tw-border) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-compose-card,
+.tweeter-mode[data-color-mode='blue'] .tweeter-compose-card {
+  background: color-mix(in srgb, var(--tw-accent) 5%, var(--tw-bg-elevated)) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweet-card-v2:hover,
+.tweeter-mode[data-color-mode='blue'] .tweet-card-v2:hover {
+  background: color-mix(in srgb, var(--tw-accent) 4%, var(--tw-bg-elevated)) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-topnav,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-topnav {
+  background: color-mix(in srgb, var(--tw-bg-elevated) 94%, var(--tw-accent) 6%) !important;
+  color: var(--tw-text) !important;
+  border-bottom-color: var(--tw-border) !important;
+  box-shadow: 0 1px 4px rgba(15, 20, 25, 0.08) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-topnav a,
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-topnav button,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-topnav a,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-topnav button {
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-logo,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-logo,
+.tweeter-mode[data-era='retro'][data-color-mode='light'] .tweeter-legacy-logo,
+.tweeter-mode[data-era='retro'][data-color-mode='blue'] .tweeter-legacy-logo {
+  color: #1d9bf0 !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-nav a,
+.tweeter-mode[data-color-mode='light'] .tweeter-nav button,
+.tweeter-mode[data-color-mode='blue'] .tweeter-nav a,
+.tweeter-mode[data-color-mode='blue'] .tweeter-nav button {
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-nav a:hover,
+.tweeter-mode[data-color-mode='light'] .tweeter-nav button:hover,
+.tweeter-mode[data-color-mode='light'] .tweeter-nav .active,
+.tweeter-mode[data-color-mode='blue'] .tweeter-nav a:hover,
+.tweeter-mode[data-color-mode='blue'] .tweeter-nav button:hover,
+.tweeter-mode[data-color-mode='blue'] .tweeter-nav .active {
+  background: color-mix(in srgb, var(--tw-accent) 11%, transparent) !important;
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-tabs button,
+.tweeter-mode[data-color-mode='blue'] .tweeter-tabs button,
+.tweeter-mode[data-color-mode='light'] .tweet-actions-row a,
+.tweeter-mode[data-color-mode='light'] .tweet-actions-row button,
+.tweeter-mode[data-color-mode='blue'] .tweet-actions-row a,
+.tweeter-mode[data-color-mode='blue'] .tweet-actions-row button {
+  color: var(--tw-muted) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-tabs .active,
+.tweeter-mode[data-color-mode='blue'] .tweeter-tabs .active,
+.tweeter-mode[data-color-mode='light'] a:hover,
+.tweeter-mode[data-color-mode='blue'] a:hover {
+  color: var(--tw-accent) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-compose-body textarea,
+.tweeter-mode[data-color-mode='blue'] .tweeter-compose-body textarea,
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-search input,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-search input {
+  color: var(--tw-text) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-compose-body textarea::placeholder,
+.tweeter-mode[data-color-mode='blue'] .tweeter-compose-body textarea::placeholder,
+.tweeter-mode[data-color-mode='light'] .tweeter-legacy-search input::placeholder,
+.tweeter-mode[data-color-mode='blue'] .tweeter-legacy-search input::placeholder {
+  color: var(--tw-muted) !important;
+}
+
+.tweeter-current-user {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tweeter-current-user .avatar,
+.legacy-mini-avatar .avatar {
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+  min-width: 2.35rem !important;
+  max-width: 2.35rem !important;
+  flex: 0 0 2.35rem !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.tweeter-current-user .avatar img,
+.legacy-mini-avatar .avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.tweeter-current-user > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tweeter-current-user strong,
+.tweeter-current-user span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tweeter-current-user > i {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--tw-muted);
+}
+
+.tweeter-left-rail,
+.tweeter-right-rail,
+.tweeter-feed-list,
+.tweeter-main-column,
+.tweeter-messages-list,
+.tweeter-message-thread {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}

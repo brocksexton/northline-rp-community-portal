@@ -1,6 +1,6 @@
 {
   "name": "northline-rp-community-portal",
-  "version": "2.9.92",
+  "version": "2.9.93",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
