@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="Deliver parcel to mailbox illustration">
+  <rect width="1200" height="760" rx="48" fill="#f1f5f9"/>
+  <rect x="120" y="120" width="960" height="520" rx="34" fill="#7c2d12" opacity=".2"/>
+  <rect x="680" y="205" width="260" height="230" rx="28" fill="#1e3a8a"/>
+  <rect x="720" y="245" width="180" height="70" rx="12" fill="#0f172a" opacity=".45"/>
+  <rect x="780" y="435" width="60" height="135" rx="12" fill="#1e293b"/>
+  <rect x="270" y="430" width="300" height="190" rx="14" fill="#d97706"/>
+  <path d="M270 470h300" stroke="#92400e" stroke-width="10"/><path d="M420 430v190" stroke="#fef3c7" stroke-width="16"/>
+  <rect x="410" y="360" width="260" height="76" rx="18" fill="rgba(15,23,42,.75)"/>
+  <text x="540" y="408" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#fff" font-weight="700">E  Deliver Parcel</text>
+  <rect x="185" y="160" width="350" height="130" rx="26" fill="#fff" stroke="#bfdbfe" stroke-width="4"/>
+  <text x="360" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#0f172a" font-weight="700">Finish at the mailbox</text>
+  <text x="360" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#475569">Interact when you see the prompt.</text>
+</svg>

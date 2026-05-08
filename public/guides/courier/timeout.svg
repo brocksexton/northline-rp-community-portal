@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="Courier delivery cancelled illustration">
+  <rect width="1200" height="760" rx="48" fill="#fff1f2"/>
+  <rect x="250" y="260" width="700" height="150" rx="18" fill="#7f1d1d" opacity=".92"/>
+  <rect x="250" y="260" width="95" height="150" rx="18" fill="#991b1b"/>
+  <text x="300" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="52" fill="#fca5a5">!</text>
+  <text x="390" y="325" font-family="Arial, sans-serif" font-size="34" fill="#fff" font-weight="700">Employment</text>
+  <text x="390" y="370" font-family="Arial, sans-serif" font-size="29" fill="#fecaca">Out of time — delivery cancelled.</text>
+  <rect x="405" y="480" width="390" height="80" rx="22" fill="#fff" stroke="#fecaca" stroke-width="4"/>
+  <text x="600" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#7f1d1d" font-weight="700">Return for a new package</text>
+</svg>
