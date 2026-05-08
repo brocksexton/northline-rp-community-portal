@@ -18,7 +18,7 @@
     "secondaryCta": "View server status"
   },
   "server": {
-    "joinLabel": "Open s&box page",
+    "joinLabel": "Join server",
     "joinUrl": "https://sbox.game/apetavern/aperp",
     "discordUrl": "https://discord.gg/mmwPf2dT8W",
     "rulesUrl": "/rules",
@@ -30,7 +30,7 @@
   "content": {
     "announcementTitle": "Built for the city, not just the homepage",
     "announcementBody": "The portal is designed around player profiles, city activity, onboarding, transparent operations, and staff tools that can expand safely over time.",
-    "footerText": "Northline RP is a community server project running Northbound RP for s&box. Not affiliated with Valve, Steam, Facepunch, Garry's Mod, ApeTavern, or Northbound RP unless otherwise stated.",
+    "footerText": "Northline RP is a community-run Northbound RP server for s&box. Not affiliated with Valve, Steam, Facepunch, Garry's Mod, ApeTavern, or Northbound RP unless otherwise stated.",
     "earlyAccessTitle": "Early access notice",
     "earlyAccessBody": "Server systems, balance values, website pages, and profile data may change while Northline RP is being built. The game server remains the source of truth."
   },
@@ -112,7 +112,11 @@
     "privacySections": [
       {
         "title": "Steam-linked identity",
-        "body": "The portal uses Steam OpenID to confirm SteamID64 and may use public Steam profile name/avatar information for account display."
+        "body": "The portal uses Steam OpenID to confirm SteamID64 and uses the Steam Web API where configured to read public Steam profile names and avatars. Steam API keys remain server-side."
+      },
+      {
+        "title": "Cloudflare, Steam, and Discord services",
+        "body": "Northline RP uses Cloudflare for CDN, DNS, security, and reverse-proxy protection; Steam OpenID/Web API for login and public profile lookups; and Discord bot, webhook, and API features for community links, forum identity, staff notifications, and relays."
       },
       {
         "title": "Portal and server data",
@@ -130,7 +134,7 @@
     "termsSections": [
       {
         "title": "Community portal",
-        "body": "Northline RP provides this website as a companion portal for the Northbound RP / ApeTavern / aperp s&box server."
+        "body": "Northline RP provides this website for its community-run Northbound RP / ApeTavern / aperp s&box server."
       },
       {
         "title": "Acceptable use",
@@ -143,6 +147,10 @@
       {
         "title": "No pay-to-win",
         "body": "Future supporter perks should remain cosmetic, convenience-based, or community-facing and must not provide gameplay power or moderation preference."
+      },
+      {
+        "title": "Third-party services",
+        "body": "Steam, Discord, s&box, Facepunch, Cloudflare, hosting providers, and other linked services are separate services with their own terms and privacy practices."
       }
     ]
   }

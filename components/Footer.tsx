@@ -57,8 +57,7 @@ export async function Footer() {
             <FooterWordmark />
           </Link>
           <p>
-            Northline RP is a community-run companion site for our Northbound RP server. Jump into the city, check what is happening,
-            and keep your profile looking like yours.
+            Northline RP is a community-run Northbound RP server with a website for status, profiles, community tools, and updates.
           </p>
           <div className="footer-actions-v3">
             <a href="https://discord.gg/VExsvp4PXT" target="_blank" rel="noreferrer"><i className="fa-solid fa-gamepad" aria-hidden="true" /> Northbound RP</a>
@@ -96,7 +95,7 @@ export async function Footer() {
       </div>
 
       <div className="footer-bottom-v3">
-        <span>Community run, built for fun.</span>
+        <span>Community-run server, built for fun.</span>
         <span className="footer-version-pill">v{APP_VERSION}</span>
         <span>Not affiliated with Valve, Steam, Facepunch, Garry&apos;s Mod, ApeTavern, or Northbound RP unless otherwise stated.</span>
       </div>

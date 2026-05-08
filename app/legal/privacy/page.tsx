@@ -29,12 +29,20 @@ const privacyHighlights = [
   },
 ];
 
+
+const thirdPartyPrivacyLinks = [
+  { label: 'Cloudflare Privacy Policy', href: 'https://www.cloudflare.com/privacypolicy/' },
+  { label: 'Steam Privacy Agreement', href: 'https://store.steampowered.com/privacy_agreement/' },
+  { label: 'Discord Privacy Policy', href: 'https://discord.com/privacy' },
+  { label: 's&box website', href: 'https://sbox.game/' },
+];
+
 const privacySections = [
   {
     title: 'Who this policy covers',
     body: [
       'This Privacy Policy applies to the Northline RP community portal at northline.lol and related Northline RP web features for the Northbound RP / ApeTavern / aperp s&box server.',
-      'Northline RP is a community server project. It is not affiliated with Valve, Steam, Facepunch, Garry\'s Mod, ApeTavern, or Northbound RP unless expressly stated.',
+      'Northline RP is a community-run server. It is not affiliated with Valve, Steam, Facepunch, Garry\'s Mod, ApeTavern, or Northbound RP unless expressly stated.',
     ],
   },
   {
@@ -48,14 +56,14 @@ const privacySections = [
     title: 'Technical data, cookies, and sessions',
     body: [
       'When you sign in with Steam, the portal stores a session cookie so you can stay signed in and use account features such as dashboard settings, follows, likes, messages, applications, and staff tools where authorized.',
-      'The server or hosting provider may also process normal technical logs such as IP address, browser information, requested URLs, timestamps, errors, and security events. These logs are used for reliability, abuse prevention, troubleshooting, and security.',
+      'The website is served through Cloudflare as the CDN, DNS, security, and reverse-proxy layer. Cloudflare and the origin host may process normal technical logs such as IP address, browser information, requested URLs, timestamps, errors, cache events, firewall/security events, and performance data. These logs are used for reliability, abuse prevention, troubleshooting, and security.',
     ],
   },
   {
     title: 'Steam, Discord, and third-party services',
     body: [
-      'Steam handles the login confirmation through Steam OpenID. If a Steam Web API key is configured, the portal may request public Steam profile information such as display name and avatar. Steam does not give Northline RP your Steam password through this process.',
-      'Northline RP may link to or integrate with Discord for community support, announcements, account linking, staff notifications, admin audit webhooks, and bot/relay features. Discord, Steam, s&box, and any hosting/CDN providers operate under their own terms and privacy policies.',
+      'Steam handles login confirmation through Steam OpenID. Northline RP also uses server-side Steam Web API keys where configured to request public Steam profile information such as display name and avatar. Steam does not give Northline RP your Steam password through this process, and Steam API keys must remain server-side.',
+      'Northline RP integrates with Discord for community support, announcements, account linking, forum identity, staff notifications, admin audit webhooks, and bot/relay features. Discord bot tokens, webhook URLs, Steam API keys, and other credentials are operational secrets and should not be exposed publicly. Discord, Steam, s&box, Cloudflare, and the hosting provider operate under their own terms and privacy policies.',
     ],
   },
   {
@@ -96,7 +104,7 @@ const privacySections = [
   {
     title: 'Security',
     body: [
-      'Northline RP uses server-side permission checks for staff and admin functionality. Secrets such as Steam API keys, webhook URLs, bridge tokens, and command credentials should remain server-side and should not be committed to public code.',
+      'Northline RP uses server-side permission checks for staff and admin functionality, Cloudflare as a public-facing protection layer, and private server-side credentials for integrations. Secrets such as Steam Web API keys, Discord bot tokens, webhook URLs, bridge tokens, and command credentials should remain server-side and should not be committed to public code.',
       'No community website can guarantee perfect security. Please report suspected data leaks, account issues, or unsafe pages through Discord support or the contact email below.',
     ],
   },
@@ -144,6 +152,14 @@ export default async function PrivacyPage() {
             <p>{item.body}</p>
           </article>
         ))}
+      </section>
+
+
+      <section className="policy-service-links-v2" aria-label="Related third-party privacy links">
+        <strong>Related service policies</strong>
+        <div>
+          {thirdPartyPrivacyLinks.map((item) => <a href={item.href} target="_blank" rel="noreferrer" key={item.href}>{item.label}</a>)}
+        </div>
       </section>
 
       <section className="policy-section-list-v2">

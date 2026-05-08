@@ -69,7 +69,7 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       tone: 'success',
       headline: 'Server online.',
       body: 'The city is reachable and players are connected right now.',
-      primaryAction: 'Join through s&box',
+      primaryAction: 'Join server',
     };
   }
 
@@ -81,7 +81,7 @@ function inferPublicState(runtime: ServerRuntimeStatus, onlineCount: number, lat
       body: latestEventAt
         ? `Nobody is showing online at the moment. The latest visible activity was ${relativeFromDate(latestEventAt)}.`
         : 'The game server appears online, but nobody is showing as connected.',
-      primaryAction: 'Join through s&box',
+      primaryAction: 'Join server',
     };
   }
 
@@ -226,7 +226,11 @@ export default async function StatusPage() {
   const state = inferPublicState(runtime, effectiveOnlineCount, runtime.lastSignalAt ?? population.latestEventAt);
   const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
   const capacityPercent = visiblePlayerCount === null ? 0 : Math.min(100, Math.round((visiblePlayerCount / maxPlayers) * 100));
-  const primaryActionHref = state.primaryAction === 'Check Discord' ? config.server.discordUrl : config.server.joinUrl;
+  const connectHost = config.status.serverHost ?? '203.0.113.10';
+  const connectPort = config.status.serverPort ?? 27015;
+  const steamConnectHref = `steam://connect/${connectHost}:${connectPort}`;
+  const primaryActionHref = state.primaryAction === 'Check Discord' ? config.server.discordUrl : steamConnectHref;
+  const primaryActionExternal = state.primaryAction === 'Check Discord';
   const onlinePlayers = runtime.state === 'offline' ? [] : population.onlinePlayers.slice(0, 12);
   const recentEvents = population.recentEvents.slice(0, 7);
   const signalLabel = runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Not reported';
@@ -250,9 +254,10 @@ export default async function StatusPage() {
           <h1>{state.headline}</h1>
           <p>{state.body}</p>
           <div className="status-command-actions">
-            <a className="button button-primary" href={primaryActionHref} target={state.primaryAction === 'Check Discord' ? '_blank' : undefined} rel={state.primaryAction === 'Check Discord' ? 'noreferrer' : undefined}>
+            <a className="button button-primary" href={primaryActionHref} target={primaryActionExternal ? '_blank' : undefined} rel={primaryActionExternal ? 'noreferrer' : undefined}>
               <i className={state.primaryAction === 'Check Discord' ? 'fa-brands fa-discord' : 'fa-solid fa-gamepad'} aria-hidden="true" /> {state.primaryAction}
             </a>
+            {state.primaryAction !== 'Check Discord' ? <a className="button button-soft" href={config.server.joinUrl} target="_blank" rel="noreferrer"><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" /> Open s&box page</a> : null}
             <a className="button button-soft" href={config.server.discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Discord</a>
             {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Tweeter</Link> : null}
           </div>

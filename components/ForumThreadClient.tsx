@@ -264,10 +264,13 @@ export function ForumThreadClient({ thread: initialThread, initialPosts, signedI
         <aside className="forum-post-author-panel">
           <UserAvatar src={post.author.avatarUrl} name={post.author.displayName} size={isStarter ? 'lg' : 'md'} />
           <div className="forum-author-name-line">
-            <strong>{post.author.displayName}</strong>
+            {post.author.steamId ? (
+              <Link href={`/u/${post.author.steamId}`} className="forum-author-profile-link">{post.author.displayName}</Link>
+            ) : (
+              <strong>{post.author.displayName}</strong>
+            )}
             <TweeterVerifiedBadge kind={post.author.badgeKind} className="forum-user-badge" />
           </div>
-          {post.author.steamId ? <small className="forum-author-detail">Steam {post.author.steamId.slice(-8)}</small> : post.author.discordUserId ? <small className="forum-author-detail">Discord {post.author.discordUserId.slice(-6)}</small> : null}
         </aside>
         <div className="forum-post-content-panel">
           <header className="forum-post-clean-header">

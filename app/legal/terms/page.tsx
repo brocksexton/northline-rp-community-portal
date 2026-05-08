@@ -17,6 +17,14 @@ const quickRules = [
   { icon: 'fa-solid fa-gift', title: 'No pay-to-win', body: 'Any future supporter perks should remain cosmetic, convenience-based, or community-facing without gameplay power.' },
 ];
 
+
+const thirdPartyTermsLinks = [
+  { label: 'Cloudflare Terms', href: 'https://www.cloudflare.com/website-terms/' },
+  { label: 'Steam Subscriber Agreement', href: 'https://store.steampowered.com/subscriber_agreement/' },
+  { label: 'Discord Terms', href: 'https://discord.com/terms' },
+  { label: 's&box website', href: 'https://sbox.game/' },
+];
+
 const termsSections = [
   {
     title: 'Agreement to these terms',
@@ -28,15 +36,15 @@ const termsSections = [
   {
     title: 'What the portal is for',
     body: [
-      'Northline RP provides this website as a companion portal for the Northbound RP / ApeTavern / aperp s&box server. Features may include Steam sign-in, dashboards, player profiles, Tweeter, forum threads, messages, status pages, leaderboards, jobs/applications, bans/cases, support information, Discord integrations, and staff tools.',
+      'Northline RP provides this website for its community-run Northbound RP / ApeTavern / aperp s&box server. Features may include Steam sign-in, dashboards, player profiles, Tweeter, forum threads, messages, status pages, leaderboards, jobs/applications, bans/cases, support information, Discord integrations, and staff tools.',
       'The portal is provided for community use and server operations. Features may be changed, restricted, reset, disabled, or removed as the server develops.',
     ],
   },
   {
     title: 'Account access and responsibility',
     body: [
-      'Steam sign-in connects your browser session to your SteamID64. You are responsible for actions taken through your signed-in browser session, especially on shared computers or public devices.',
-      'Do not attempt to access another person\'s account, session, staff tools, API routes, server bridge, webhook, token, or permission-controlled page.',
+      'Steam sign-in connects your browser session to your SteamID64 through Steam OpenID. Public Steam profile data may be retrieved through the Steam Web API where configured. You are responsible for actions taken through your signed-in browser session, especially on shared computers or public devices.',
+      'Do not attempt to access another person\'s account, session, staff tools, API routes, server bridge, Discord webhook, Discord bot token, Steam API key, Cloudflare configuration, or permission-controlled page.',
     ],
   },
   {
@@ -84,14 +92,14 @@ const termsSections = [
   {
     title: 'Availability, changes, and early access',
     body: [
-      'Northline RP is an evolving community project. The website, server, data bridge, Discord relay, bot features, game exports, and staff tools may be unavailable, interrupted, changed, or removed without advance notice.',
+      'Northline RP is an evolving community-run server. The website, server, Cloudflare/CDN layer, data bridge, Discord relay, bot features, game exports, and staff tools may be unavailable, interrupted, changed, or removed without advance notice.',
       'We may update these terms when features, rules, integrations, or operational needs change. The Last updated date shows when this page was last materially revised.',
     ],
   },
   {
     title: 'Third-party services and non-affiliation',
     body: [
-      'Steam, Discord, s&box, Facepunch, hosting providers, and other linked services are separate services with their own accounts, rules, terms, and privacy practices.',
+      'Steam, Discord, s&box, Facepunch, Cloudflare, hosting providers, and other linked services are separate services with their own accounts, rules, terms, and privacy practices. Northline RP may use Steam OpenID/Web API, Discord bot/webhook/API features, and Cloudflare CDN/reverse-proxy services to operate the community website.',
       'Northline RP is not affiliated with Valve, Steam, Facepunch, Garry\'s Mod, ApeTavern, or Northbound RP unless expressly stated.',
     ],
   },
@@ -139,6 +147,14 @@ export default async function TermsPage() {
             <p>{item.body}</p>
           </article>
         ))}
+      </section>
+
+
+      <section className="policy-service-links-v2" aria-label="Related third-party terms">
+        <strong>Related service terms</strong>
+        <div>
+          {thirdPartyTermsLinks.map((item) => <a href={item.href} target="_blank" rel="noreferrer" key={item.href}>{item.label}</a>)}
+        </div>
       </section>
 
       <section className="policy-section-list-v2">

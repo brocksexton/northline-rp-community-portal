@@ -90,7 +90,7 @@ export function ForumBoardClient({ initialState, signedIn }: Props) {
           {filtered.length ? filtered.map((thread) => {
             const cat = categoryFor(initialState.categories, thread);
             return (
-              <Link className={`forum-thread-card ${thread.pinned ? 'pinned' : ''} kind-${thread.kind}`} href={`/forum/thread/${thread.id}`} key={thread.id}>
+              <article className={`forum-thread-card ${thread.pinned ? 'pinned' : ''} kind-${thread.kind}`} key={thread.id}>
                 <div className="forum-thread-icon"><i className={cat?.icon ?? 'fa-solid fa-comments'} aria-hidden="true" /></div>
                 <div>
                   <div className="forum-thread-meta">
@@ -98,11 +98,11 @@ export function ForumBoardClient({ initialState, signedIn }: Props) {
                     {thread.kind === 'announcement' ? <span>Announcement</span> : null}
                     {thread.source === 'discord' ? <span>Discord</span> : <span>Website</span>}
                   </div>
-                  <h2>{thread.title}</h2>
+                  <h2><Link href={`/forum/thread/${thread.id}`}>{thread.title}</Link></h2>
                   <p>{thread.excerpt}</p>
-                  <small>{thread.author.displayName} · {thread.postCount} post{thread.postCount === 1 ? '' : 's'} · {relative(thread.lastActivityAt)}</small>
+                  <small>{thread.author.steamId ? <Link className="forum-thread-author-link" href={`/u/${thread.author.steamId}`}>{thread.author.displayName}</Link> : thread.author.displayName} · {thread.postCount} post{thread.postCount === 1 ? '' : 's'} · {relative(thread.lastActivityAt)}</small>
                 </div>
-              </Link>
+              </article>
             );
           }) : <article className="empty-card"><strong>No threads yet</strong><p>Start the first conversation for this category.</p></article>}
         </div>

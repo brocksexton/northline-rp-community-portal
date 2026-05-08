@@ -323,7 +323,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
 
           <div className="ape-tavern-copy">
             <p>
-              Northline is a community-run companion for a gamemode we genuinely enjoy. Huge respect to Ape Tavern for the work they keep putting into
+              Northline RP is a community-run server built around a gamemode we genuinely enjoy. Huge respect to Ape Tavern for the work they keep putting into
               Northbound RP and the wider S&box scene.
             </p>
           </div>
