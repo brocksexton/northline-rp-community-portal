@@ -209,55 +209,59 @@ const basicSteps = {
   courier: [
     {
       title: 'Open Job Finder and choose Courier',
-      body: 'Press P, open Job Finder, and choose Courier under the Other section. Courier is a good starting job if you want to learn the map while making steady money.',
-      image: '/guides/courier/job-finder.svg',
-      alt: 'Illustration of the phone Job Finder app showing Courier under Other jobs.',
-      bullets: ['Courier may show a $0 salary.', 'That is expected: you are paid per package, not from a fixed salary.', 'Use Add Waypoint if you need help finding the post office.'],
+      body: 'Press P, open Job Finder, and choose Courier under the Other section. Courier is a great first job if you want to learn the city while earning money.',
+      image: '/guides/courier/job-finder.png',
+      alt: 'Careers screen showing Courier listed under Other jobs.',
+      bullets: ['Courier appears under the Other category.', 'This job often has open slots for newer players.', 'Open the Courier page to review the job first.'],
     },
     {
-      title: 'Go to the post office',
-      body: 'Follow the waypoint to the post office and speak with Postman Patrick. Ask him about employment and browse the available job.',
-      image: '/guides/courier/post-office.svg',
-      alt: 'Illustration of a post office counter and parcel shelves.',
-      bullets: ['Look for the courier/post office interior with parcel shelves.', 'You can apply from the job list if there are open courier slots.', 'If the job is full, come back when a slot opens.'],
+      title: 'Check the job details and add a waypoint',
+      body: 'The job page shows a short description, open spots, and an Add Waypoint button. Courier may show a $0 salary because you are paid per completed package, not by a fixed paycheck.',
+      image: '/guides/courier/job-details.png',
+      alt: 'Courier job details page showing the Add Waypoint button and a $0 listed salary.',
+      bullets: ['Do not let the $0 salary confuse you.', 'Use Add Waypoint if you need help finding the post office.', 'You earn money from successful deliveries.'],
     },
     {
-      title: 'Apply and read the courier intro',
-      body: 'After applying, the courier intro explains the basics: parcels are stored on the shelves, deliveries are timed, and the compass helps you find the right mailbox.',
-      image: '/guides/courier/timer.svg',
-      alt: 'Illustration of a courier compass and timer prompt.',
-      bullets: ['The faster you deliver, the better the payout.', 'The timer matters, so do not pick up a parcel unless you are ready to move.', 'Use the guide prompts if this is your first delivery.'],
+      title: 'Head to the post office',
+      body: 'Follow your waypoint to the post office. This is where you start the job and pick up parcels for delivery.',
+      image: '/guides/courier/post-office-exterior.png',
+      alt: 'Exterior view of the post office building in Northline RP.',
+      bullets: ['The post office is your home base for Courier work.', 'If you get lost, re-open Job Finder and set the waypoint again.'],
+    },
+    {
+      title: 'Talk to Postman Patrick',
+      body: 'Inside, speak with Postman Patrick and ask about employment. He is the NPC that handles courier work.',
+      image: '/guides/courier/postman-patrick.png',
+      alt: 'Postman Patrick standing behind the post office counter.',
+      bullets: ['Use the employment dialogue option.', 'This is where you begin the in-person part of the job.'],
+    },
+    {
+      title: 'Browse jobs and apply',
+      body: 'Open the job list and apply for Courier if there is an open slot. Once accepted, you can start taking deliveries right away.',
+      image: '/guides/courier/browse-jobs.png',
+      alt: 'Browse Jobs panel showing the Courier role with an Apply button.',
+      bullets: ['If the job is full, come back later.', 'Once hired, you can start collecting parcels from the shelves.'],
     },
     {
       title: 'Pick up a parcel from the shelves',
-      body: 'Walk up to a parcel and interact with it. Once you take a parcel, the delivery route starts and the HUD will show where it needs to go.',
-      bullets: ['Only grab a package when you are ready to leave.', 'The parcel will be carried with you.', 'Watch for the delivery location and timer on your HUD.'],
+      body: 'Walk up to a parcel and interact with it. Taking a parcel starts the delivery and begins the timed run.',
+      image: '/guides/courier/pick-parcel.png',
+      alt: 'A parcel on a shelf with the pick-up prompt visible.',
+      bullets: ['Only grab a parcel when you are ready to leave.', 'After pickup, the HUD shows the destination and the timer.', 'Quicker runs pay more.'],
     },
     {
-      title: 'Follow the compass and timer',
-      body: 'Your HUD shows the destination and remaining time. Follow the compass marker toward the delivery address and keep moving quickly.',
-      image: '/guides/courier/timer.svg',
-      alt: 'Illustration of a courier waypoint and countdown timer.',
-      bullets: ['The compass marker points you toward the mailbox.', 'The timer counts down while you are carrying the package.', 'Faster deliveries pay better.'],
+      title: 'Deliver the parcel to the right mailbox',
+      body: 'Carry the package to the marked destination and interact with the correct mailbox to complete the delivery.',
+      image: '/guides/courier/deliver-parcel.png',
+      alt: 'Parcel being delivered to a mailbox with the Deliver Parcel prompt visible.',
+      bullets: ['Follow the destination marker and keep an eye on the time.', 'You are paid when the delivery is completed successfully.', 'The faster you finish, the better your payout can be.'],
     },
     {
-      title: 'Deliver the parcel to the mailbox',
-      body: 'When you reach the correct mailbox, interact with it to deliver the parcel and complete the job.',
-      image: '/guides/courier/mailbox.svg',
-      alt: 'Illustration of delivering a parcel to a mailbox.',
-      bullets: ['Look for the Deliver Parcel prompt.', 'Press the interact key when you are at the correct mailbox.', 'You are paid for completed deliveries, not for holding the package.'],
-    },
-    {
-      title: 'If time runs out, restart the delivery',
-      body: 'If you run out of time, the delivery is cancelled and the package disappears. Return to the post office, grab a new parcel, and try again.',
-      image: '/guides/courier/timeout.svg',
-      alt: 'Illustration of an out-of-time delivery cancelled notice.',
-      bullets: ['You do not complete the job if the timer expires.', 'A cancelled delivery means you need a new package.', 'Plan your route and move quickly on the next run.'],
-    },
-    {
-      title: 'Use deliveries to create small RP moments',
-      body: 'Courier work is also a reason to move around the city, meet business owners, and run into other players without forcing a big scene.',
-      bullets: ['Say hi when you pass people.', 'Ask shops if they are expecting deliveries.', 'Keep routes clear and avoid blocking doors or roads.'],
+      title: 'If time runs out, get a new package',
+      body: 'If you run out of time, the delivery is cancelled and the package disappears. Head back to the post office and pick up a new parcel.',
+      image: '/guides/courier/timeout-notice.png',
+      alt: 'Red employment notice saying the delivery was cancelled because time ran out.',
+      bullets: ['A timed-out package does not count as a delivery.', 'You need to return and start a new run.', 'Try to move quicker on the next attempt for a better payout.'],
     },
   ],
   business: [
@@ -445,8 +449,8 @@ export default function GuideJobSection() {
                 </figure>
               ) : (
                 <div className="guide-modal-placeholder">
-                  <strong>Visual guide slot</strong>
-                  <span>A screenshot or short clip can be added here later.</span>
+                  <strong>Guide note</strong>
+                  <span>Use the step details on the left, then continue when you are ready.</span>
                 </div>
               )}
             </article>
