@@ -7,6 +7,7 @@ import {
   EmbedBuilder,
   PermissionFlagsBits,
   Partials,
+  ActivityType,
 } from 'discord.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
@@ -31,6 +32,16 @@ const deathPollMs = Math.max(1000, Math.min(Number(process.env.NORTHLINE_BOT_DEA
 const deathDedupeMs = Math.max(5000, Math.min(Number(process.env.NORTHLINE_BOT_DEATH_DEDUPE_MS || 45000) || 45000, 300000));
 const deathIncludeSteamId = !/^false$/i.test(process.env.NORTHLINE_BOT_DEATH_INCLUDE_STEAMID || 'true');
 const deathEventsPath = (process.env.NORTHLINE_BOT_DEATH_EVENTS_PATH || 'C:\\Servers\\northline-data\\death-events.jsonl').trim();
+const statusPresenceEnabled = !/^false$/i.test(process.env.NORTHLINE_BOT_STATUS_ENABLED || 'true');
+const statusPollMs = Math.max(15_000, Math.min(Number(process.env.NORTHLINE_BOT_STATUS_POLL_MS || 60000) || 60000, 900000));
+const statusTemplate = String(process.env.NORTHLINE_BOT_STATUS_TEXT || 'Northline RP • {players}/{max} online').trim();
+const statusStaticText = String(process.env.NORTHLINE_BOT_STATUS_STATIC_TEXT || '').trim();
+const statusTypeName = String(process.env.NORTHLINE_BOT_STATUS_TYPE || 'Watching').trim().toLowerCase();
+const botStatus = String(process.env.NORTHLINE_BOT_ONLINE_STATUS || 'online').trim().toLowerCase();
+const activityType = statusTypeName === 'playing' ? ActivityType.Playing
+  : statusTypeName === 'listening' ? ActivityType.Listening
+    : statusTypeName === 'competing' ? ActivityType.Competing
+      : ActivityType.Watching;
 
 
 if (!token) {
@@ -74,6 +85,46 @@ function parseColor(value) {
 function clean(value, max = 1024) {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text.length > max ? `${text.slice(0, Math.max(0, max - 1))}…` : text;
+}
+
+function sitePath(path) {
+  const base = String(publicUrl || apiBase || '').replace(/\/$/, '');
+  const suffix = String(path || '/').startsWith('/') ? String(path || '/') : `/${path}`;
+  return `${base}${suffix}`;
+}
+
+function linkEmbed(title, description, links = []) {
+  const embed = baseEmbed(title).setDescription(description);
+  if (links.length) {
+    embed.addFields({
+      name: 'Links',
+      value: links.map((link) => `• [${link.label}](${sitePath(link.path)})`).join('\n'),
+      inline: false,
+    });
+  }
+  return embed;
+}
+
+function rollDice(notation) {
+  const raw = String(notation || '1d20').trim().toLowerCase();
+  const match = raw.match(/^(?:(\d{1,2})d)?(\d{1,4})$/);
+  if (!match) return { error: 'Use dice like `d20`, `2d6`, or `3d10`.' };
+  const count = Math.min(Math.max(Number(match[1] || 1), 1), 20);
+  const sides = Math.min(Math.max(Number(match[2]), 2), 1000);
+  const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
+  return { notation: `${count}d${sides}`, rolls, total: rolls.reduce((sum, value) => sum + value, 0) };
+}
+
+function publicCommandHelpEmbed() {
+  return baseEmbed('Northline bot command menu')
+    .setDescription('Useful website, server, forum, and lightweight RP utility commands.')
+    .addFields(
+      { name: 'Website + city', value: '`/northline status` · `/northline players` · `/northline deaths` · `/northline links` · `/northline forum` · `/northline jobs` · `/northline cases` · `/northline leaderboards`', inline: false },
+      { name: 'Fun', value: '`/northline fun` · `/northline roll` · `/northline coinflip` · `/northline choose` · `/northline eightball`', inline: false },
+      { name: 'Staff/game moderation', value: '`/northline broadcast` · `/northline kick` · `/northline ban` · `/northline server`', inline: false },
+      { name: 'Discord moderation', value: '`/discordmod timeout` · `/discordmod purge` · `/discordmod slowmode` · `/discordmod lock` · `/discordmod unlock` · `/discordmod userinfo`', inline: false },
+      { name: 'Account linking', value: 'Generate a code from the website dashboard, then run `/link code:<code>`.', inline: false },
+    );
 }
 
 function steamProfileUrl(steamId) {
@@ -437,10 +488,44 @@ async function handleNorthline(interaction) {
 
   await interaction.deferReply({ ephemeral: ['broadcast', 'kick', 'ban', 'server'].includes(sub) });
   try {
+    if (sub === 'help') return interaction.editReply({ embeds: [publicCommandHelpEmbed()] });
     if (sub === 'status') return interaction.editReply({ embeds: [await statusEmbed()] });
     if (sub === 'players') return interaction.editReply({ embeds: [await playersEmbed()] });
     if (sub === 'deaths') return interaction.editReply({ embeds: [await deathsEmbed()] });
+    if (sub === 'links') return interaction.editReply({ embeds: [linkEmbed('Northline RP links', 'Quick links into the website, forum, and community tools.', [
+      { label: 'Website home', path: '/' },
+      { label: 'Forum', path: '/forum' },
+      { label: 'Staff applications', path: '/jobs' },
+      { label: 'Leaderboards', path: '/leaderboards' },
+      { label: 'Daily Drops', path: '/cases' },
+      { label: 'Profile Studio', path: '/dashboard' },
+    ])] });
+    if (sub === 'forum') return interaction.editReply({ embeds: [linkEmbed('Northline Forum', 'Read announcements, synced Discord discussions, and community threads.', [{ label: 'Open forum', path: '/forum' }, { label: 'Profile Studio', path: '/dashboard' }])] });
+    if (sub === 'jobs') return interaction.editReply({ embeds: [linkEmbed('Staff applications', 'Browse open postings and track application status from the website mini-app.', [{ label: 'Applications hub', path: '/jobs' }, { label: 'Open postings', path: '/jobs/open' }, { label: 'My applications', path: '/jobs/applications' }])] });
+    if (sub === 'cases') return interaction.editReply({ embeds: [linkEmbed('Daily Drops cases', 'Open your daily case, view inventory, and preview the case shop foundation.', [{ label: 'Open Daily Drops', path: '/cases' }])] });
+    if (sub === 'leaderboards') return interaction.editReply({ embeds: [linkEmbed('Northline leaderboards', 'Compare economy, activity, character, property, Tweeter, and guide progress.', [{ label: 'Open leaderboards', path: '/leaderboards' }])] });
     if (sub === 'fun') return interaction.editReply({ embeds: [await funEmbed()] });
+    if (sub === 'roll') {
+      const result = rollDice(interaction.options.getString('dice') || '1d20');
+      if (result.error) return interaction.editReply(result.error);
+      const description = result.rolls.length > 1 ? `Rolls: ${result.rolls.map((roll) => `\`${roll}\``).join(' ')}\n\nTotal: **${result.total}**` : `Result: **${result.total}**`;
+      return interaction.editReply({ embeds: [baseEmbed(`🎲 Rolled ${result.notation}`).setDescription(description)] });
+    }
+    if (sub === 'coinflip') {
+      const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+      return interaction.editReply({ embeds: [baseEmbed('🪙 Coin flip').setDescription(`Northline calls it: **${result}**.`)] });
+    }
+    if (sub === 'choose') {
+      const options = interaction.options.getString('options', true).split(',').map((item) => clean(item, 80)).filter(Boolean);
+      if (options.length < 2) return interaction.editReply('Give me at least two comma-separated options.');
+      const choice = options[Math.floor(Math.random() * options.length)];
+      return interaction.editReply({ embeds: [baseEmbed('Northline chooses').setDescription(`I pick: **${choice}**`)] });
+    }
+    if (sub === 'eightball') {
+      const question = interaction.options.getString('question', true);
+      const answers = ['Absolutely.', 'Ask again after the next restart.', 'The city says yes.', 'Not looking good.', 'Only if the mayor survives.', 'Very likely.', 'No, but it would be funny.', 'The evidence is inconclusive.'];
+      return interaction.editReply({ embeds: [baseEmbed('🎱 Northline 8-ball').setDescription(`> ${clean(question, 280)}\n\n**${answers[Math.floor(Math.random() * answers.length)]}**`)] });
+    }
     if (sub === 'broadcast') {
       const embed = await sendNorthlineAction(interaction, { type: 'broadcast', message: interaction.options.getString('message', true) });
       return interaction.editReply({ embeds: [embed] });
@@ -496,11 +581,43 @@ async function handleDiscordMod(interaction) {
       const deleted = await interaction.channel.bulkDelete(amount, true);
       return interaction.editReply(`Deleted ${deleted.size} recent messages.`);
     }
+    if (sub === 'slowmode') {
+      const seconds = interaction.options.getInteger('seconds', true);
+      const reason = interaction.options.getString('reason') || `Requested by ${interaction.user.tag}`;
+      if (!interaction.channel?.setRateLimitPerUser) return interaction.editReply('This channel does not support slowmode.');
+      await interaction.channel.setRateLimitPerUser(seconds, reason);
+      return interaction.editReply(seconds > 0 ? `Slowmode set to ${seconds} second(s).` : 'Slowmode disabled.');
+    }
+    if (sub === 'lock' || sub === 'unlock') {
+      const reason = interaction.options.getString('reason') || `Requested by ${interaction.user.tag}`;
+      const everyoneId = interaction.guild.roles.everyone.id;
+      await interaction.channel.permissionOverwrites.edit(everyoneId, {
+        SendMessages: sub === 'lock' ? false : null,
+        CreatePublicThreads: sub === 'lock' ? false : null,
+        CreatePrivateThreads: sub === 'lock' ? false : null,
+        SendMessagesInThreads: sub === 'lock' ? false : null,
+      }, { reason });
+      return interaction.editReply(sub === 'lock' ? 'Channel locked for @everyone.' : 'Channel unlocked for @everyone.');
+    }
 
     const user = interaction.options.getUser('user', true);
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     const reason = interaction.options.getString('reason') || `Requested by ${interaction.user.tag}`;
     if (!member && sub !== 'ban') return interaction.editReply('That member is not in this server.');
+    if (sub === 'userinfo') {
+      const joined = member?.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Not in server';
+      const created = `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`;
+      const roles = member ? member.roles.cache.filter((role) => role.id !== interaction.guild.id).sort((a, b) => b.position - a.position).first(8).map((role) => `${role}`).join(' ') || 'No roles' : 'Not in server';
+      const embed = baseEmbed(`User info: ${user.tag}`)
+        .setThumbnail(user.displayAvatarURL({ size: 256 }))
+        .addFields(
+          { name: 'User ID', value: `\`${user.id}\``, inline: true },
+          { name: 'Created', value: created, inline: true },
+          { name: 'Joined', value: joined, inline: true },
+          { name: 'Roles', value: clean(roles, 1000), inline: false },
+        );
+      return interaction.editReply({ embeds: [embed] });
+    }
 
     if (sub === 'timeout') {
       const minutes = interaction.options.getInteger('minutes', true);
@@ -879,8 +996,49 @@ async function startDeathNoticeWatcher() {
   }, deathPollMs).unref?.();
 }
 
+
+function formatPresenceText(data) {
+  const runtime = data?.runtime || {};
+  const population = data?.population || {};
+  const players = runtime.playerCount ?? population.onlineCount ?? 0;
+  const max = runtime.maxPlayers ?? data?.server?.maxPlayers ?? '—';
+  const state = runtime.online ? 'online' : (runtime.state || 'offline');
+  const deaths = data?.deaths?.total ?? 0;
+  const template = statusStaticText || statusTemplate;
+  return clean(template
+    .replaceAll('{players}', String(players))
+    .replaceAll('{max}', String(max))
+    .replaceAll('{state}', String(state))
+    .replaceAll('{deaths}', String(deaths))
+    .replaceAll('{site}', 'northline.lol'), 128) || 'Northline RP';
+}
+
+async function updateBotPresence() {
+  if (!statusPresenceEnabled || !client.user) return;
+  try {
+    const data = statusStaticText ? null : await apiGet('/api/bot/summary');
+    const name = formatPresenceText(data);
+    client.user.setPresence({
+      status: ['online', 'idle', 'dnd', 'invisible'].includes(botStatus) ? botStatus : 'online',
+      activities: [{ name, type: activityType }],
+    });
+    if (forumSyncLog) console.log(`[northline-discord-bot] Presence updated: ${name}`);
+  } catch (error) {
+    const fallback = clean(statusStaticText || 'Northline RP', 128);
+    client.user.setPresence({ status: 'idle', activities: [{ name: fallback, type: activityType }] });
+    console.warn('[northline-discord-bot] Presence update failed:', error instanceof Error ? error.message : error);
+  }
+}
+
+function startPresenceUpdater() {
+  if (!statusPresenceEnabled) return;
+  updateBotPresence().catch(() => {});
+  setInterval(() => updateBotPresence().catch(() => {}), statusPollMs).unref?.();
+}
+
 client.once('ready', () => {
   console.log(`Northline Discord bot signed in as ${client.user.tag}. API: ${apiBase}`);
+  startPresenceUpdater();
   startConnectionNoticeWatcher().catch((error) => console.error('[northline-discord-bot] Connection watcher failed:', error));
   startDeathNoticeWatcher().catch((error) => console.error('[northline-discord-bot] Death watcher failed:', error));
 });

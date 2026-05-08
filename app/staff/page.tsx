@@ -215,6 +215,20 @@ export default async function StaffPage() {
             { label: 'Mode', value: tweeterMode },
           ]}
         />
+
+        <WorkspaceCard
+          eyebrow="Discord"
+          title="Bot manager"
+          description="Send guided embed panels, preview Discord messages, inspect server data, and manage simple role/user actions from the website."
+          icon="fa-brands fa-discord"
+          href="/staff/discord"
+          tone="violet"
+          stats={[
+            { label: 'Panels', value: 'Preview' },
+            { label: 'Roles', value: 'Manage' },
+            { label: 'Bot', value: 'Live' },
+          ]}
+        />
         <WorkspaceCard
           eyebrow="Site"
           title="Site settings"

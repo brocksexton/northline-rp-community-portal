@@ -10,10 +10,16 @@ The dedicated Discord bot works alongside the website and game-server admin pane
 
 ### Northline/game commands
 
+- `/northline help` — command menu for website, fun, game, and moderation commands.
 - `/northline status` — current game-server status, online count, fatality rate, and website link.
 - `/northline players` — currently connected players from the website/server data.
 - `/northline deaths` — fatality/death summary from damage logs.
+- `/northline links` / `forum` / `jobs` / `cases` / `leaderboards` — quick embeds linking to the matching website areas.
 - `/northline fun` — a lightweight city status/vibe check.
+- `/northline roll dice:` — roll dice such as `d20`, `2d6`, or `3d10`.
+- `/northline coinflip` — flip a coin.
+- `/northline choose options:` — pick from a comma-separated list.
+- `/northline eightball question:` — RP-flavored eight-ball answer.
 - `/northline broadcast message:` — sends a server broadcast command through the same command bridge/queue used by the staff web panel.
 - `/northline kick steamid: reason:` — queues or sends a kick command for a SteamID64.
 - `/northline ban steamid: reason: duration_minutes:` — queues or sends a ban command for a SteamID64.
@@ -31,6 +37,10 @@ The dedicated Discord bot works alongside the website and game-server admin pane
 - `/discordmod kick`
 - `/discordmod ban`
 - `/discordmod purge`
+- `/discordmod slowmode`
+- `/discordmod lock`
+- `/discordmod unlock`
+- `/discordmod userinfo`
 
 Discord moderation commands rely on Discord permissions and optional Northline role ID gates.
 
@@ -194,3 +204,51 @@ Example body:
 ```
 
 The website appends the event to `NORTHLINE_BOT_DEATH_EVENTS_PATH` and posts a Discord incident embed to `NORTHLINE_BOT_DEATH_CHANNEL_ID`, falling back to `NORTHLINE_BOT_CONNECTION_CHANNEL_ID`.
+
+
+## Bot member-list status / rich presence
+
+The bot can display a live status in the Discord member list. By default it uses website server data and updates every minute.
+
+```env
+NORTHLINE_BOT_STATUS_ENABLED=true
+NORTHLINE_BOT_STATUS_TYPE=Watching
+NORTHLINE_BOT_STATUS_TEXT=Northline RP • {players}/{max} online
+NORTHLINE_BOT_STATUS_STATIC_TEXT=
+NORTHLINE_BOT_STATUS_POLL_MS=60000
+NORTHLINE_BOT_ONLINE_STATUS=online
+```
+
+Supported placeholders in `NORTHLINE_BOT_STATUS_TEXT`:
+
+- `{players}` — current player count
+- `{max}` — server max players when known
+- `{state}` — runtime state such as online/offline
+- `{deaths}` — fatal event count from the site summary
+- `{site}` — `northline.lol`
+
+Set `NORTHLINE_BOT_STATUS_STATIC_TEXT` to a non-empty value when you want a fixed status that does not call the website API.
+
+## New utility and moderation commands
+
+Run `npm run bot:register` after deploying v2.9.76 so Discord receives the expanded command schema.
+
+Added utility commands:
+
+- `/northline help`
+- `/northline links`
+- `/northline forum`
+- `/northline jobs`
+- `/northline cases`
+- `/northline leaderboards`
+- `/northline roll`
+- `/northline coinflip`
+- `/northline choose`
+- `/northline eightball`
+
+Added moderation commands:
+
+- `/discordmod slowmode`
+- `/discordmod lock`
+- `/discordmod unlock`
+- `/discordmod userinfo`
