@@ -127,9 +127,9 @@ export default async function RulesPage() {
       <section className="rules-hero-card">
         <div className="rules-hero-copy">
           <span className="eyebrow">Northline citizen handbook</span>
-          <h1>Rules that keep the city fun.</h1>
+          <h1>Rules that keep Northline running smoothly.</h1>
           <p>
-            Northline works best when every interaction gives someone else something to play. This guide keeps the important expectations skimmable before you jump in.
+            A short, readable pass through the expectations that matter most before you jump in.
           </p>
           <div className="rules-hero-actions">
             <a className="button button-primary" href="#quick-start">Start with the basics</a>

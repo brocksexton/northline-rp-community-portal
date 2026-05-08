@@ -75,11 +75,10 @@ export function LeaderboardsClient({ summary, boards, playersVisible = true }: P
       <section className="leaderboard-hero">
         <div className="leaderboard-hero-copy">
           <span className="kicker">City scoreboards</span>
-          <h1>Leaderboards for the locals who opt in.</h1>
+          <h1>Public leaderboards for citizens who opt in.</h1>
           <div className="leaderboard-hero-orbit" aria-hidden="true"><span /><span /><span /></div>
           <p>
-            Compare money, playtime, building, Tweeter activity, stats, and more. Private profiles stay private,
-            and some boards only show people who chose to share that kind of detail.
+            See rankings for money, playtime, building, Tweeter activity, and more. Only public data appears here.
           </p>
           <div className="leaderboard-hero-actions">
             <Link className="button button-primary" href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Manage my profile</Link>

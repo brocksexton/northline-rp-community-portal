@@ -32,8 +32,8 @@ export default async function StaffDiscordPage() {
       <section className="staff-command-hero staff-dedicated-hero discord-manager-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Discord bot manager</span>
-          <h1>Build panels, manage roles, and understand the bot.</h1>
-          <p>A guided control room for staff who do not want to memorize slash commands. Preview Discord embeds before sending, inspect server data, and perform careful member actions.</p>
+          <h1>Discord tools and bot controls.</h1>
+          <p>Build panels, preview embeds, inspect bot data, and handle basic member actions without memorizing slash commands.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to command center</Link>
             <Link className="button button-soft" href="/forum"><i className="fa-solid fa-comments" aria-hidden="true" /> Website forum</Link>

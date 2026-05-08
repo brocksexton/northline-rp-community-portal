@@ -19,8 +19,8 @@ export default async function StaffAuditPage() {
       <section className="staff-command-hero staff-dedicated-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Administrator audit</span>
-          <h1>Staff attendance, action patterns, and page access.</h1>
-          <p>Use this workspace to spot long inactivity, review action mix by staff member, and disable sensitive pages such as Server Control without changing the person’s in-game role.</p>
+          <h1>Staff activity and access audit.</h1>
+          <p>Review sign-in gaps, action patterns, and page access overrides in one place.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to command center</Link>
             <Link className="button button-soft" href="/staff/activity"><i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Activity center</Link>

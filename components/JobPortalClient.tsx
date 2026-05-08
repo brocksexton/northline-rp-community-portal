@@ -394,8 +394,8 @@ export function JobPortalClient({ initialState, signedIn, initialView = 'hub' }:
       <section className="jobs-mini-hero">
         <div>
           <span className="eyebrow"><i /> Northline RP staff applications</span>
-          <h1>{view === 'hub' ? 'Choose your staff application path.' : view === 'open' ? 'Open staff postings.' : 'My staff applications.'}</h1>
-          <p>{view === 'hub' ? 'A focused mini-app for open postings, guided applications, submitted answers, statuses, and staff notes.' : view === 'open' ? 'Browse active roles, compare expectations, and start an application without staring at a giant form.' : 'Track every application you have submitted, read staff-visible updates, and review your answers.'}</p>
+          <h1>{view === 'hub' ? 'Staff applications.' : view === 'open' ? 'Open staff postings.' : 'My applications.'}</h1>
+          <p>{view === 'hub' ? 'Browse open roles, apply through guided forms, and keep track of your submissions.' : view === 'open' ? 'Review active roles, compare expectations, and start an application.' : 'Track your submissions, read updates, and review your answers.'}</p>
         </div>
         <aside>
           <strong>{postingCopy(state.postings.length)}</strong>

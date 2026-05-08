@@ -220,9 +220,9 @@ export function CasesHub({ initialState, signedIn }: Props) {
       <section className="cases-command-hero">
         <div className="cases-command-copy">
           <span className="kicker">Daily cases</span>
-          <h1>Your case vault, daily drop, and reward shop preview.</h1>
+          <h1>Daily drops, case inventory, and rewards.</h1>
           <p>
-            Claim a free case every {dailyCase.cadenceHours} hours, open it with a full reward roll, track your inventory, and preview the shop-ready case catalog as staff tests new pools.
+            Claim a free case every {dailyCase.cadenceHours} hours, open it when you want, track your inventory, and preview upcoming reward pools.
           </p>
           <div className="cases-hero-actions">
             <button className="button button-primary" disabled={busy || !state.canClaim} type="button" onClick={claimCase}>

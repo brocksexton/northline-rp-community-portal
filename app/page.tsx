@@ -170,11 +170,11 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
       <section className="community-hero">
         <div className="community-hero-copy">
           <span className="community-pill"><i className="fa-solid fa-house-chimney-window" aria-hidden="true" /> Northline RP community portal</span>
-          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline. Come hang out.'}</h1>
+          <h1>{hasSignedIn ? `Welcome back, ${displayName}.` : 'Welcome to Northline RP.'}</h1>
           <p>
             {hasSignedIn
-              ? `Your ${role} profile is connected. Check your character, tune your profile, and catch up on the city before heading in-game.`
-              : 'A relaxed companion site for Northline RP: live city status, public profiles, guides, city chatter, and the chaos board that keeps receipts.'}
+              ? `Your ${role} profile is connected. Check your character, update your profile, and catch up before heading in-game.`
+              : 'Live server status, public profiles, guides, city chatter, and a few extras for Northline players.'}
           </p>
 
           <div className="community-hero-actions">

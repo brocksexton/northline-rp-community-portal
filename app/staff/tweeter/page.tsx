@@ -32,8 +32,8 @@ export default async function StaffTweeterPage() {
       <section className="staff-command-hero tweeter-admin-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Tweeter moderation</span>
-          <h1>Social administration</h1>
-          <p>Control Tweeter profile visibility and website-only restrictions while preserving in-game data and existing post history.</p>
+          <h1>Tweeter moderation</h1>
+          <p>Manage profile visibility and website-side restrictions without changing in-game data.</p>
           <div className="staff-hero-actions">
             <Link className="button button-soft" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff panel</Link>
             <Link className="button button-primary" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Open Tweeter</Link>

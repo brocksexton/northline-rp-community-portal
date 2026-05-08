@@ -248,10 +248,9 @@ export default async function GuidesPage() {
       <section className="guides-hero">
         <div className="guides-hero-copy">
           <span className="guides-kicker">Northline Player Guide</span>
-          <h1>Get settled, find something to do, and have a good time.</h1>
+          <h1>A simple guide for getting started.</h1>
           <p>
-            A relaxed guide for new and returning players. Play a character, make some friends, run a shop,
-            cause a little trouble, or just hang around and see where the night goes.
+            Whether you are new or returning, this page covers the basics, useful links, and what to do first.
           </p>
           <div className="guides-hero-actions">
             <a className="button button-primary" href="#first-night">Start with your first night</a>

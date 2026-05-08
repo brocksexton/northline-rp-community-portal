@@ -34,8 +34,8 @@ export default async function StaffActivityPage() {
       <section className="staff-command-hero staff-dedicated-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Activity center</span>
-          <h1>Recent city signals.</h1>
-          <p>Admin actions, chat, and damage events are separated from the staff homepage so the command center stays clean.</p>
+          <h1>Recent staff and city activity.</h1>
+          <p>Review admin logs, chat activity, and damage events in one place.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to command center</Link>
             <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Diagnostics</Link>

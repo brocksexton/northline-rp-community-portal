@@ -65,8 +65,8 @@ export function ForumBoardClient({ initialState, signedIn }: Props) {
       <section className="forum-hero card">
         <div>
           <span className="eyebrow"><i /> Northline Forum</span>
-          <h1>City discussion, announcements, and Discord-synced threads.</h1>
-          <p>Use the website forum for clean profiles and readable threads. Linked Discord users can mirror conversation through the configured Discord Forum Channel.</p>
+          <h1>Community threads, updates, and synced discussion.</h1>
+          <p>Use the forum for announcements, discussion, and readable threads. Linked Discord accounts can sync with the configured Discord forum channel.</p>
           <div className="button-row">
             <a className="button button-primary" href="#new-thread"><i className="fa-solid fa-pen-to-square" aria-hidden="true" /> Start a thread</a>
             <Link className="button button-soft" href="/dashboard"><i className="fa-brands fa-discord" aria-hidden="true" /> Link Discord</Link>

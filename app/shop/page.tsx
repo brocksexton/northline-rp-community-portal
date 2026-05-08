@@ -19,8 +19,8 @@ export default async function ShopPage() {
     <main className="page-shell shop-page">
       <section className="card shop-placeholder-card">
         <span className="eyebrow">Shop</span>
-        <h1>Shop is enabled, but not configured yet.</h1>
-        <p>This page is reserved for a future supporter shop. Keep perks cosmetic or community-facing, and avoid anything pay-to-win.</p>
+        <h1>The shop is not ready yet.</h1>
+        <p>This page is reserved for a future supporter shop. Any perks should stay cosmetic or community-facing.</p>
         <div className="staff-hero-actions">
           {supportVisible ? <Link className="button button-primary" href="/support"><i className="fa-solid fa-life-ring" aria-hidden="true" /> Support</Link> : null}
           <Link className="button button-soft" href="/"><i className="fa-solid fa-house" aria-hidden="true" /> Back home</Link>

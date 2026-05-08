@@ -19,8 +19,8 @@ export default async function StaffServerPage() {
       <section className="staff-command-hero server-admin-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Live administration</span>
-          <h1>Server control room</h1>
-          <p>Watch the latest console output, review connected players, and run safe staff actions from the website.</p>
+          <h1>Server control</h1>
+          <p>Watch console output, review connected players, and run website-based server actions.</p>
           <div className="staff-hero-actions">
             <Link className="button button-soft" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff panel</Link>
             <Link className="button button-soft" href="/staff/status"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Diagnostics</Link>

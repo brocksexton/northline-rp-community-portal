@@ -34,8 +34,8 @@ export default async function StaffJobsWorkspacePage() {
       <section className="staff-command-hero staff-dedicated-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Hiring workspace</span>
-          <h1>Staff applications and role postings</h1>
-          <p>Everything related to role postings and applicant review now has its own dedicated workspace so it is easier to read, manage, and navigate.</p>
+          <h1>Applications and role postings</h1>
+          <p>Manage public postings and review applicants from one workspace.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff home</Link>
             <Link className="button button-soft" href="/jobs"><i className="fa-solid fa-eye" aria-hidden="true" /> Open public portal</Link>

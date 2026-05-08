@@ -33,8 +33,8 @@ export default async function StaffCasesWorkspacePage() {
       <section className="staff-command-hero staff-dedicated-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Daily drop workspace</span>
-          <h1>Case modifications and reward pools</h1>
-          <p>Daily-drop case editing now lives on its own dedicated page so every reward, rarity, cadence, and visibility control has room to breathe.</p>
+          <h1>Daily drop settings</h1>
+          <p>Manage case cadence, rewards, visibility, and claim behaviour from one workspace.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff home</Link>
             <Link className="button button-soft" href="/cases"><i className="fa-solid fa-eye" aria-hidden="true" /> Open public page</Link>

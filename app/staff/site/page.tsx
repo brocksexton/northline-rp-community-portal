@@ -33,8 +33,8 @@ export default async function StaffSitePage() {
       <section className="staff-command-hero staff-dedicated-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Site settings</span>
-          <h1>Public modules and display identity.</h1>
-          <p>Manage public feature visibility and the badge-only Ape Tavern display list away from the main staff dashboard.</p>
+          <h1>Site features and public modules.</h1>
+          <p>Enable or hide public sections and manage website display settings.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to command center</Link>
             <Link className="button button-soft" href="/"><i className="fa-solid fa-house" aria-hidden="true" /> View homepage</Link>

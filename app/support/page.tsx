@@ -69,9 +69,9 @@ export default async function SupportPage() {
       <section className="support-hero-v2">
         <div>
           <span className="eyebrow">Support</span>
-          <h1>Need a hand? Start here.</h1>
+          <h1>Need help? Start here.</h1>
           <p>
-            Bugs happen, people get confused, and sometimes the city does city things. This page points you toward the fastest place to get help without making everything feel like a ticket queue.
+            Use this page to find the right place for bugs, account help, questions, or moderation issues.
           </p>
           <div className="support-action-row-v2">
             <a className="button button-primary" href={discordUrl} target="_blank" rel="noreferrer"><i className="fa-brands fa-discord" aria-hidden="true" /> Join Northline Discord</a>

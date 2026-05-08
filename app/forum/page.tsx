@@ -21,8 +21,8 @@ export default async function ForumPage() {
       <main className="page-shell">
         <section className="card auth-panel">
           <span className="eyebrow">Forum</span>
-          <h1>The forum is currently hidden.</h1>
-          <p>Staff can enable it from site feature visibility when it is ready for public use.</p>
+          <h1>The forum is currently unavailable.</h1>
+          <p>Staff can re-enable it from site settings when it is ready for public use.</p>
         </section>
       </main>
     );

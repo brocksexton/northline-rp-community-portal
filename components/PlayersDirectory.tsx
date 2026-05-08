@@ -115,8 +115,8 @@ export function PlayersDirectory({ entries, roles, stats, signedIn, currentUserL
       <section className="players-directory-hero">
         <div className="players-directory-copy">
           <span className="kicker">Citizen board</span>
-          <h1>Meet Northline’s public citizens.</h1>
-          <p>Browse claimed, discoverable profiles from citizens who chose to be on the board.</p>
+          <h1>Public profiles from around Northline.</h1>
+          <p>Browse discoverable citizen profiles shared by players who chose to be listed.</p>
           <div className="players-hero-actions">
             {signedIn ? (
               <Link className="button button-primary" href="/dashboard">

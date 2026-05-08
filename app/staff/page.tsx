@@ -114,8 +114,8 @@ export default async function StaffPage() {
       <section className="staff-command-hero staff-command-center-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Staff Command Center</span>
-          <h1>One calm launchpad for every staff tool.</h1>
-          <p>Use this page for situational awareness and routing. Configuration, logs, moderation, server controls, applications, cases, and site settings now live in dedicated workspaces.</p>
+          <h1>Your staff tools, in one place.</h1>
+          <p>Use this hub to jump into server controls, logs, moderation, applications, cases, and site settings.</p>
           <div className="staff-hero-actions">
             {canOpenServer ? <Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Server control</Link> : null}
             {canOpenActivity ? <Link className="button button-soft" href="/staff/activity"><i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Activity center</Link> : null}

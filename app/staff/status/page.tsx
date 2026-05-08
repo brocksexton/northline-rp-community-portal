@@ -95,8 +95,8 @@ export default async function StaffStatusPage() {
       <section className="staff-command-hero">
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Staff diagnostics</span>
-          <h1>Status checks</h1>
-          <p>Private server reachability details, host metrics, and fallback checks for staff troubleshooting.</p>
+          <h1>Server diagnostics</h1>
+          <p>Private reachability checks, host metrics, and fallback data for troubleshooting.</p>
           <div className="staff-hero-actions">
             <Link className="button button-soft" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff panel</Link>
             {publicStatusVisible ? <Link className="button button-primary" href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /> Public status</Link> : null}

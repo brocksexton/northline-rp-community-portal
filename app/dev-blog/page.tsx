@@ -30,8 +30,8 @@ export default async function DevBlogPage() {
       <section className="dev-blog-hero">
         <div>
           <span className="nl-kicker"><i /> Dev Blog</span>
-          <h1>Dev blog and release notes</h1>
-          <p>Readable portal updates for players and staff, with release notes sorted by their real publish time.</p>
+          <h1>Dev blog and updates</h1>
+          <p>Patch notes, website changes, and project updates in one place.</p>
         </div>
         <aside className="dev-blog-hero-card">
           <span>Latest release</span>

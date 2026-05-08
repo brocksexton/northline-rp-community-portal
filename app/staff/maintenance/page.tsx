@@ -32,7 +32,7 @@ export default async function StaffMaintenancePage() {
         <div className="staff-command-copy">
           <span className="ops-kicker"><i /> Staff tools</span>
           <h1>Maintenance studio</h1>
-          <p>Control what visitors see when the website, Tweeter, or both need a short break.</p>
+          <p>Choose what visitors see when the website or Tweeter needs a temporary pause.</p>
           <div className="staff-hero-actions">
             <Link className="button button-soft" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to staff panel</Link>
             <Link className="button button-primary" href="/status"><i className="fa-solid fa-signal" aria-hidden="true" /> Public status</Link>
