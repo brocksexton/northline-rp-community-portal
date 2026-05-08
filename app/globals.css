@@ -481,7 +481,7 @@ body:has(.tweeter-mode) #main-content {
 .tweeter-right-rail {
   position: sticky;
   top: 0;
-  align-self: start;
+  align-self: flex-start;
   height: 100vh;
   overflow-y: auto;
   padding: 0.9rem 1rem 2rem;
@@ -4111,7 +4111,7 @@ body[data-site-style]:not(:has(.tweeter-mode)) .button-soft {
   mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.64) 55%, transparent 98%);
 }
 .status-control-hero > * { position: relative; z-index: 1; }
-.status-control-copy { align-self: end; max-width: 780px; }
+.status-control-copy { align-self: flex-end; max-width: 780px; }
 .status-control-copy h1 {
   margin: 1rem 0 0;
   font-size: clamp(3.5rem, 9vw, 7.8rem);
@@ -7878,7 +7878,7 @@ body[data-site-style='ops']:has(.community-home):not(:has(.tweeter-mode)) .ape-t
 
 .ban-detail-status-card {
   min-width: min(320px, 100%);
-  justify-self: end;
+  justify-self: flex-end;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 18px 50px rgba(2,6,23,.18);
 }
 
@@ -9605,7 +9605,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .site-header-v3 {
 }
 
 .header-actions-v3 {
-  justify-self: end;
+  justify-self: flex-end;
   display: inline-flex;
   align-items: center;
   gap: .55rem;
@@ -10675,7 +10675,7 @@ body:not(:has(.tweeter-mode)) .desktop-nav-v3 a:hover {
 }
 
 .status-hero-main-v2 {
-  align-self: end;
+  align-self: flex-end;
   max-width: 55rem;
 }
 
@@ -16499,7 +16499,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
   display: grid;
   grid-template-columns: minmax(14rem, 0.35fr) minmax(0, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .drops-case-list {
@@ -17823,7 +17823,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
 .jobs-hero-card aside { border: 1px solid rgba(56,189,248,.24); border-radius: 28px; padding: 1.2rem; background: linear-gradient(180deg, rgba(14,165,233,.14), rgba(15,23,42,.78)); display: flex; flex-direction: column; justify-content: flex-end; min-height: 220px; }
 .jobs-hero-card aside span, .jobs-hero-card aside small { color: var(--soft); }
 .jobs-hero-card aside strong { font-size: clamp(3rem, 8vw, 5.2rem); line-height: 1; letter-spacing: -.08em; }
-.jobs-posting-layout { display: grid; grid-template-columns: minmax(245px, .34fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.jobs-posting-layout { display: grid; grid-template-columns: minmax(245px, .34fr) minmax(0, 1fr); gap: 1rem; align-items: flex-start; }
 .jobs-posting-list, .jobs-detail-panel, .my-applications-panel, .staff-jobs-panel, .job-posting-admin-card, .job-applications-admin-card { border: 1px solid var(--border); border-radius: 28px; background: linear-gradient(180deg, rgba(15,23,42,.9), rgba(15,23,42,.64)); box-shadow: var(--shadow); }
 .jobs-posting-list { position: sticky; top: 6rem; padding: 1rem; display: grid; gap: .7rem; }
 .section-heading.compact h2 { margin: .25rem 0 0; }
@@ -17901,7 +17901,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
 .staff-jobs-stats div { border: 1px solid rgba(148,163,184,.14); border-radius: 20px; padding: 1rem; background: rgba(15,23,42,.56); }
 .staff-jobs-stats strong { display: block; font-size: 1.8rem; letter-spacing: -.05em; }
 .staff-jobs-stats span { color: var(--muted); font-weight: 800; }
-.staff-jobs-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 1rem; align-items: start; }
+.staff-jobs-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 1rem; align-items: flex-start; }
 .job-posting-admin-card, .job-applications-admin-card { padding: 1rem; display: grid; gap: .9rem; box-shadow: none; }
 .jobs-admin-heading, .job-editor-actions-line { display: flex; justify-content: space-between; gap: .8rem; align-items: center; flex-wrap: wrap; }
 .jobs-admin-heading h3, .jobs-admin-heading h4, .job-editor-actions-line h4 { margin: .25rem 0 0; letter-spacing: -.035em; }
@@ -17920,7 +17920,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-diagnostic-pre { bac
 .job-question-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) 112px auto auto; gap: .5rem; align-items: center; }
 .job-question-toolbar label { display: inline-flex; gap: .35rem; align-items: center; color: var(--soft); font-weight: 800; white-space: nowrap; }
 .job-question-toolbar input[type="checkbox"] { width: auto; }
-.job-review-layout { display: grid; grid-template-columns: minmax(190px, .35fr) minmax(0, 1fr); gap: .8rem; align-items: start; }
+.job-review-layout { display: grid; grid-template-columns: minmax(190px, .35fr) minmax(0, 1fr); gap: .8rem; align-items: flex-start; }
 .job-application-admin-list { display: grid; gap: .6rem; max-height: 880px; overflow: auto; padding-right: .2rem; }
 .job-application-admin-list button { align-items: flex-start; justify-content: space-between; }
 .job-application-admin-list em { font-style: normal; color: #bae6fd; font-size: .76rem; font-weight: 900; white-space: nowrap; }
@@ -19931,7 +19931,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 }
 
 .community-home .community-stat-card.animated-stat-card > i {
-  align-self: start;
+  align-self: flex-start;
 }
 
 .community-home .community-stat-card.animated-stat-card > span {
@@ -19950,7 +19950,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 }
 
 .community-home .community-stat-card.animated-stat-card > small {
-  align-self: start;
+  align-self: flex-start;
   display: block;
   line-height: 1.45;
 }
@@ -20097,7 +20097,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   gap: 1rem;
   padding: 1rem;
   border-radius: 30px;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .jobs-queue-panel,
@@ -20165,7 +20165,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: .75rem;
-  align-items: start;
+  align-items: flex-start;
   width: 100%;
   border: 1px solid rgba(148, 163, 184, .18);
   border-radius: 18px;
@@ -20203,7 +20203,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 
 .jobs-queue-list b,
 .posting-status-dot {
-  align-self: start;
+  align-self: flex-start;
   display: inline-flex;
   border-radius: 999px;
   padding: .35rem .5rem;
@@ -20235,7 +20235,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
   padding: 1rem;
   border-radius: 22px;
   border: 1px solid rgba(14,165,233,.18);
@@ -20483,7 +20483,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 
 .posting-catalog-list b {
   grid-column: 1 / -1;
-  justify-self: start;
+  justify-self: flex-start;
 }
 
 .posting-editor-panel {
@@ -20905,7 +20905,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: grid;
   grid-template-columns: minmax(250px, .32fr) minmax(0, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .jobs-mini-posting-list,
@@ -21204,7 +21204,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 .cases-status-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: .85rem; }
 .cases-status-grid article { min-height: 13rem; display: grid; grid-template-rows: 3rem 1.65rem 3.2rem 1fr; gap: .3rem; padding: 1rem; border: 1px solid rgba(148,163,184,.18); border-radius: 26px; background: rgba(255,255,255,.92); box-shadow: 0 18px 48px rgba(15,23,42,.05); }
 .cases-status-grid i { width: 2.7rem; height: 2.7rem; display: grid; place-items: center; border-radius: 1rem; background: #e0f2fe; color: #0284c7; }
-.cases-status-grid span { align-self: end; color: #64748b; font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; font-weight: 950; }
+.cases-status-grid span { align-self: flex-end; color: #64748b; font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; font-weight: 950; }
 .cases-status-grid strong { color: #0f172a; font-size: 2.45rem; line-height: .92; letter-spacing: -.06em; }
 .cases-status-grid p { margin: 0; color: #475569; line-height: 1.45; }
 .cases-app-tabs { display: flex; gap: .6rem; flex-wrap: wrap; padding: .55rem; border: 1px solid rgba(148,163,184,.16); border-radius: 24px; background: rgba(255,255,255,.82); box-shadow: 0 16px 48px rgba(15,23,42,.05); }
@@ -21366,7 +21366,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: end;
+  align-items: flex-end;
   padding: .25rem .15rem 0;
 }
 
@@ -21466,7 +21466,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 }
 
 .staff-launch-actions {
-  align-self: end;
+  align-self: flex-end;
   justify-content: flex-start;
   flex-wrap: wrap;
 }
@@ -21475,7 +21475,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, .7fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .staff-activity-grid {
@@ -21519,7 +21519,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   .staff-command-alert,
   .staff-section-head {
     display: grid;
-    align-items: start;
+    align-items: flex-start;
   }
 
   .staff-launch-grid,
@@ -21632,7 +21632,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, .42fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .forum-thread-list {
@@ -22123,7 +22123,7 @@ body[data-site-style='ops']:not(:has(.tweeter-mode)) .staff-workspace-stats div 
 .account-workspace-card > div:last-child { display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding-top: .8rem; border-top: 1px solid rgba(148,163,184,.16); }
 .account-workspace-card > div:last-child strong { color: #0f172a; }
 .account-workspace-card > div:last-child span { color: #0369a1; font-weight: 900; font-size: .85rem; }
-.account-overview-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 1rem; align-items: start; }
+.account-overview-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 1rem; align-items: flex-start; }
 .account-action-list { display: grid; gap: .65rem; margin-bottom: 1rem; }
 .account-action-list a { display: flex; align-items: center; gap: .7rem; padding: .85rem 1rem; border: 1px solid rgba(148,163,184,.18); border-radius: 18px; background: rgba(248,250,252,.86); color: #0f172a; text-decoration: none; font-weight: 900; }
 .account-action-list a i { color: #0284c7; width: 1.1rem; text-align: center; }
@@ -22721,7 +22721,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .leaderboard-category-tab
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .discord-manager-card,
@@ -23778,7 +23778,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .leaderboard-category-tab
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: .85rem;
-  align-items: start;
+  align-items: flex-start;
   padding: 1rem;
   border: 1px solid rgba(14, 165, 233, .18);
   border-radius: 22px;
@@ -24042,7 +24042,7 @@ body[data-site-style='glass']:not(:has(.tweeter-mode)) .leaderboard-category-tab
   }
   .status-command-notice > button {
     grid-column: 1 / -1;
-    justify-self: start;
+    justify-self: flex-start;
   }
   .status-command-chart {
     min-height: 250px;

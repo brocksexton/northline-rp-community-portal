@@ -232,6 +232,7 @@ export default async function StatusPage() {
   const signalLabel = runtime.lastSignalAt ? relativeFromDate(runtime.lastSignalAt) : 'Not reported';
   const playerValue = visiblePlayerCount === null ? 'Offline' : `${visiblePlayerCount}/${maxPlayers}`;
   const query = runtime.diagnostics?.query;
+  const mapName = query?.mapName ?? serverConfig.StartingMap ?? 'Unknown';
   const diskSample = [...metricSamples].reverse().find((sample) => typeof sample.diskPercent === 'number');
   const latestStoredSample = metricSamples.at(-1);
   const avgCpu = metricSamples.length
@@ -272,7 +273,7 @@ export default async function StatusPage() {
             <div><dt>Signal</dt><dd>{signalLabel}</dd></div>
             <div><dt>Source</dt><dd>{runtime.source.replace(/_/g, ' ')}</dd></div>
             <div><dt>Endpoint</dt><dd>{query?.selectedHost ? `${query.selectedHost}:${query.port}` : `${config.status.serverHost}:${config.status.serverPort}`}</dd></div>
-            <div><dt>Map</dt><dd>{query?.mapName ?? serverConfig.StartingMap ?? 'Unknown'}</dd></div>
+            <div><dt>Map</dt><dd>{mapName}</dd></div>
           </dl>
         </aside>
       </section>

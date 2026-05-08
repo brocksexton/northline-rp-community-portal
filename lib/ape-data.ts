@@ -176,6 +176,7 @@ export type ServerConfig = {
   ServerName?: string;
   ServerSubtitle?: string;
   ServerDiscordUrl?: string;
+  StartingMap?: string | null;
   MaxPlayers?: number;
   TaxRate?: number;
   StartingCash?: number;
