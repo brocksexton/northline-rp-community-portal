@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { noStoreHeaders } from '@/lib/session';
-import { getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus } from '@/lib/ape-data';
+import { getDataHealth, getPopulationSummary, getPopulationTrends, getServerConfig, getServerRuntimeStatus } from '@/lib/ape-data';
 import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
 import { getSiteConfig } from '@/lib/site-config';
 
@@ -9,11 +9,12 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export async function GET() {
-  const [config, health, serverConfig, population, updates] = await Promise.all([
+  const [config, health, serverConfig, population, trends, updates] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getServerConfig(),
     getPopulationSummary(),
+    getPopulationTrends(),
     getStatusUpdates(8),
   ]);
 
@@ -48,6 +49,7 @@ export async function GET() {
       lastSignalAt: runtime.lastSignalAt,
     },
     population,
+    trends,
     current: sample,
     samples,
     updates,

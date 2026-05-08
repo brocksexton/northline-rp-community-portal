@@ -969,6 +969,103 @@ export async function getAllGuideProgress(): Promise<Map<string, GuideProgress>>
   return map;
 }
 
+
+export type PopulationTrendPoint = {
+  at: string;
+  count: number;
+  label: string;
+};
+
+export type PopulationTrendSummary = {
+  points: PopulationTrendPoint[];
+  peakCount: number;
+  peakAt: string | null;
+  currentCount: number;
+  joins24h: number;
+  leaves24h: number;
+  uniquePlayers24h: number;
+  firstJoins24h: number;
+  windowLabel: string;
+  sampledFromEvents: number;
+};
+
+function compactTrendLabel(date: Date, includeDay: boolean) {
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+  if (!includeDay) return time.replace(' ', '').toLowerCase();
+  const day = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${day} ${time.replace(' ', '').toLowerCase()}`;
+}
+
+export async function getPopulationTrends(): Promise<PopulationTrendSummary> {
+  const events = (await getConnectionEvents())
+    .filter((event) => Number.isFinite(Date.parse(event.Timestamp)))
+    .sort((a, b) => Date.parse(a.Timestamp) - Date.parse(b.Timestamp));
+
+  const now = Date.now();
+  const firstEventAt = events[0] ? Date.parse(events[0].Timestamp) : now;
+  const spanHours = Math.max(1, (now - firstEventAt) / 1000 / 60 / 60);
+  const windowHours = spanHours > 72 ? 168 : 24;
+  const windowMs = windowHours * 60 * 60 * 1000;
+  const since = now - windowMs;
+  const bucketCount = 18;
+  const includeDay = windowHours > 24;
+
+  const online = new Set<string>();
+  let peakCount = 0;
+  let peakAt: string | null = null;
+  const snapshots: Array<{ at: number; iso: string; count: number }> = [];
+
+  for (const event of events) {
+    const steamId = String(event.SteamId);
+    if (event.IsConnection) online.add(steamId);
+    else online.delete(steamId);
+    const at = Date.parse(event.Timestamp);
+    const count = online.size;
+    snapshots.push({ at, iso: event.Timestamp, count });
+    if (count > peakCount) {
+      peakCount = count;
+      peakAt = event.Timestamp;
+    }
+  }
+
+  const recent = events.filter((event) => Date.parse(event.Timestamp) >= since);
+  const dayAgo = now - 24 * 60 * 60 * 1000;
+  const last24 = events.filter((event) => Date.parse(event.Timestamp) >= dayAgo);
+  const joins24h = last24.filter((event) => event.IsConnection).length;
+  const leaves24h = last24.filter((event) => !event.IsConnection).length;
+  const uniquePlayers24h = new Set(last24.map((event) => String(event.SteamId))).size;
+  const firstJoins24h = last24.filter((event) => Boolean(event.IsFirstJoin)).length;
+
+  const points: PopulationTrendPoint[] = [];
+  let snapshotIndex = 0;
+  let lastCount = 0;
+  for (let i = 0; i < bucketCount; i += 1) {
+    const at = since + (windowMs / (bucketCount - 1)) * i;
+    while (snapshotIndex < snapshots.length && snapshots[snapshotIndex].at <= at) {
+      lastCount = snapshots[snapshotIndex].count;
+      snapshotIndex += 1;
+    }
+    const date = new Date(at);
+    points.push({ at: date.toISOString(), count: lastCount, label: compactTrendLabel(date, includeDay) });
+  }
+
+  const finalCurrent = snapshots.at(-1)?.count ?? 0;
+  if (points.length) points[points.length - 1] = { ...points[points.length - 1], count: finalCurrent };
+
+  return {
+    points,
+    peakCount,
+    peakAt,
+    currentCount: finalCurrent,
+    joins24h,
+    leaves24h,
+    uniquePlayers24h,
+    firstJoins24h,
+    windowLabel: windowHours > 24 ? 'Last 7 days' : 'Last 24 hours',
+    sampledFromEvents: recent.length,
+  };
+}
+
 export async function getPopulationSummary(): Promise<PopulationSummary> {
   const events = await getConnectionEvents();
   const latestByPlayer = new Map<string, ConnectionEvent>();
