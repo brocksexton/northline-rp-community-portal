@@ -426,11 +426,22 @@ export default function GuideJobSection() {
   function openGuide(id: string) {
     setActiveGuideId(id);
     setStepIndex(0);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('guide', id);
+      url.hash = 'job-guides';
+      window.history.replaceState(null, '', url.toString());
+    }
   }
 
   function closeGuide() {
     setActiveGuideId(null);
     setStepIndex(0);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('guide');
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
   }
 
   function previousStep() {
@@ -441,6 +452,18 @@ export default function GuideJobSection() {
     if (!activeGuide) return;
     setStepIndex((current) => Math.min(activeGuide.steps.length - 1, current + 1));
   }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const requestedGuide = url.searchParams.get('guide');
+    if (!requestedGuide) return;
+    if (allGuides.some((guide) => guide.id === requestedGuide)) {
+      setActiveGuideId(requestedGuide);
+      setStepIndex(0);
+      document.getElementById('job-guides')?.scrollIntoView({ block: 'start' });
+    }
+  }, [allGuides]);
 
   useEffect(() => {
     if (!activeGuide) return;

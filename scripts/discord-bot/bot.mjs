@@ -105,6 +105,106 @@ function linkEmbed(title, description, links = []) {
   return embed;
 }
 
+
+const guideCatalog = {
+  'core-basics': {
+    title: 'Cash, Bank, Inventory & Property Basics',
+    command: '/guide topic:Cash, bank, inventory, and property',
+    path: '/guides?guide=core-basics',
+    summary: 'Learn how cash, bank money, inventory items, ATMs, property rentals, personal safes, and Town Hall storage work.',
+    covers: ['Cash vs bank balance', 'Dropping cash or items', 'ATM deposits and withdrawals', 'Property rental basics', 'Personal safe and Town Hall storage', 'Illegal red-outlined inventory items'],
+    aliases: ['cash', 'bank', 'inventory', 'property', 'storage', 'safe', 'stash', 'atm'],
+  },
+  police: {
+    title: 'Police Officer / Chief of Police Guide',
+    command: '/job police',
+    path: '/guides?guide=police',
+    summary: 'Apply through Job Finder, visit the Police Department, talk to Sergeant Harris, and learn how 911 reports, theft sensors, cuffs, tasers, and police scenes work.',
+    covers: ['Applying for Police Officer or Chief of Police', 'Finding the station', '911 reports and break-in alerts', 'Common application blockers', 'Cuffs and cuff escape minigame', 'AFK job removal warning'],
+    aliases: ['pd', 'cop', 'officer', 'chief', 'chief-of-police', 'police-officer'],
+  },
+  mayor: {
+    title: 'Elections & Mayor Guide',
+    command: '/job mayor',
+    path: '/guides?guide=mayor',
+    summary: 'Start an election with Michael, register as a candidate, campaign through Tweeter, win votes, and manage city policy from the Mayor computer.',
+    covers: ['Starting elections at the Police Department', 'Entering the race in the Elections app', 'Campaigning on Tweeter', 'Voting flow', 'Custom laws, contraband, and tax rate', 'Mayor survival and body armor'],
+    aliases: ['election', 'elections', 'vote', 'voting', 'candidate', 'government'],
+  },
+  courier: {
+    title: 'Courier Guide',
+    command: '/job courier',
+    path: '/guides?guide=courier',
+    summary: 'Become a Courier, pick up timed parcels at the post office, follow your compass, and deliver packages for pay.',
+    covers: ['Courier application', '$0 salary explanation', 'Postman Patrick', 'Picking up parcels', 'Timed delivery HUD', 'Timeout and cancelled package behaviour'],
+    aliases: ['delivery', 'deliveries', 'post', 'postman', 'package', 'packages', 'parcel', 'parcels'],
+  },
+  medic: {
+    title: 'Medic Guide',
+    command: '/job medic',
+    path: '/guides?guide=medic',
+    summary: 'Learn how to approach Medic as a public-facing RP job focused on helping injured players and keeping scenes moving.',
+    covers: ['Finding the Medic role', 'Responding to medical scenes', 'Semi-serious patient interaction', 'AFK job removal warning'],
+    aliases: ['ems', 'doctor', 'medical'],
+  },
+  business: {
+    title: 'Store Owner / Business Guide',
+    command: '/job business',
+    path: '/guides?guide=business',
+    summary: 'Run a Grocery Store, Gun Store, or Hardware Store role and use property, advertisements, and player interaction to make the shop matter.',
+    covers: ['Business role basics', 'Advertisement app', 'Commercial property expectations', 'Creating reasons for players to visit', 'AFK job removal warning'],
+    aliases: ['store', 'shop', 'grocery', 'gunstore', 'gun-store', 'hardware', 'business-owner'],
+  },
+  citizen: {
+    title: 'Citizen Guide',
+    command: '/job citizen',
+    path: '/guides?guide=citizen',
+    summary: 'A starter guide for learning Northline without taking on a major public job immediately.',
+    covers: ['Exploring the city', 'Using phone apps', 'Recycling garbage', 'Meeting players', 'Building toward a role naturally'],
+    aliases: ['starter', 'new', 'new-player', 'first-day'],
+  },
+};
+
+const guideAliases = new Map(Object.entries(guideCatalog).flatMap(([id, guide]) => [[id, id], ...(guide.aliases || []).map((alias) => [alias, id])]));
+const jobGuideMap = { police: 'police', chief: 'police', mayor: 'mayor', courier: 'courier', medic: 'medic', business: 'business', citizen: 'citizen' };
+
+function normalizeGuideId(value) {
+  const key = String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
+  return guideAliases.get(key) || null;
+}
+
+function guideEmbed(guideId) {
+  const guide = guideCatalog[guideId];
+  if (!guide) return null;
+  const url = sitePath(guide.path);
+  return baseEmbed(guide.title)
+    .setURL(url)
+    .setDescription(clean(guide.summary, 2048))
+    .addFields(
+      { name: 'What it covers', value: guide.covers.map((item) => `• ${item}`).join('\n'), inline: false },
+      { name: 'Open the guide', value: `[Launch this guide](${url})`, inline: true },
+      { name: 'Bot shortcut', value: `\`${guide.command}\``, inline: true },
+    );
+}
+
+function guideListEmbed() {
+  return baseEmbed('Northline guide hub')
+    .setURL(sitePath('/guides'))
+    .setDescription('Pick a guide below, or use one of the shortcut commands for a direct link.')
+    .addFields(
+      { name: 'Core systems', value: `• [Cash, Bank, Inventory & Property](${sitePath('/guides?guide=core-basics')}) — \`/guide topic:Cash, bank, inventory, and property\``, inline: false },
+      { name: 'Jobs', value: [
+        `• [Police Officer / Chief of Police](${sitePath('/guides?guide=police')}) — \`/job police\``,
+        `• [Elections & Mayor](${sitePath('/guides?guide=mayor')}) — \`/job mayor\``,
+        `• [Courier](${sitePath('/guides?guide=courier')}) — \`/job courier\``,
+        `• [Medic](${sitePath('/guides?guide=medic')}) — \`/job medic\``,
+        `• [Store Owner / Business](${sitePath('/guides?guide=business')}) — \`/job business\``,
+        `• [Citizen](${sitePath('/guides?guide=citizen')}) — \`/job citizen\``,
+      ].join('\n'), inline: false },
+      { name: 'Website', value: `[Open all guides](${sitePath('/guides')})`, inline: false },
+    );
+}
+
 function rollDice(notation) {
   const raw = String(notation || '1d20').trim().toLowerCase();
   const match = raw.match(/^(?:(\d{1,2})d)?(\d{1,4})$/);
@@ -119,7 +219,8 @@ function publicCommandHelpEmbed() {
   return baseEmbed('Northline bot command menu')
     .setDescription('Useful website, server, forum, and lightweight RP utility commands.')
     .addFields(
-      { name: 'Website + city', value: '`/northline status` · `/northline players` · `/northline deaths` · `/northline links` · `/northline forum` · `/northline jobs` · `/northline cases` · `/northline leaderboards`', inline: false },
+      { name: 'Website + city', value: '`/northline status` · `/northline players` · `/northline deaths` · `/northline links` · `/northline guides` · `/northline forum` · `/northline jobs` · `/northline cases` · `/northline leaderboards`', inline: false },
+      { name: 'Guides', value: '`/job police` · `/job courier` · `/job mayor` · `/guide topic:Cash, bank, inventory, and property`', inline: false },
       { name: 'Fun', value: '`/northline fun` · `/northline roll` · `/northline coinflip` · `/northline choose` · `/northline eightball`', inline: false },
       { name: 'Staff/game moderation', value: '`/northline broadcast` · `/northline kick` · `/northline ban` · `/northline server`', inline: false },
       { name: 'Discord moderation', value: '`/discordmod timeout` · `/discordmod purge` · `/discordmod slowmode` · `/discordmod lock` · `/discordmod unlock` · `/discordmod userinfo`', inline: false },
@@ -495,11 +596,13 @@ async function handleNorthline(interaction) {
     if (sub === 'links') return interaction.editReply({ embeds: [linkEmbed('Northline RP links', 'Quick links into the website, forum, and community tools.', [
       { label: 'Website home', path: '/' },
       { label: 'Forum', path: '/forum' },
+      { label: 'Guides', path: '/guides' },
       { label: 'Staff applications', path: '/jobs' },
       { label: 'Leaderboards', path: '/leaderboards' },
       { label: 'Daily Drops', path: '/cases' },
       { label: 'Profile Studio', path: '/dashboard' },
     ])] });
+    if (sub === 'guides') return interaction.editReply({ embeds: [guideListEmbed()] });
     if (sub === 'forum') return interaction.editReply({ embeds: [linkEmbed('Northline Forum', 'Read announcements, synced Discord discussions, and community threads.', [{ label: 'Open forum', path: '/forum' }, { label: 'Profile Studio', path: '/dashboard' }])] });
     if (sub === 'jobs') return interaction.editReply({ embeds: [linkEmbed('Staff applications', 'Browse open postings and track application status from the website mini-app.', [{ label: 'Applications hub', path: '/jobs' }, { label: 'Open postings', path: '/jobs/open' }, { label: 'My applications', path: '/jobs/applications' }])] });
     if (sub === 'cases') return interaction.editReply({ embeds: [linkEmbed('Daily Drops cases', 'Open your daily case, view inventory, and preview the case shop foundation.', [{ label: 'Open Daily Drops', path: '/cases' }])] });
@@ -548,6 +651,23 @@ async function handleNorthline(interaction) {
   } catch (error) {
     return interaction.editReply({ content: error instanceof Error ? error.message : 'Northline bot action failed.' });
   }
+}
+
+async function handleJobGuide(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const guideId = jobGuideMap[sub];
+  const embed = guideId ? guideEmbed(guideId) : null;
+  if (!embed) return interaction.reply({ content: 'I could not find that job guide.', ephemeral: true });
+  return interaction.reply({ embeds: [embed] });
+}
+
+async function handleGuide(interaction) {
+  const topic = interaction.options.getString('topic', true);
+  if (topic === 'all') return interaction.reply({ embeds: [guideListEmbed()] });
+  const guideId = normalizeGuideId(topic);
+  const embed = guideId ? guideEmbed(guideId) : null;
+  if (!embed) return interaction.reply({ content: 'I could not find that guide. Try `/guide topic:All guides`.', ephemeral: true });
+  return interaction.reply({ embeds: [embed] });
 }
 
 async function handleAnnounce(interaction) {
@@ -1047,6 +1167,8 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'link') return handleLink(interaction);
   if (interaction.commandName === 'northline') return handleNorthline(interaction);
+  if (interaction.commandName === 'job') return handleJobGuide(interaction);
+  if (interaction.commandName === 'guide') return handleGuide(interaction);
   if (interaction.commandName === 'announce') return handleAnnounce(interaction);
   if (interaction.commandName === 'discordmod') return handleDiscordMod(interaction);
 });

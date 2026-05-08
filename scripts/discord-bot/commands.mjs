@@ -18,6 +18,7 @@ export const northlineCommand = new SlashCommandBuilder()
   .addSubcommand((sub) => sub.setName('players').setDescription('Show the current connected players'))
   .addSubcommand((sub) => sub.setName('deaths').setDescription('Show current death/fatality stats'))
   .addSubcommand((sub) => sub.setName('links').setDescription('Show useful Northline website links'))
+  .addSubcommand((sub) => sub.setName('guides').setDescription('Show the Northline guide hub'))
   .addSubcommand((sub) => sub.setName('forum').setDescription('Open the synced Northline forum'))
   .addSubcommand((sub) => sub.setName('jobs').setDescription('Show the staff applications portal link'))
   .addSubcommand((sub) => sub.setName('cases').setDescription('Show the Daily Drops cases link'))
@@ -62,6 +63,36 @@ export const northlineCommand = new SlashCommandBuilder()
       { name: 'Restart', value: 'restart' },
       { name: 'Update', value: 'update' },
     )));
+
+
+export const jobCommand = new SlashCommandBuilder()
+  .setName('job')
+  .setDescription('Get a Northline RP job guide')
+  .addSubcommand((sub) => sub.setName('police').setDescription('Police Officer and Chief of Police guide'))
+  .addSubcommand((sub) => sub.setName('chief').setDescription('Chief of Police guide'))
+  .addSubcommand((sub) => sub.setName('mayor').setDescription('Elections and Mayor guide'))
+  .addSubcommand((sub) => sub.setName('courier').setDescription('Courier delivery guide'))
+  .addSubcommand((sub) => sub.setName('medic').setDescription('Medic job guide'))
+  .addSubcommand((sub) => sub.setName('business').setDescription('Store Owner and business guide'))
+  .addSubcommand((sub) => sub.setName('citizen').setDescription('Citizen starter guide'));
+
+export const guideCommand = new SlashCommandBuilder()
+  .setName('guide')
+  .setDescription('Get a Northline RP website guide')
+  .addStringOption((opt) => opt
+    .setName('topic')
+    .setDescription('Guide topic')
+    .setRequired(true)
+    .addChoices(
+      { name: 'All guides', value: 'all' },
+      { name: 'Cash, bank, inventory, and property', value: 'core-basics' },
+      { name: 'Police Officer / Chief of Police', value: 'police' },
+      { name: 'Elections / Mayor', value: 'mayor' },
+      { name: 'Courier', value: 'courier' },
+      { name: 'Medic', value: 'medic' },
+      { name: 'Store Owner / Business', value: 'business' },
+      { name: 'Citizen', value: 'citizen' },
+    ));
 
 export const announceCommand = new SlashCommandBuilder()
   .setName('announce')
@@ -126,4 +157,4 @@ export const discordModCommand = new SlashCommandBuilder()
     .setDescription('Show useful moderation context for a Discord member')
     .addUserOption((opt) => opt.setName('user').setDescription('Member').setRequired(true)));
 
-export const commands = [linkCommand, northlineCommand, announceCommand, discordModCommand].map((command) => command.toJSON());
+export const commands = [linkCommand, northlineCommand, jobCommand, guideCommand, announceCommand, discordModCommand].map((command) => command.toJSON());
