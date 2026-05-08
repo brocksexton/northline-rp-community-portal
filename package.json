@@ -1,10 +1,10 @@
 {
   "name": "northline-rp-community-portal",
-  "version": "2.9.105",
+  "version": "2.9.106",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
-    "build": "next build",
+    "build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build",
     "start": "next start -H 127.0.0.1 -p 3000",
     "start:lan": "next start -H 0.0.0.0 -p 3000",
     "typecheck": "tsc --noEmit",
@@ -13,7 +13,8 @@
     "rebuild": "npm run clean && npm run build",
     "bot:start": "node scripts/discord-bot/bot.mjs",
     "bot:register": "node scripts/discord-bot/register-commands.mjs",
-    "server:bridge": "node scripts/server-bridge/command-bridge.mjs"
+    "server:bridge": "node scripts/server-bridge/command-bridge.mjs",
+    "build:lowmem": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build"
   },
   "dependencies": {
     "next": "15.5.15",
