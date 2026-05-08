@@ -27184,6 +27184,10 @@ body[data-app-section='tweeter'] .tweeter-mode[data-era='classic'] .tweeter-tabs
   margin-top: 1rem;
 }
 
+.guide-jobs-subheading {
+  margin-top: 2rem;
+}
+
 .guide-job-card {
   position: relative;
   overflow: hidden;

@@ -13,7 +13,7 @@ type GuideStep = {
 type JobGuide = {
   id: string;
   title: string;
-  group: 'Real job' | 'Citizen job';
+  group: 'Real job' | 'Citizen job' | 'Core guide';
   summary: string;
   status: 'Visual guide' | 'Basic guide' | 'Planned';
   accent: string;
@@ -104,6 +104,94 @@ const policeSteps: GuideStep[] = [
     image: '/guides/police/cuff-minigame.png',
     alt: 'Cuff escape minigame UI with a timing bar and mouse prompts.',
     bullets: ['Do not assume a cuffed suspect is fully secure.', 'Use good judgment before escalating.', 'A chase or escape can be part of the fun.'],
+  },
+];
+
+const systemGuides: JobGuide[] = [
+  {
+    id: 'core-basics',
+    title: 'Cash, Bank, Inventory & Property Basics',
+    group: 'Core guide',
+    summary: 'Learn where money lives, how item storage works, how to rent property, and what to do with safes, stash storage, and Town Hall storage.',
+    status: 'Visual guide',
+    accent: '💰',
+    steps: [
+      {
+        title: 'Understand what you are carrying',
+        body: 'There are three core things to keep in mind: cash on your character, items in your inventory, and money stored in the bank. You can also drop cash from your wallet and drop items from your inventory when roleplay calls for it.',
+        bullets: ['Cash on hand is what you are physically carrying.', 'Items stay in your inventory until you drop, store, or use them.', 'Bank money is safer than walking around with a pocket full of cash.'],
+      },
+      {
+        title: 'Use an ATM for your bank account',
+        body: 'ATMs let you withdraw cash, deposit cash, and check your bank balance. The phone Bank app is useful for checking balance, but when you want to move cash into the bank, you need an ATM around the map.',
+        image: '/guides/basics/atm.png',
+        alt: 'Northline ATM screen showing options to withdraw cash, deposit, and perform a balance inquiry.',
+        bullets: ['Deposit cash at ATMs to keep it safe.', 'Withdraw cash when you need spending money on you.', 'If you plan on renting property, make sure the rent money is in your bank.'],
+      },
+      {
+        title: 'Renting starts at a property sign',
+        body: 'If you want your own place, walk up to a property with a rent sign and interact with it. This is the first step for getting a residential or commercial space.',
+        image: '/guides/basics/rent-sign.png',
+        alt: 'A for-rent sign on a property with an E interact prompt to rent it.',
+        bullets: ['Residential places are good for personal living space and storage.', 'Commercial places are used for businesses like grocery, gun, or hardware stores.', 'Think about why you want the space before you rent it.'],
+      },
+      {
+        title: 'Jobs and commercial property can conflict',
+        body: 'Some roles and commercial property do not mix. If you try to rent a business property while you still have a conflicting job, the game may tell you to quit your job first. The reverse can also happen when you try to take a job while already renting a commercial unit.',
+        image: '/guides/basics/property-warning-quit-job.png',
+        alt: 'Property warning saying to quit your job to rent a commercial property.',
+        bullets: ['Read red warning notices carefully before assuming something is broken.', 'If needed, open Careers and use the Quit Job button first.', 'Commercial property ownership can block certain public jobs, and certain jobs can block commercial rentals.'],
+      },
+      {
+        title: 'You can quit your current job from Careers',
+        body: 'If you need to free yourself up for a commercial property, open the Careers app and use the Quit Job button beside your current role. After that, try renting again.',
+        image: '/guides/basics/quit-job-phone.png',
+        alt: 'Careers phone screen showing Courier as the current job and a Quit Job button.',
+        bullets: ['Do this before trying to rent a shop if the warning tells you to.', 'You can always pick a different job again later if the server allows it.'],
+      },
+      {
+        title: 'Set up the property before you rent it',
+        body: 'When the rent window opens, choose the correct business type for commercial space, look at the rent cost, review building limits, and pick a saved layout if you have one. The rent comes from your bank account.',
+        image: '/guides/basics/property-panel.png',
+        alt: 'Property rental menu showing business type, commercial type, rent cost from bank, building limits, and layout options.',
+        bullets: ['Commercial property rent is paid from bank, not from the cash in your pocket.', 'Use the dropdowns to choose the right business type.', 'Saved layouts can speed up setup if you already made one.'],
+      },
+      {
+        title: 'Business type and layout choices matter',
+        body: 'Commercial properties let you choose what kind of shop it is and whether to apply a layout. Pick the option that matches what you actually plan to run.',
+        image: '/guides/basics/property-dropdowns.png',
+        alt: 'Commercial property menu showing business type choices such as Grocery Store, Gun Store, Hardware Store, and layout selection.',
+        bullets: ['Choose the business type that matches your intended store.', 'Layouts can give you a quick starting point, but you can still customize later.'],
+      },
+      {
+        title: 'Store items in a personal safe or stash',
+        body: 'One of the best reasons to own property is secure item storage. You can buy a Personal Safe item and place it in your property to hold valuables and gear.',
+        image: '/guides/basics/safe-shop-card.png',
+        alt: 'Shop card for a Personal Safe item with a tooltip saying it stores items safely.',
+        bullets: ['Safes are for items and valuables you do not want to carry everywhere.', 'A placed safe acts like your personal stash inside the property.'],
+      },
+      {
+        title: 'Place the safe and manage its storage',
+        body: 'After placing the safe in your property, interact with it to open the storage window. You can move items between the safe, your inventory, and your hotbar from there.',
+        image: '/guides/basics/safe-ui.png',
+        alt: 'Safe storage UI with safe slots, player inventory slots, and hotbar slots.',
+        bullets: ['Use Store All, Quick Stack, and Sort to tidy things up.', 'This is much safer than carrying everything around in person.'],
+      },
+      {
+        title: 'Remember that safes can still be attacked',
+        body: 'A safe is storage, not magic. In some situations players may attempt to crack safes. That means expensive or illegal-looking storage can create its own risks and RP.',
+        image: '/guides/basics/crack-safe.png',
+        alt: 'Prompt showing a player cracking a safe with a stealing progress bar.',
+        bullets: ['A private property does not make your storage untouchable.', 'Store smartly and understand that crime-related RP may involve break-ins or theft attempts.'],
+      },
+      {
+        title: 'Town Hall / Spawn storage is a good backup option',
+        body: 'If you do not own a property yet, use the Town Hall storage at spawn for simple item storage. It is a practical option when you are still getting started or between places.',
+        image: '/guides/basics/townhall-storage.png',
+        alt: 'Town Hall storage interface with inventory slots and hotbar slots.',
+        bullets: ['This is helpful early on before renting your own place.', 'Use it when you need somewhere predictable to leave items.'],
+      },
+    ],
   },
 ];
 
@@ -245,7 +333,8 @@ export default function GuideJobSection() {
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
 
-  const activeGuide = useMemo(() => jobGuides.find((guide) => guide.id === activeGuideId) ?? null, [activeGuideId]);
+  const allGuides = useMemo(() => [...systemGuides, ...jobGuides], []);
+  const activeGuide = useMemo(() => allGuides.find((guide) => guide.id === activeGuideId) ?? null, [activeGuideId, allGuides]);
   const activeStep = activeGuide?.steps[stepIndex] ?? null;
   const progress = activeGuide ? Math.round(((stepIndex + 1) / activeGuide.steps.length) * 100) : 0;
 
@@ -286,6 +375,24 @@ export default function GuideJobSection() {
   return (
     <section className="guide-jobs-hub" id="job-guides">
       <div className="guides-section-heading compact">
+        <span className="guides-kicker">Core basics</span>
+        <h2>Learn the systems that power everyday play.</h2>
+        <p>These guides cover the basics that almost everyone uses sooner or later, like money, banking, inventory, property, and starter storage.</p>
+      </div>
+
+      <div className="guide-job-card-grid">
+        {systemGuides.map((guide) => (
+          <button className="guide-job-card" type="button" key={guide.id} onClick={() => openGuide(guide.id)}>
+            <span className="guide-job-icon" aria-hidden="true">{guide.accent}</span>
+            <span className="guide-job-meta">{guide.group} · {guide.status}</span>
+            <strong>{guide.title}</strong>
+            <p>{guide.summary}</p>
+            <small>Open step-by-step guide</small>
+          </button>
+        ))}
+      </div>
+
+      <div className="guides-section-heading compact guide-jobs-subheading">
         <span className="guides-kicker">Jobs available</span>
         <h2>Pick a job guide.</h2>
         <p>Choose a role below to open a step-by-step guide. The guide appears in a pop-up window, tracks progress, and can be closed at any time.</p>
