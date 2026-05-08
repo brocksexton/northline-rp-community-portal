@@ -98,8 +98,8 @@ const privacySections = [
     title: 'Retention and deletion',
     body: [
       'You can update profile visibility and editable profile content from the dashboard where those controls are available. You can also contact the team for help with account/profile data that cannot be changed directly.',
-      'You can use Profile Studio > Data & Privacy to request a downloadable archive of your account-linked website data and available game/server data, or to submit a deletion request for staff review.',
-      'Deletion requests can affect live game data. If processed, your character progress, money, inventory, rewards, and other in-game progress may be reset or removed with no recovery option. Some limited moderation, security, audit, or abuse-prevention records may be retained where operationally necessary.',
+      'You can use Profile Studio > Data & Privacy to request a downloadable archive of your account-linked website data and available game/server data, or to submit a deletion request for staff review. The export is provided as a ZIP with plain README notes and structured JSON files where available.',
+      'Deletion requests can affect live game data. If processed, your character progress, money, inventory, rewards, and other in-game progress may be reset or removed with no recovery option. The deletion tool requires acknowledgement checkboxes and typed confirmation before the request is submitted. Some limited moderation, security, audit, or abuse-prevention records may be retained where operationally necessary.',
       'Northline RP keeps limited server/provider backups for up to 14 days. Deleted live data may remain inside backup snapshots until those backups expire. If a backup must be restored, we will communicate it through Discord and the website status page, and will make a reasonable effort to re-apply completed deletion requests where technically possible.',
     ],
   },
@@ -156,6 +156,15 @@ export default async function PrivacyPage() {
         ))}
       </section>
 
+
+      <section className="policy-self-service-v2" aria-label="Your privacy tools">
+        <div>
+          <span className="eyebrow">Your privacy tools</span>
+          <h2>Download your data or request deletion.</h2>
+          <p>Signed-in players can use Profile Studio to export account-linked records or submit a deletion request. Deletion can reset in-game progress, so the request form explains the impact before it can be sent.</p>
+        </div>
+        <Link className="button button-primary" href="/dashboard/profile/data"><i className="fa-solid fa-file-shield" aria-hidden="true" /> Open Data & Privacy</Link>
+      </section>
 
       <section className="policy-service-links-v2" aria-label="Related third-party privacy links">
         <strong>Related service policies</strong>

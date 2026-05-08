@@ -36,9 +36,9 @@ export function ProfileDataPrivacyPanel({ requests }: { requests: PrivacyRequest
       <article className="privacy-studio-card privacy-export-card">
         <span className="kicker">Download your data</span>
         <h2>Get a copy of your Northline data.</h2>
-        <p>Download a ZIP file with account-linked information the website can gather for you, including profile settings, Steam details, Tweeter activity, forum summary, applications, daily drops, and available game/server records.</p>
+        <p>Download a ZIP file with account-linked information the website can gather for you, including profile settings, Steam details, Tweeter activity, forum summary, applications, daily drops, and available game/server records. The ZIP includes an index.html viewer that presents the data in a readable format.</p>
         <div className="privacy-explainer-list">
-          <span><i className="fa-solid fa-file-zipper" /> ZIP archive</span>
+          <span><i className="fa-solid fa-file-zipper" /> ZIP archive with offline viewer</span>
           <span><i className="fa-solid fa-user-shield" /> Only your signed-in Steam account</span>
           <span><i className="fa-solid fa-key" /> No secrets, keys, or staff-only notes</span>
         </div>

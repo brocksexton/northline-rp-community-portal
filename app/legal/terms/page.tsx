@@ -100,8 +100,8 @@ const termsSections = [
   {
     title: 'Data exports, deletion requests, and backups',
     body: [
-      'You may use Profile Studio to request an export of account-linked website data and available game/server records, or to submit a deletion request for staff review.',
-      'Deletion is not a simple undo button. If a deletion request is approved and processed, your Northline RP in-game progress may be reset or removed with no recovery option. Limited moderation, security, audit, or abuse-prevention records may be retained where needed to protect the server and community.',
+      'You may use Profile Studio > Data & Privacy to request an export of account-linked website data and available game/server records, or to submit a deletion request for staff review. This tool is available from your profile tools after signing in with Steam.',
+      'Deletion is not a simple undo button. If a deletion request is approved and processed, your Northline RP in-game progress may be reset or removed with no recovery option. The request page requires clear acknowledgement checkboxes and typed confirmation so players understand the effect before staff review it. Limited moderation, security, audit, or abuse-prevention records may be retained where needed to protect the server and community.',
       'Server/provider backups may exist for up to 14 days. If a backup must be restored, Northline RP will communicate the restore through Discord and the website status page.',
     ],
   },
@@ -138,6 +138,7 @@ export default async function TermsPage() {
           </p>
           <div className="policy-hero-actions-v2">
             {rulesVisible ? <Link className="button button-primary" href="/rules"><i className="fa-solid fa-scale-balanced" aria-hidden="true" /> Read server rules</Link> : null}
+            <Link className="button button-soft" href="/dashboard/profile/data"><i className="fa-solid fa-file-shield" aria-hidden="true" /> Data & Privacy</Link>
             {supportVisible ? <Link className="button button-soft" href="/support"><i className="fa-solid fa-circle-question" aria-hidden="true" /> Need help?</Link> : null}
           </div>
         </div>
@@ -158,6 +159,15 @@ export default async function TermsPage() {
         ))}
       </section>
 
+
+      <section className="policy-self-service-v2" aria-label="Account data tools">
+        <div>
+          <span className="eyebrow">Account data tools</span>
+          <h2>Exports and deletion requests live in Profile Studio.</h2>
+          <p>Use this page to download a copy of account-linked data or request deletion. Deletion may include game progress and is reviewed by staff before anything is processed.</p>
+        </div>
+        <Link className="button button-primary" href="/dashboard/profile/data"><i className="fa-solid fa-file-arrow-down" aria-hidden="true" /> Open Data & Privacy</Link>
+      </section>
 
       <section className="policy-service-links-v2" aria-label="Related third-party terms">
         <strong>Related service terms</strong>
