@@ -177,6 +177,91 @@ const doDont = [
   { do: 'Use 911 for actual in-character reports.', dont: 'Spam fake emergency reports for attention.' },
 ];
 
+const policeGuideSteps = [
+  {
+    title: 'Learn the basics and open your phone',
+    body: 'Before doing anything else, get comfortable with the HUD. Press P to open your phone, then head into the Job Finder app.',
+    image: '/guides/police/controls.png',
+    alt: 'Bottom-right Northline HUD controls showing keys for phone, inventory, progression, roleplay actions, and voice chat.',
+    tips: ['Press P for your phone.', 'The control list is worth remembering for almost every guide on the server.', 'This same HUD reference can help with other jobs later.'],
+  },
+  {
+    title: 'Open Job Finder from the phone',
+    body: 'From the phone home screen, click Job Finder. This lets you browse available jobs, check slots, and find out where to go.',
+    image: '/guides/police/phone-home.png',
+    alt: 'Northline in-game phone home screen with the Job Finder app visible.',
+    tips: ['The phone is the main hub for server systems.', 'You can also use Government, Bank, 911 Report, and Tweeter from here.'],
+  },
+  {
+    title: 'Choose Police Officer or Chief of Police',
+    body: 'In Job Finder, look for Police Officer or Chief of Police. Select the role you want and review the open spots.',
+    image: '/guides/police/job-finder.png',
+    alt: 'Job Finder screen listing Police Officer, Mayor, Courier, and Medic.',
+    tips: ['Chief of Police may not always be available.', 'If a job is full, you will need to wait until a slot opens.'],
+  },
+  {
+    title: 'Read the job page and set a waypoint',
+    body: 'The job page shows the role description, salary, and open spots. Use Add Waypoint so the police station appears on your compass.',
+    image: '/guides/police/police-officer-details.png',
+    alt: 'Police Officer job details page showing description, salary, open slots, and an Add Waypoint button.',
+    tips: ['If salary ever looks strange, that does not always mean the job is broken.', 'The waypoint is the quickest way to find the right building.'],
+  },
+  {
+    title: 'Follow the compass to the police station',
+    body: 'Once you set the waypoint, watch the top compass on your HUD and follow the marker until you reach the station.',
+    image: '/guides/police/compass-waypoint.png',
+    alt: 'Northline top compass HUD with a waypoint marker and distance shown.',
+    tips: ['The distance number helps when you are close.', 'If you get turned around, re-open the phone and confirm the waypoint is still set.'],
+  },
+  {
+    title: 'Walk into the police station lobby',
+    body: 'Head to the front of the Police Department and go into the lobby. There is a staffed service window inside.',
+    image: '/guides/police/police-station-exterior.png',
+    alt: 'Exterior of the Northline Police Department building.',
+    tips: ['Use the front entrance.', 'This is where you continue the application in-character.'],
+  },
+  {
+    title: 'Speak to Sergeant Harris about employment',
+    body: 'At the front desk, talk to Sergeant Harris and ask about employment opportunities. If there are open slots, he can offer Police Officer or Chief of Police.',
+    image: '/guides/police/sergeant-harris.png',
+    alt: 'Sergeant Harris behind the service window with employment dialogue options.',
+    tips: ['Talk to the desk NPC, not just the job app.', 'If you are not eligible, the server will tell you why.'],
+  },
+];
+
+const policeWarnings = [
+  {
+    title: 'Commercial property conflict',
+    body: 'If you own or are renting a commercial property, you may be told to stop renting it before getting the job.',
+    image: '/guides/police/error-property.png',
+    alt: 'Property warning saying to stop renting your commercial property before getting a job.',
+  },
+  {
+    title: 'Existing job vote already in progress',
+    body: 'If you already have another job vote in progress, you will need to wait until that vote finishes before applying again.',
+    image: '/guides/police/error-job-vote.png',
+    alt: 'Employment warning saying you already have a job vote in progress.',
+  },
+  {
+    title: 'Vote notice',
+    body: 'You may also see a notice that a new vote has started. That means your application is moving through the vote flow.',
+    image: '/guides/police/notice-voting.png',
+    alt: 'Voting notice saying a new vote has started.',
+  },
+  {
+    title: 'Wanted players may be blocked',
+    body: 'If your character is currently wanted, do not expect to be hired into the police. Clear up that situation first before applying again.',
+  },
+];
+
+const policeRoleNotes = [
+  'Police Officers are given a taser, a pistol, and handcuffs.',
+  'One of your core jobs is dealing with suspects and making arrests.',
+  'Cuffed players can attempt to break out by playing a small minigame, so do not assume every arrest is automatically secure.',
+  'Play to create scenes: respond to reports, speak to citizens, investigate, and keep the city moving.',
+  'Chief of Police follows a similar hiring route, but has more leadership responsibility and may have fewer open slots.',
+];
+
 function slugFromTitle(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -369,6 +454,107 @@ export default async function GuidesPage() {
             </div>
           </details>
         ))}
+      </section>
+
+
+      <section className="guides-section-heading" id="police-job-guide">
+        <span className="guides-kicker">Featured role guide</span>
+        <h2>How to become a Police Officer or Chief of Police.</h2>
+        <p>This example guide uses real in-game screenshots so new players can follow the process from the phone all the way to the front desk.</p>
+      </section>
+
+      <section className="guide-featured-hero police-guide-hero">
+        <div>
+          <span className="guides-kicker">Police Department walkthrough</span>
+          <h3>From Job Finder to the front desk.</h3>
+          <p>Use your phone, set the waypoint, head to the station, and speak to Sergeant Harris. If there are open slots, you can ask about becoming a <strong>Police Officer</strong> or <strong>Chief of Police</strong>.</p>
+          <ul>
+            <li>Start from <strong>Job Finder</strong> on your phone.</li>
+            <li>Use <strong>Add Waypoint</strong> so the station appears on your compass.</li>
+            <li>Talk to <strong>Sergeant Harris</strong> in the front lobby.</li>
+          </ul>
+        </div>
+        <div className="guide-featured-sidecard">
+          <span>Good to know</span>
+          <strong>Police jobs are public-facing.</strong>
+          <p>These roles are great if you want scenes involving law enforcement, reports, pursuits, investigations, and character interaction.</p>
+        </div>
+      </section>
+
+      <section className="guide-visual-steps" aria-label="Police application guide">
+        {policeGuideSteps.map((step, index) => (
+          <article className="guide-visual-step" key={step.title}>
+            <div className="guide-visual-copy">
+              <span>Step {index + 1}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <ul>
+                {step.tips.map((tip) => <li key={tip}>{tip}</li>)}
+              </ul>
+            </div>
+            <figure className="guide-visual-figure">
+              <img src={step.image} alt={step.alt} loading="lazy" />
+            </figure>
+          </article>
+        ))}
+      </section>
+
+      <section className="guides-section-heading compact">
+        <span className="guides-kicker">Possible notices</span>
+        <h2>Messages you might see while applying.</h2>
+      </section>
+
+      <section className="guide-warning-grid">
+        {policeWarnings.map((warning) => (
+          <article className="guide-warning-card" key={warning.title}>
+            <div>
+              <span>{warning.title}</span>
+              <p>{warning.body}</p>
+            </div>
+            {warning.image ? (
+              <figure>
+                <img src={warning.image} alt={warning.alt} loading="lazy" />
+              </figure>
+            ) : null}
+          </article>
+        ))}
+      </section>
+
+      <section className="guides-layout police-guide-layout">
+        <div className="guides-main-column">
+          <section className="guides-section-heading compact">
+            <span className="guides-kicker">On the job</span>
+            <h2>What to expect once hired.</h2>
+          </section>
+          <article className="guides-card police-duty-card">
+            <div className="police-duty-grid">
+              <div>
+                <h3>Core notes</h3>
+                <ul>
+                  {policeRoleNotes.map((note) => <li key={note}>{note}</li>)}
+                </ul>
+              </div>
+              <div className="police-duty-images">
+                <figure>
+                  <img src="/guides/police/cuffed.png" alt="A player in police custody with an instruction to press E to escape cuffs." loading="lazy" />
+                  <figcaption>Cuffed suspects can try to escape.</figcaption>
+                </figure>
+                <figure>
+                  <img src="/guides/police/cuff-minigame.png" alt="Cuff escape minigame UI with a timing bar and mouse prompts." loading="lazy" />
+                  <figcaption>The escape attempt uses a short minigame.</figcaption>
+                </figure>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside className="guides-side-column">
+          <article className="guides-card guides-tip-card">
+            <span className="guides-kicker">Roleplay tip</span>
+            <h3>Be a scene-maker, not just an enforcer.</h3>
+            <p>Good police RP is more than arresting people. Patrol, answer 911 calls, talk to citizens, question suspects, and create scenes that other players can actively join.</p>
+          </article>
+        </aside>
       </section>
 
       <section className="guides-layout">

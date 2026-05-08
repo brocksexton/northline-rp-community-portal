@@ -26989,3 +26989,186 @@ body[data-app-section='tweeter'] .tweeter-mode[data-era='classic'] .tweeter-tabs
     grid-template-columns: 1fr;
   }
 }
+
+.police-guide-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(21, 80, 130, 0.13);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.10), transparent 22rem),
+    radial-gradient(circle at 100% 10%, rgba(14, 165, 233, 0.12), transparent 16rem),
+    rgba(255, 255, 255, 0.88);
+  box-shadow: 0 20px 54px rgba(15, 23, 42, 0.08);
+}
+
+.police-guide-hero h3,
+.guide-featured-sidecard strong,
+.guide-visual-copy h3,
+.police-duty-card h3,
+.guide-warning-card span {
+  color: #071629;
+  letter-spacing: -0.04em;
+}
+
+.police-guide-hero p,
+.police-guide-hero li,
+.guide-featured-sidecard p,
+.guide-visual-copy p,
+.guide-visual-copy li,
+.guide-warning-card p,
+.police-duty-card li,
+.police-duty-images figcaption {
+  color: #36506f;
+  line-height: 1.55;
+}
+
+.police-guide-hero ul,
+.guide-visual-copy ul,
+.police-duty-card ul {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.guide-featured-sidecard {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(2, 132, 199, 0.16);
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.9), rgba(255,255,255,0.9));
+}
+
+.guide-featured-sidecard span,
+.guide-visual-copy span,
+.guide-warning-card span:first-child {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.32rem 0.6rem;
+  background: rgba(224, 242, 254, 0.86);
+  color: #0369a1;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guide-visual-steps {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.guide-visual-step,
+.guide-warning-card,
+.police-duty-card {
+  border: 1px solid rgba(21, 80, 130, 0.13);
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
+}
+
+.guide-visual-step {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  padding: 1rem;
+  align-items: start;
+}
+
+.guide-visual-copy {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.guide-visual-copy h3 {
+  margin: 0;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+}
+
+.guide-visual-copy p,
+.guide-warning-card p {
+  margin: 0;
+}
+
+.guide-visual-figure,
+.guide-warning-card figure,
+.police-duty-images figure {
+  margin: 0;
+}
+
+.guide-visual-figure img,
+.guide-warning-card img,
+.police-duty-images img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.guide-warning-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.guide-warning-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.guide-warning-card span {
+  margin-bottom: 0.45rem;
+}
+
+.police-guide-layout {
+  align-items: start;
+}
+
+.police-duty-card {
+  padding: 1rem;
+}
+
+.police-duty-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.police-duty-images {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.police-duty-images figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 980px) {
+  .police-guide-hero,
+  .guide-visual-step,
+  .police-duty-grid,
+  .guide-warning-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .police-guide-hero,
+  .guide-visual-step,
+  .guide-warning-card,
+  .police-duty-card {
+    padding: 0.85rem;
+  }
+}
