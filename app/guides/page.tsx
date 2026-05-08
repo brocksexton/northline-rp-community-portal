@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
   return buildPageMetadata({
     title: 'Guides',
-    description: 'Northline RP player guides for first steps, phone apps, jobs, money, inventory, banking, and property basics.',
+    description: 'Northline RP player guides for first steps, jobs, elections, money, inventory, banking, and property basics.',
     path: '/guides',
   });
 }
@@ -46,14 +46,6 @@ const phoneApps = [
   { name: 'Tweeter', use: 'Use the city feed for public chatter, business posts, and RP hooks.' },
 ];
 
-const quickAnswers = [
-  { q: 'How do I open my phone?', a: 'Press P in-game.' },
-  { q: 'Why does a job show $0 salary?', a: 'Some jobs pay through tasks, deliveries, sales, or player interaction instead of a fixed salary.' },
-  { q: 'How do I deposit cash?', a: 'Visit an ATM and use the Deposit option. The phone Bank app only shows your balance.' },
-  { q: 'Where can I store items if I do not own a property?', a: 'Use the Town Hall / spawn storage until you have your own place.' },
-  { q: 'Can I carry and drop cash or items?', a: 'Yes. Cash lives in your wallet and items live in your inventory, and both can be dropped when needed.' },
-  { q: 'Where should I start if I am brand new?', a: 'Open the core basics guide first, then check a job guide like Courier or Citizen.' },
-];
 
 export default async function GuidesPage() {
   if (!(await isSiteFeatureEnabled('guides'))) notFound();
@@ -75,12 +67,12 @@ export default async function GuidesPage() {
       <section className="guides-hero guides-field-hero">
         <div className="guides-hero-copy">
           <span className="guides-kicker">Northline guidebook</span>
-          <h1>Learn the essentials and get into the city.</h1>
+          <h1>Get comfortable in Northline, fast.</h1>
           <p>
-            Start with your phone, learn how money and storage work, then pick a job that matches the kind of RP you want to get into.
+            Start with the basics, then open a guide for the job or system you want to learn next.
           </p>
           <div className="guides-hero-actions">
-            <a className="button button-primary" href="#job-guides">Open guides</a>
+            <a className="button button-primary" href="#job-guides">Browse guides</a>
             <a className="button button-soft" href="#phone-apps">Phone apps</a>
             {rulesVisible ? <Link className="button button-ghost" href="/rules">Read the rules</Link> : null}
           </div>
@@ -91,7 +83,7 @@ export default async function GuidesPage() {
           <p>
             {steamId
               ? `${completed}/${total} guide cards seen in-game.`
-              : 'Sign in with Steam to track your progress across the in-game guide cards.'}
+              : 'Sign in with Steam to track which guides you have already worked through.'}
           </p>
           <div className="guides-progress-bar" aria-hidden="true">
             <i style={{ width: `${steamId ? Math.max(percent, 8) : 12}%` }} />
@@ -108,8 +100,8 @@ export default async function GuidesPage() {
       </section>
 
       <section className="guides-section-heading">
-        <span className="guides-kicker">Start here</span>
-        <h2>The basics most players use first.</h2>
+        <span className="guides-kicker">Before you jump in</span>
+        <h2>The things most new players need first.</h2>
       </section>
 
       <section className="guide-path-grid">
@@ -123,13 +115,13 @@ export default async function GuidesPage() {
         ))}
       </section>
 
-      <section className="guides-section-heading" id="phone-apps">
-        <span className="guides-kicker">Phone apps</span>
-        <h2>These are the ones you will use the most.</h2>
+      <section className="guides-section-heading compact" id="phone-apps">
+        <span className="guides-kicker">Most-used phone apps</span>
+        <h2>Keep these in mind.</h2>
       </section>
 
       <section className="phone-app-grid">
-        {phoneApps.map((app) => (
+        {phoneApps.slice(0, 6).map((app) => (
           <article key={app.name}>
             <span>{app.name}</span>
             <p>{app.use}</p>
@@ -140,28 +132,11 @@ export default async function GuidesPage() {
       <GuideJobSection />
 
       <section className="guides-layout">
-        <div className="guides-main-column">
-          <section className="guides-section-heading compact">
-            <span className="guides-kicker">Quick answers</span>
-            <h2>Common questions.</h2>
-          </section>
-          <article className="guides-card guide-faq-card">
-            <div className="guide-faq-list">
-              {quickAnswers.map((item) => (
-                <details key={item.q}>
-                  <summary>{item.q}</summary>
-                  <p>{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </article>
-        </div>
-
         <aside className="guides-side-column">
           <article className="guides-card guides-tip-card">
             <span className="guides-kicker">Good first picks</span>
-            <h3>Citizen and Courier are easy places to start.</h3>
-            <p>They help you learn the map, meet other players, and understand how the city works before you jump into bigger roles.</p>
+            <h3>Citizen, Courier, and the core basics guide are great starting points.</h3>
+            <p>Once you know where your money, items, and storage live, the rest of the city starts to make a lot more sense.</p>
             <div className="guides-hero-actions">
               <a className="button button-primary" href="#job-guides">Browse guides</a>
               {supportVisible ? <Link className="button button-soft" href="/support">Need help?</Link> : null}

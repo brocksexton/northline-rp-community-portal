@@ -7,6 +7,7 @@ type GuideStep = {
   body: string;
   image?: string;
   alt?: string;
+  images?: { src: string; alt: string }[];
   bullets?: string[];
 };
 
@@ -195,16 +196,72 @@ const systemGuides: JobGuide[] = [
   },
 ];
 
+const mayorSteps: GuideStep[] = [
+  {
+    title: 'Start the election with Michael at the Police Department',
+    body: 'All mayoral elections begin at the Police Department with Michael. Talk to him to open a new election cycle for the city. Starting the election does not automatically put you on the ballot.',
+    images: [
+      { src: '/guides/mayor/michael-portrait.jpg', alt: 'Michael standing at City Hall / Police Department, used to start mayoral elections.' },
+      { src: '/guides/mayor/michael-dialogue.png', alt: 'Michael dialogue screen offering to start a new mayoral election.' },
+    ],
+    bullets: ['Michael is the first stop for every election.', 'Starting the election only opens registration.', 'You still need to enter yourself as a candidate afterward.'],
+  },
+  {
+    title: 'Watch for registration opening',
+    body: 'Once the election is started, the city gets a notice that registration is open. Players also get a phone notification, giving other people time to decide whether they want to run against you.',
+    images: [
+      { src: '/guides/mayor/registration-open.png', alt: 'Voting notice and phone message announcing that mayoral election registration is open.' },
+    ],
+    bullets: ['Registration opens before voting starts.', 'Use this window to prepare your campaign.', 'Other players can join the race during this time.'],
+  },
+  {
+    title: 'Open the Elections app and enter the race',
+    body: 'Press P, open your phone, and launch the Elections app. Set a slogan, then use Enter race to register yourself as a candidate. If you never do this step, you are not running even if you started the election.',
+    images: [
+      { src: '/guides/mayor/phone-home.png', alt: 'Phone home screen showing the Elections app.' },
+      { src: '/guides/mayor/elections-register.png', alt: 'Elections app screen with fields for running for mayor and entering a campaign slogan.' },
+      { src: '/guides/mayor/elections-candidates.png', alt: 'Elections app showing a registered candidate and slogan.' },
+    ],
+    bullets: ['Set a slogan people will actually remember.', 'Registration stays open for a bit so rivals can join too.', 'Check the candidate list to make sure you appear there.'],
+  },
+  {
+    title: 'Campaign before voting starts',
+    body: 'Use the time before voting begins to get your name out there. Tweeter is one of the best tools for this. Tell people what kind of mayor you plan to be and what you will change if elected.',
+    images: [
+      { src: '/guides/mayor/tweeter-campaign.png', alt: 'Tweeter compose screen with a campaign message for mayor.' },
+    ],
+    bullets: ['Use Tweeter for promises, events, and reminders.', 'Talk to business owners, police, and regular citizens in-character.', 'Good campaigns give people a reason to care about the result.'],
+  },
+  {
+    title: 'Voting opens city-wide',
+    body: 'When registration closes, the city gets another alert that voting is open. Players can then open the Elections app, look at the candidates, and cast a vote. A recorded vote confirmation appears after they choose someone.',
+    images: [
+      { src: '/guides/mayor/voting-open.png', alt: 'Voting notice and phone message announcing that mayoral voting is open.' },
+      { src: '/guides/mayor/elections-vote.png', alt: 'Elections app screen showing a candidate card with a Vote button.' },
+      { src: '/guides/mayor/vote-recorded.png', alt: 'Confirmation in the Elections app that a vote has been recorded.' },
+    ],
+    bullets: ['Registration and voting are separate phases.', 'People vote through the Elections app on their phone.', 'You still need to campaign if you want turnout in your favour.'],
+  },
+  {
+    title: 'Run the city from the Mayor computer',
+    body: 'If you win, head to the Mayor computer on the top floor of the Police Department. This is where you manage custom laws, contraband policy, and the sales tax rate within the server limits. Players can then view your current policies in the Government app on their phone.',
+    images: [
+      { src: '/guides/mayor/mayor-computer.png', alt: 'Mayor computer interface showing city administration controls such as tax rate and illegal items.' },
+    ],
+    bullets: ['Tax, laws, and contraband are all handled there.', 'Changes show up in the Government app for everyone.', 'Your tax rate can affect how strong your mayor paycheck becomes over time.'],
+  },
+  {
+    title: 'Stay alive and expect pushback',
+    body: 'Being mayor paints a target on your back. Unhappy people in the city may come after you, so do not wander around carelessly. When you become mayor, you receive body armor that reduces damage by 25%, but it will not save you from every bad situation.',
+    bullets: ['If you die, you lose the mayor title immediately.', 'When that happens, laws, tax rate, and policy all return to the default settings.', 'The best mayors keep the city active without making half the server want them gone.'],
+  },
+];
+
 const basicSteps = {
   medic: [
     { title: 'Open Job Finder', body: 'Press P, open Job Finder, and check whether Medic has an open slot.', bullets: ['Use the waypoint if available.', 'Medic RP is about helping scenes continue.'] },
     { title: 'Find the job location', body: 'Follow the waypoint or ask around in-character if you are not sure where to go.', bullets: ['Keep your character believable.', 'Respond to injuries and calls for help.'] },
     { title: 'Play the role', body: 'Treat medical work as a public-facing job. Talk to patients, respond to scenes, and avoid turning every injury into a joke.', bullets: ['Keep it semi-serious.', 'Give people a reason to interact.'] },
-  ],
-  mayor: [
-    { title: 'Check Elections and Government', body: 'Use the phone to check elections, laws, taxes, and current city direction.', bullets: ['Mayor work is public and political.', 'Expect other players to have opinions.'] },
-    { title: 'Campaign in-character', body: 'Use Tweeter, public speeches, businesses, and conversations to campaign.', bullets: ['Make promises you can roleplay around.', 'Keep it fun, not personal.'] },
-    { title: 'Lead the city', body: 'If elected, use the role to create scenes rather than only changing numbers.', bullets: ['Talk to police and business owners.', 'Give citizens something to react to.'] },
   ],
   courier: [
     {
@@ -297,12 +354,12 @@ const jobGuides: JobGuide[] = [
   },
   {
     id: 'mayor',
-    title: 'Mayor',
+    title: 'Elections & Mayor',
     group: 'Real job',
-    summary: 'Use elections, Government, and public RP to campaign and lead the city when elected.',
-    status: 'Basic guide',
+    summary: 'Start an election, enter the race, campaign, win votes, and run city laws and tax policy as mayor.',
+    status: 'Visual guide',
     accent: '🏛️',
-    steps: basicSteps.mayor,
+    steps: mayorSteps,
   },
   {
     id: 'courier',
@@ -399,7 +456,7 @@ export default function GuideJobSection() {
       <div className="guides-section-heading compact guide-jobs-subheading">
         <span className="guides-kicker">Jobs available</span>
         <h2>Pick a job guide.</h2>
-        <p>Choose a role below to open a step-by-step guide. The guide appears in a pop-up window, tracks progress, and can be closed at any time.</p>
+        <p>Choose a role below to learn how it works, what tools you will use, and what to expect once you are in the job.</p>
       </div>
 
       <div className="guide-job-card-grid">
@@ -443,7 +500,15 @@ export default function GuideJobSection() {
                   </ul>
                 ) : null}
               </div>
-              {activeStep.image ? (
+              {activeStep.images?.length ? (
+                <figure className="guide-modal-media guide-modal-media-grid">
+                  {activeStep.images.map((item) => (
+                    <div className="guide-modal-media-tile" key={`${activeStep.title}-${item.src}`}>
+                      <img src={item.src} alt={item.alt} />
+                    </div>
+                  ))}
+                </figure>
+              ) : activeStep.image ? (
                 <figure className="guide-modal-media">
                   <img src={activeStep.image} alt={activeStep.alt ?? activeStep.title} />
                 </figure>
