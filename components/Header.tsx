@@ -71,7 +71,7 @@ export async function Header() {
   });
   const visibleOnlineCount = runtime.state === 'offline' || runtime.state === 'data_missing'
     ? null
-    : runtime.playerCount ?? population.onlineCount;
+    : population.onlineCount;
   const [role, permissions, player, communityProfile, steamProfile, isBadgeOnlyApeStaff] = steamId
     ? await Promise.all([
       getRoleForSteamId(steamId),

@@ -221,7 +221,7 @@ export default async function StatusPage() {
 
   const visiblePlayerCount = runtime.state === 'offline' || runtime.state === 'data_missing'
     ? null
-    : runtime.playerCount ?? population.onlineCount;
+    : population.onlineCount;
   const effectiveOnlineCount = visiblePlayerCount ?? 0;
   const state = inferPublicState(runtime, effectiveOnlineCount, runtime.lastSignalAt ?? population.latestEventAt);
   const maxPlayers = runtime.maxPlayers ?? serverConfig.MaxPlayers ?? config.server.maxPlayersFallback;
@@ -276,7 +276,6 @@ export default async function StatusPage() {
           <div className="status-command-meter large" aria-label={`${capacityPercent}% capacity`}><i style={{ width: `${capacityPercent}%` }} /></div>
           <dl>
             <div><dt>Signal</dt><dd>{signalLabel}</dd></div>
-            <div><dt>Source</dt><dd>{runtime.source.replace(/_/g, ' ')}</dd></div>
             <div><dt>Endpoint</dt><dd>{query?.selectedHost ? `${query.selectedHost}:${query.port}` : `${config.status.serverHost}:${config.status.serverPort}`}</dd></div>
             <div><dt>Map</dt><dd>{mapName}</dd></div>
           </dl>
@@ -296,7 +295,7 @@ export default async function StatusPage() {
           </div>
           <div className="status-command-info-grid">
             <MiniStat label="Join status" value={runtime.label} detail={runtime.message} />
-            <MiniStat label="Current players" value={playerValue} detail="Reachable population reported by the best available source." />
+            <MiniStat label="Current players" value={playerValue} detail="Current connected roster reported by the server data feed." />
             <MiniStat label="Known citizens" value={overview.players.toLocaleString()} detail="Saved citizens known to the portal." />
             <MiniStat label="Sessions recorded" value={population.totalSessions.toLocaleString()} detail={`Average session ${duration(population.avgSessionSeconds)}.`} />
           </div>
@@ -390,16 +389,15 @@ export default async function StatusPage() {
         <article className="status-command-panel status-command-diagnostics">
           <div className="status-command-section-head compact">
             <div>
-              <span className="kicker">Diagnostics</span>
-              <h2>How this status was decided</h2>
+              <span className="kicker">Connection</span>
+              <h2>Server check details</h2>
             </div>
           </div>
           <dl>
-            <div><dt>Decision source</dt><dd>{runtime.source.replace(/_/g, ' ')}</dd></div>
             <div><dt>Signal age</dt><dd>{runtime.signalAgeSeconds === null ? 'Unavailable' : duration(runtime.signalAgeSeconds)}</dd></div>
-            <div><dt>Stale threshold</dt><dd>{duration(runtime.staleAfterSeconds)}</dd></div>
-            <div><dt>Query answered</dt><dd>{query ? (query.answered ? 'Yes' : 'No') : 'Not used'}</dd></div>
+            <div><dt>Server answered</dt><dd>{query ? (query.answered ? 'Yes' : 'No') : runtime.online ? 'Yes' : 'No'}</dd></div>
             <div><dt>Timeout</dt><dd>{query ? `${query.timeoutMs}ms` : `${config.status.queryTimeoutMs}ms`}</dd></div>
+            <div><dt>Refresh</dt><dd>Updates when the page is loaded or refreshed.</dd></div>
           </dl>
         </article>
       </section>

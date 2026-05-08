@@ -659,6 +659,16 @@ export async function getServerRuntimeStatus(options?: {
     };
   }
 
+  const siteConfig = await getSiteConfig();
+  const queryBundle = await queryReachableSourceServerStatus({
+    host: options?.serverHost ?? siteConfig.status.serverHost,
+    port: options?.serverPort ?? siteConfig.status.serverPort,
+    timeoutMs: options?.queryTimeoutMs ?? siteConfig.status.queryTimeoutMs,
+    fallbackHosts: options?.fallbackQueryHosts ?? siteConfig.status.fallbackQueryHosts,
+  });
+  const queryDiag = queryDiagnostics(queryBundle);
+  if (queryBundle.selected.online) return statusFromServerQuery(queryBundle.selected, staleAfterSeconds, { query: queryDiag });
+
   const statusFile = await readJson<unknown>('server_status.json', null);
   if (isPlainRecord(statusFile)) {
     const statusText = firstRecordValue(statusFile, ['Status', 'status', 'State', 'state', 'ServerState', 'serverState']);
@@ -700,16 +710,6 @@ export async function getServerRuntimeStatus(options?: {
       };
     }
   }
-
-  const siteConfig = await getSiteConfig();
-  const queryBundle = await queryReachableSourceServerStatus({
-    host: options?.serverHost ?? siteConfig.status.serverHost,
-    port: options?.serverPort ?? siteConfig.status.serverPort,
-    timeoutMs: options?.queryTimeoutMs ?? siteConfig.status.queryTimeoutMs,
-    fallbackHosts: options?.fallbackQueryHosts ?? siteConfig.status.fallbackQueryHosts,
-  });
-  const queryDiag = queryDiagnostics(queryBundle);
-  if (queryBundle.selected.online) return statusFromServerQuery(queryBundle.selected, staleAfterSeconds, { query: queryDiag });
 
   const connectionStatus = statusFromFreshPopulation(population, staleAfterSeconds, { query: queryDiag });
   if (connectionStatus) return connectionStatus;

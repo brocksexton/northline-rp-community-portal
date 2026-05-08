@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 
@@ -30,6 +31,20 @@ type HeaderNavClientProps = {
   statusLabel: string;
 };
 
+
+type LiveHeaderStatus = {
+  onlineCount: number | null;
+  statusState: string;
+  statusLabel: string;
+};
+
+function liveStatusLabel(state: string, onlineCount: number | null) {
+  if (state === 'offline') return 'Offline';
+  if (state === 'data_missing' || state === 'unknown') return 'Checking';
+  if (onlineCount === 1) return '1 online';
+  return `${onlineCount ?? 0} online`;
+}
+
 function isActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -45,6 +60,40 @@ function Wordmark() {
 
 export function HeaderNavClient({ navItems, staff, supportVisible, statusVisible, accountLinks, user, onlineCount, statusState, statusLabel }: HeaderNavClientProps) {
   const pathname = usePathname() || '/';
+  const [liveStatus, setLiveStatus] = useState<LiveHeaderStatus>({ onlineCount, statusState, statusLabel });
+
+  useEffect(() => {
+    setLiveStatus({ onlineCount, statusState, statusLabel });
+  }, [onlineCount, statusState, statusLabel]);
+
+  useEffect(() => {
+    if (!statusVisible) return;
+    let cancelled = false;
+    const refreshStatus = async () => {
+      try {
+        const response = await fetch('/api/status', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        const state = String(data?.runtime?.state ?? data?.state ?? 'unknown');
+        const count = state === 'offline' || state === 'data_missing' || state === 'unknown'
+          ? null
+          : typeof data?.population?.onlineCount === 'number'
+            ? data.population.onlineCount
+            : typeof data?.runtime?.playerCount === 'number'
+              ? data.runtime.playerCount
+              : null;
+        if (!cancelled) setLiveStatus({ onlineCount: count, statusState: state, statusLabel: liveStatusLabel(state, count) });
+      } catch {
+        // Keep the server-rendered value if the refresh fails.
+      }
+    };
+    void refreshStatus();
+    const interval = window.setInterval(refreshStatus, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [statusVisible]);
   const visibleItems = staff ? [...navItems, { href: '/staff', label: 'Staff', icon: 'fa-solid fa-shield-halved', description: 'Staff tools' }] : navItems;
   const supportItem: NavItem | null = supportVisible ? { href: '/support', label: 'Support', icon: 'fa-solid fa-life-ring', description: 'Get help or report an issue' } : null;
   const primaryHrefs = new Set(['/status', '/tweeter', '/players', '/rules', '/leaderboards']);
@@ -88,9 +137,9 @@ export function HeaderNavClient({ navItems, staff, supportVisible, statusVisible
 
         <div className="header-actions header-actions-v3">
           {statusVisible ? (
-            <Link className={`city-status-pill tone-${statusState}`} href="/status" aria-label={`${statusLabel}, view server status`}>
+            <Link className={`city-status-pill tone-${liveStatus.statusState}`} href="/status" aria-label={`${liveStatus.statusLabel}, view server status`}>
               <span className="city-status-dot" aria-hidden="true" />
-              {onlineCount === null ? <strong>{statusLabel}</strong> : <><strong>{onlineCount}</strong><span>online</span></>}
+              {liveStatus.onlineCount === null ? <strong>{liveStatus.statusLabel}</strong> : <><strong>{liveStatus.onlineCount}</strong><span>online</span></>}
             </Link>
           ) : null}
 
@@ -125,7 +174,7 @@ export function HeaderNavClient({ navItems, staff, supportVisible, statusVisible
             <summary aria-label="Open navigation menu"><i className="fa-solid fa-bars" aria-hidden="true" /></summary>
             <div className="mobile-menu-panel-v3">
               <Link href="/" className="mobile-brand-link"><Wordmark /></Link>
-              {statusVisible ? <div className={`mobile-menu-status tone-${statusState}`}><span className="city-status-dot" /> <strong>{statusLabel}</strong></div> : null}
+              {statusVisible ? <div className={`mobile-menu-status tone-${liveStatus.statusState}`}><span className="city-status-dot" /> <strong>{liveStatus.statusLabel}</strong></div> : null}
               <nav aria-label="Mobile navigation">
                 {mobileItems.map((item) => (
                   <Link className={isActive(pathname, item.href) ? 'active' : ''} key={item.href} href={item.href}>

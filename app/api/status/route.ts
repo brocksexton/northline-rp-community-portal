@@ -26,7 +26,6 @@ export async function GET() {
     state: runtime.state,
     label: runtime.label,
     message: runtime.message,
-    source: runtime.source,
     online: runtime.online,
     playerCount: runtime.playerCount,
     maxPlayers: runtime.maxPlayers,
@@ -55,7 +54,7 @@ export async function GET() {
     updates,
     notes: {
       metrics: 'CPU, RAM, disk, and process memory are sampled by the web process. True NIC bytes in/out can be added later with a Windows performance-counter collector.',
-      serverStatus: 'Fresh heartbeat data is preferred. If it is missing or stale, the portal checks the configured server query hosts and then verifies the local game process when available.',
+      serverStatus: 'The portal checks the configured game server address for live reachability and player count, then falls back to local data when needed.',
     },
   }, { headers: noStoreHeaders() });
 }
