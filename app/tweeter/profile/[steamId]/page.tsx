@@ -86,13 +86,23 @@ function formatTweetTime(seconds: number) {
 }
 
 
+function cssUrl(value?: string | null) {
+  const raw = value?.trim();
+  if (!raw) return 'none';
+  if (raw.startsWith('url(')) return raw;
+  const safe = raw.replace(/\\/g, '\\\\').replace(/"/g, '\\\"');
+  return `url("${safe}")`;
+}
+
 function profileCoverStyle(user: Awaited<ReturnType<typeof buildTweeterUser>>): CSSProperties {
   const preset = getProfileCoverPreset(user.coverPreset);
   const imageUrl = user.customCoverUrl || preset.imageUrl || '';
+  const image = cssUrl(imageUrl);
   return {
     '--profile-cover-gradient': preset.gradient,
-    '--profile-cover-image': imageUrl ? `url("${imageUrl}")` : 'none',
+    '--profile-cover-image': image,
     '--profile-cover-accent': user.bannerColor || '#1d9bf0',
+    backgroundImage: `linear-gradient(135deg, color-mix(in srgb, ${user.bannerColor || '#1d9bf0'} 18%, transparent), rgba(2,6,23,.34)), ${image}, ${preset.gradient}`,
   } as unknown as CSSProperties;
 }
 
@@ -358,16 +368,16 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </section>
           ) : null}
 
-          {!profileHasServerIdentity ? (
-            <section className="tweeter-server-lock-banner profile">
-              <i className="fa-solid fa-lock" aria-hidden="true" />
+          {profileHasClaimedSiteProfile && !profileHasServerIdentity ? (
+            <section className="tweeter-server-lock-banner profile compact">
+              <i className="fa-solid fa-circle-info" aria-hidden="true" />
               <div>
-                <strong>Game server login required</strong>
-                <p>{isOwner ? 'Your Steam account is signed in, but the website cannot find a Northline server join date for you yet. Join the game server once to unlock profile editing, follows, messages, and likes.' : 'This Steam account has not joined the Northline game server yet. Gameplay details and social actions stay locked until they log in to the server once.'}</p>
+                <strong>Website profile only</strong>
+                <p>{isOwner ? 'You have signed into the website, but you have not joined the Northline game server yet. Join once in-game to unlock profile editing, follows, messages, and likes.' : 'This user has signed into the website, but has not joined the Northline game server yet. Gameplay details stay limited until they play in-game.'}</p>
               </div>
             </section>
           ) : viewerSocialLockReason ? (
-            <section className="tweeter-server-lock-banner profile">
+            <section className="tweeter-server-lock-banner profile compact">
               <i className="fa-solid fa-lock" aria-hidden="true" />
               <div>
                 <strong>Unlock Tweeter actions</strong>
@@ -376,12 +386,12 @@ export default async function TweeterProfilePage({ params, searchParams }: Param
             </section>
           ) : null}
 
-          {!profileHasClaimedSiteProfile ? (
-            <section className="tweeter-profile-claim-banner profile">
+          {!profileHasClaimedSiteProfile && userTweets.length ? (
+            <section className="tweeter-profile-claim-banner profile compact">
               <i className="fa-regular fa-id-card" aria-hidden="true" />
               <div>
-                <strong>Website profile not claimed yet</strong>
-                <p>{isOwner ? 'Your Steam account is signed in, but your website profile has not been claimed in the local profile store yet. Open profile settings once to publish a public Tweeter profile.' : 'This citizen has Tweeter activity, but they have not signed into the website and claimed a public profile yet. Their posts stay visible and you can still follow them, but DMs and custom profile details are limited.'}</p>
+                <strong>In-game Tweeter profile</strong>
+                <p>{isOwner ? 'This Steam account has in-game Tweeter activity, but has not finished claiming a website profile yet. Open profile settings once to finish the website side.' : 'This citizen has posted from in-game Tweeter, but has not signed into the website yet. Their posts stay visible, but DMs and custom website profile details are limited.'}</p>
               </div>
             </section>
           ) : null}

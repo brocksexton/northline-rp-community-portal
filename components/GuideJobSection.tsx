@@ -266,11 +266,8 @@ const mayorSteps: GuideStep[] = [
   {
     title: 'Stay alive and expect pushback',
     body: 'Being mayor paints a target on your back. Unhappy people in the city may come after you, so do not wander around carelessly. When you become mayor, you receive body armor that reduces damage by 25%, but it will not save you from every bad situation.',
-    images: [
-      { src: '/guides/mayor/dead-screen.png', alt: 'Northline death screen showing the player has died.' },
-      { src: '/guides/mayor/body-armor-inventory.png', alt: 'Inventory screen showing mayor body armor and its 25 percent damage reduction.' },
-    ],
-    mediaLayout: 'stacked',
+    image: '/guides/mayor/body-armor-inventory.png',
+    alt: 'Inventory screen showing mayor body armor and its 25 percent damage reduction.',
     bullets: ['If you die, you lose the mayor title immediately.', 'When that happens, laws, tax rate, and policy all return to the default settings.', 'The body armor cuts damage by 25%, but it is not a free pass to ignore danger.', 'The best mayors keep the city active without making half the server want them gone.'],
   },
 ];

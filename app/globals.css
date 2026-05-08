@@ -27649,3 +27649,59 @@ body.guide-modal-open {
   r: 8px;
   filter: drop-shadow(0 0 10px rgba(14, 165, 233, .45));
 }
+
+
+/* v2.9.110 Tweeter profile cover + account-state banner repairs */
+.tweeter-profile-banner {
+  background-image:
+    linear-gradient(135deg, color-mix(in srgb, var(--profile-cover-accent, #1d9bf0) 18%, transparent), rgba(2,6,23,.34)),
+    var(--profile-cover-image, none),
+    var(--profile-cover-gradient, linear-gradient(135deg, #0f172a, #1d9bf0)) !important;
+  background-repeat: no-repeat !important;
+  background-position: center center, center center, center center !important;
+  background-size: cover, cover, cover !important;
+  min-height: clamp(178px, 24vw, 232px);
+}
+
+.tweeter-profile-banner.cover-kind-gradient {
+  background-image: var(--profile-cover-gradient, linear-gradient(135deg, #0f172a, #1d9bf0)) !important;
+}
+
+.tweeter-server-lock-banner.profile.compact,
+.tweeter-profile-claim-banner.profile.compact {
+  margin: 0;
+  padding: .72rem 1.05rem !important;
+  gap: .72rem;
+  align-items: center;
+  border-top: 1px solid var(--tw-border, rgba(148,163,184,.24)) !important;
+  border-bottom: 1px solid var(--tw-border, rgba(148,163,184,.24)) !important;
+  background: color-mix(in srgb, var(--tw-bg-elevated, #111827) 88%, var(--tw-accent, #1d9bf0) 12%) !important;
+}
+
+.tweeter-server-lock-banner.profile.compact > i,
+.tweeter-profile-claim-banner.profile.compact > i {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: .9rem;
+}
+
+.tweeter-server-lock-banner.profile.compact strong,
+.tweeter-profile-claim-banner.profile.compact strong {
+  font-size: .92rem;
+  line-height: 1.2;
+}
+
+.tweeter-server-lock-banner.profile.compact p,
+.tweeter-profile-claim-banner.profile.compact p {
+  margin-top: .12rem;
+  font-size: .82rem;
+  line-height: 1.35;
+  color: var(--tw-muted, #94a3b8) !important;
+}
+
+.tweeter-mode[data-color-mode='light'] .tweeter-server-lock-banner.profile.compact,
+.tweeter-mode[data-color-mode='light'] .tweeter-profile-claim-banner.profile.compact,
+.tweeter-mode[data-color-mode='blue'] .tweeter-server-lock-banner.profile.compact,
+.tweeter-mode[data-color-mode='blue'] .tweeter-profile-claim-banner.profile.compact {
+  background: color-mix(in srgb, var(--tw-bg-elevated, #fff) 90%, var(--tw-accent, #1d9bf0) 10%) !important;
+}
