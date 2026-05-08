@@ -11,6 +11,7 @@ import { getRoleForSteamId } from '@/lib/ape-data';
 import { canUseCustomProfileCover, isLikelyImageUrl } from '@/lib/profile-customization';
 import { getSessionSteamId, getSessionSteamIdFromRequest, jsonWithSession, noStoreHeaders, verifyProfileEditToken } from '@/lib/session';
 import { getTweeterProfileCustomizeLock } from '@/lib/tweeter-access';
+import { readJsonBody, rateLimit } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,11 @@ function cleanShowcase(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({}));
+  const limited = rateLimit(request, 'profile-settings', 30, 60_000);
+  if (limited) return limited;
+  let body: Record<string, unknown> = {};
+  try { body = await readJsonBody(request, 32 * 1024); }
+  catch { return NextResponse.json({ error: 'Request body is too large or invalid.' }, { status: 413, headers: noStoreHeaders() }); }
   const steamIdFromCookie = getSessionSteamIdFromRequest(request) ?? await getSessionSteamId();
   const steamIdFromEditToken = verifyProfileEditToken(body.profileEditToken);
   const steamId = steamIdFromCookie ?? steamIdFromEditToken;

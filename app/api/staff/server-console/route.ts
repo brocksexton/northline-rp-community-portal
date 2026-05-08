@@ -3,6 +3,7 @@ import { buildModerationCommand, getServerAdminSnapshot, runManagedServiceAction
 import { canRunModerationActions, canRunServerPowerActions, requireServerAdministrationRequest } from '@/lib/staff-auth';
 import { jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { notifyAdminAudit, notifyLiveFeedServerControl, notifyWebServerAction } from '@/lib/discord-webhooks';
+import { readJsonBody, rateLimit } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,10 +29,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, 'staff-server-console', 30, 60_000);
+  if (limited) return limited;
   const staff = await requireServerAdministrationRequest(request, 'server');
   if ('response' in staff) return staff.response;
 
-  const body = await request.json().catch(() => ({} as Body));
+  let body: Body = {};
+  try { body = await readJsonBody<Body>(request, 32 * 1024); }
+  catch { return NextResponse.json({ error: 'Request body is too large or invalid.' }, { status: 413, headers: noStoreHeaders() }); }
   const type = stringValue(body.type);
 
   if (type === 'moderation') {

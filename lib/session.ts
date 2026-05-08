@@ -10,7 +10,12 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 const PROFILE_EDIT_TOKEN_TTL_SECONDS = 60 * 30;
 
 function getSecret(): string {
-  return (process.env.SESSION_SECRET || '').trim() || 'dev-secret-change-me';
+  const value = (process.env.SESSION_SECRET || '').trim();
+  if (value) return value;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SESSION_SECRET must be set to a long random value in production.');
+  }
+  return 'dev-secret-change-me';
 }
 
 function sign(value: string): string {
@@ -25,7 +30,10 @@ function safeCompare(suppliedValue: string, expectedValue: string): boolean {
 }
 
 export function createSessionCookieValue(steamId: string): string {
-  return `${steamId}.${sign(steamId)}`;
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const nonce = crypto.randomBytes(12).toString('base64url');
+  const payload = `v1.${steamId}.${issuedAt}.${nonce}`;
+  return `${payload}.${sign(`session.${payload}`)}`;
 }
 
 export function createProfileEditToken(steamId: string): string {
@@ -49,8 +57,19 @@ export function verifyProfileEditToken(value: unknown): string | null {
 
 export function verifySessionCookieValue(value: string | undefined): string | null {
   if (!value) return null;
-  const [steamId, signature] = value.split('.');
+  const parts = value.split('.');
+  if (parts[0] === 'v1') {
+    const [, steamId, issuedAtRaw, nonce, signature] = parts;
+    if (!steamId || !issuedAtRaw || !nonce || !signature || !/^\d{15,20}$/.test(steamId)) return null;
+    const issuedAt = Number(issuedAtRaw);
+    const now = Math.floor(Date.now() / 1000);
+    if (!Number.isFinite(issuedAt) || issuedAt > now + 60 || issuedAt < now - SESSION_MAX_AGE_SECONDS) return null;
+    const payload = `v1.${steamId}.${issuedAtRaw}.${nonce}`;
+    return safeCompare(signature, sign(`session.${payload}`)) ? steamId : null;
+  }
+  const [steamId, signature] = parts;
   if (!steamId || !signature || !/^\d{15,20}$/.test(steamId)) return null;
+  // Backwards compatibility for sessions issued before v2.9.91. They expire naturally by cookie max-age.
   return safeCompare(signature, sign(steamId)) ? steamId : null;
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { noStoreHeaders } from '@/lib/session';
+import { safeTimingEqual } from '@/lib/security';
 
 function configuredSecret() {
   return process.env.NORTHLINE_BOT_API_SECRET?.trim() || process.env.DISCORD_BOT_API_SECRET?.trim() || '';
@@ -13,7 +14,7 @@ export function requireBotApiSecret(request: NextRequest): NextResponse | null {
 
   const headerSecret = request.headers.get('x-northline-bot-secret')?.trim() || '';
   const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() || '';
-  if (headerSecret !== secret && bearer !== secret) {
+  if (!safeTimingEqual(headerSecret, secret) && !safeTimingEqual(bearer, secret)) {
     return NextResponse.json({ error: 'Unauthorized bot request.' }, { status: 401, headers: noStoreHeaders() });
   }
 
