@@ -14,11 +14,19 @@ type GuideStep = {
 type JobGuide = {
   id: string;
   title: string;
-  group: 'Real job' | 'Citizen job' | 'Core guide';
+  group: 'Job' | 'Citizen job' | 'Core guide';
   summary: string;
   status: 'Visual guide' | 'Basic guide' | 'Planned';
   accent: string;
   steps: GuideStep[];
+};
+
+const jobAfkStep: GuideStep = {
+  title: 'Stay active while you are working',
+  body: 'Many jobs will warn you if you are inactive too long. If the warning runs out, you can be kicked out of that job and may need to pick the role again later.',
+  image: '/guides/common/afk-warning.png',
+  alt: 'Employment warning saying the player will be kicked in 60 seconds for inactivity.',
+  bullets: ['Do not go AFK while holding an active job role.', 'If you need to step away, finish what you are doing first or expect the job to remove you.', 'This helps keep limited job slots open for people actively playing.'],
 };
 
 const policeSteps: GuideStep[] = [
@@ -337,38 +345,38 @@ const jobGuides: JobGuide[] = [
   {
     id: 'police',
     title: 'Police Officer / Chief of Police',
-    group: 'Real job',
+    group: 'Job',
     summary: 'Apply through Job Finder, visit the station, talk to Sergeant Harris, and respond to 911 or break-in alerts once hired.',
     status: 'Visual guide',
     accent: '🚓',
-    steps: policeSteps,
+    steps: [...policeSteps, jobAfkStep],
   },
   {
     id: 'medic',
     title: 'Medic',
-    group: 'Real job',
+    group: 'Job',
     summary: 'Help injured players, respond to scenes, and keep RP moving instead of treating medical work like a menu button.',
     status: 'Basic guide',
     accent: '⚕️',
-    steps: basicSteps.medic,
+    steps: [...basicSteps.medic, jobAfkStep],
   },
   {
     id: 'mayor',
     title: 'Elections & Mayor',
-    group: 'Real job',
+    group: 'Job',
     summary: 'Start an election, enter the race, campaign, win votes, and run city laws and tax policy as mayor.',
     status: 'Visual guide',
     accent: '🏛️',
-    steps: mayorSteps,
+    steps: [...mayorSteps, jobAfkStep],
   },
   {
     id: 'courier',
     title: 'Courier',
-    group: 'Real job',
+    group: 'Job',
     summary: 'Deliver timed parcels around the city. Salary shows $0 because Courier pays per completed package.',
     status: 'Visual guide',
     accent: '📦',
-    steps: basicSteps.courier,
+    steps: [...basicSteps.courier, jobAfkStep],
   },
   {
     id: 'business',
@@ -377,7 +385,7 @@ const jobGuides: JobGuide[] = [
     summary: 'Grocery, Gun Store, and Hardware Store roles are for players who want to run a public-facing business.',
     status: 'Basic guide',
     accent: '🏪',
-    steps: basicSteps.business,
+    steps: [...basicSteps.business, jobAfkStep],
   },
   {
     id: 'citizen',
@@ -386,9 +394,15 @@ const jobGuides: JobGuide[] = [
     summary: 'The flexible default role for learning the city, cleaning up, using properties, meeting people, and building a character.',
     status: 'Basic guide',
     accent: '👤',
-    steps: basicSteps.citizen,
+    steps: [...basicSteps.citizen, jobAfkStep],
   },
 ];
+
+function guideLabel(guide: JobGuide) {
+  if (guide.group === 'Core guide') return 'Core guide';
+  if (guide.group === 'Citizen job') return 'Citizen job guide';
+  return 'Job guide';
+}
 
 export default function GuideJobSection() {
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null);
@@ -478,7 +492,7 @@ export default function GuideJobSection() {
           <section className="guide-modal-window" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
             <header className="guide-modal-header">
               <div>
-                <span>{activeGuide.group} guide</span>
+                <span>{guideLabel(activeGuide)}</span>
                 <h2 id="guide-modal-title">{activeGuide.title}</h2>
               </div>
               <button className="guide-modal-close" type="button" onClick={closeGuide} aria-label="Close guide">×</button>

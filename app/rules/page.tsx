@@ -43,7 +43,7 @@ const rulebook = [
     title: 'Jobs and public roles',
     mood: 'Jobs are RP hooks first, money buttons second.',
     points: [
-      'Available real jobs currently include Medic, Police Officer, Chief of Police, Mayor, and Courier.',
+      'Available jobs currently include Medic, Police Officer, Chief of Police, Mayor, and Courier.',
       'Available citizen jobs currently include Citizen, Grocery Store Owner, Gun Store Owner, and Hardware Store Owner.',
       'Police, Chief of Police, Mayor, and Medic roles should be played with extra care because other players rely on them for scenes.',
       'If a salary shows as $0 in the phone Job Finder, that does not always mean the job is useless. Some jobs make money through tasks, sales, or RP opportunities.',
@@ -233,7 +233,7 @@ export default async function RulesPage() {
         </div>
         <div className="rules-job-grid">
           <article>
-            <span>Real jobs</span>
+            <span>Jobs</span>
             <h3>Public-service and task jobs</h3>
             <p>Medic, Police Officer, Chief of Police, Mayor, and Courier.</p>
           </article>
