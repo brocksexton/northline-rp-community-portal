@@ -105,44 +105,44 @@
     ]
   },
   "legal": {
-    "lastModified": "2026-05-04",
+    "lastModified": "2026-05-08",
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms and Conditions",
     "contactEmail": "admin@northline.lol",
     "privacySections": [
       {
-        "title": "What the portal reads",
-        "body": "The website reads Northbound RP server files such as player saves, role assignments, Tweeter posts, connection history, moderation records, property layout summaries, and server configuration values."
+        "title": "Steam-linked identity",
+        "body": "The portal uses Steam OpenID to confirm SteamID64 and may use public Steam profile name/avatar information for account display."
       },
       {
-        "title": "Steam sign-in",
-        "body": "Steam OpenID is used to confirm your SteamID64. If a Steam Web API key is configured, the portal may fetch public Steam profile names and avatars."
+        "title": "Portal and server data",
+        "body": "The portal may read or store citizen profiles, profile settings, public posts, messages, applications, Discord-link status, moderation records, audit logs, connection history, and server status data."
       },
       {
-        "title": "Profile privacy",
-        "body": "Public profiles are intentionally limited. Sensitive gameplay data such as exact inventory, phone messages, staff logs, and moderation evidence is not public by default."
+        "title": "Public visibility",
+        "body": "Public pages are intentionally limited. Sensitive gameplay details, private messages, staff notes, moderation evidence, secrets, webhook URLs, API keys, and exploit-useful information should not be public."
       },
       {
-        "title": "Website-owned data",
-        "body": "Profile bios, privacy settings, status notices, and future community settings are stored separately from the game save files."
+        "title": "Moderation and retention",
+        "body": "Staff may retain and review records needed for safety, rule enforcement, appeals, audit integrity, server security, backups, or abuse prevention."
       }
     ],
     "termsSections": [
       {
         "title": "Community portal",
-        "body": "Northline RP provides this website for server information, player profiles, onboarding, moderation transparency, and community features."
-      },
-      {
-        "title": "Game source of truth",
-        "body": "The game server remains authoritative. Website data may be delayed or unavailable during restarts, maintenance, or file migration."
+        "body": "Northline RP provides this website as a companion portal for the Northbound RP / ApeTavern / aperp s&box server."
       },
       {
         "title": "Acceptable use",
-        "body": "Do not abuse login, profile, social, appeal, status, or staff-facing systems. Staff may restrict portal access to protect the community."
+        "body": "Do not harass, impersonate, spam, evade moderation, exploit bugs, scrape restricted data, attack the service, or misuse account/staff features."
+      },
+      {
+        "title": "Moderation and access",
+        "body": "Staff may remove content, restrict features, hide profiles, ban accounts, revoke permissions, or disable staff page access when needed to protect the server."
       },
       {
         "title": "No pay-to-win",
-        "body": "Any future supporter perks should remain cosmetic or community-facing and must not grant gameplay power, money, items, property advantage, police access, or moderation preference."
+        "body": "Future supporter perks should remain cosmetic, convenience-based, or community-facing and must not provide gameplay power or moderation preference."
       }
     ]
   }

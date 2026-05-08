@@ -6,7 +6,7 @@ import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-d
 export async function generateMetadata() {
   return buildPageMetadata({
     title: 'Privacy Policy',
-    description: 'How the Northline RP portal uses Steam sign-in, public profiles, server files, and website-owned data.',
+    description: 'How Northline RP collects, uses, stores, displays, and moderates Steam-linked portal, community, and server data.',
     path: '/legal/privacy',
   });
 }
@@ -14,61 +14,97 @@ export async function generateMetadata() {
 const privacyHighlights = [
   {
     icon: 'fa-brands fa-steam',
-    title: 'Steam sign-in',
-    body: 'We use Steam OpenID so the site knows which in-game save belongs to you.',
+    title: 'Steam-linked access',
+    body: 'Steam OpenID confirms your SteamID64 so the portal can connect you to your Northline RP citizen profile and permissions.',
   },
   {
-    icon: 'fa-solid fa-eye',
-    title: 'Public profiles are opt-in',
-    body: 'You decide whether your citizen profile is public and which game sections can show.',
+    icon: 'fa-solid fa-user-shield',
+    title: 'Privacy by default',
+    body: 'Profiles and public pages are intentionally limited, with sensitive gameplay, account, message, and staff data kept out of public view.',
   },
   {
-    icon: 'fa-solid fa-server',
-    title: 'Game exports power the site',
-    body: 'Most gameplay information shown here comes from Northbound RP server files.',
+    icon: 'fa-solid fa-gavel',
+    title: 'Safety and moderation',
+    body: 'Staff may review logs, reports, posts, messages, bans, and audit records when needed to protect the server and community.',
   },
 ];
 
 const privacySections = [
   {
-    title: 'What this site reads',
+    title: 'Who this policy covers',
     body: [
-      'Northline reads server-side Northbound RP data so the website can show useful community pages. That can include citizen names, SteamID64 values, avatars, roles, titles, playtime summaries, profile settings, public Tweeter posts, property layout summaries, moderation records, and server status information.',
-      'The game server stays the source of truth. If the website looks stale, missing, or odd during a restart, the in-game data is what matters.',
+      'This Privacy Policy applies to the Northline RP community portal at northline.lol and related Northline RP web features for the Northbound RP / ApeTavern / aperp s&box server.',
+      'Northline RP is a community server project. It is not affiliated with Valve, Steam, Facepunch, Garry\'s Mod, ApeTavern, or Northbound RP unless expressly stated.',
     ],
   },
   {
-    title: 'What you can choose to share',
+    title: 'Information we collect or read',
     body: [
-      'Your public profile is controlled from the dashboard. You can keep your profile private, or you can publish selected sections such as economy, stats, properties, activity, or inventory summaries if that feature is available.',
-      'Private profiles are hidden from the public player directory. Some basic moderation or ban-list information may still appear where the server publishes it for transparency.',
+      'The portal may read or store SteamID64 values, Steam display names, Steam avatars, citizen names, profile settings, public profile text, titles, roles, playtime summaries, job and character data, server connection history, public Tweeter/forum content, follows, likes, direct-message metadata/content where the messaging feature is used, Discord-link status, support/job applications, leaderboard values, ban records, moderation cases, audit logs, and server status information.',
+      'The site also uses website-owned records such as profile privacy choices, bios, visibility settings, moderation settings, staff access overrides, maintenance settings, status posts, and feature toggles. These records are stored separately from the live game save files.',
     ],
   },
   {
-    title: 'What stays off public profiles',
+    title: 'Technical data, cookies, and sessions',
     body: [
-      'The website should not publicly expose private messages, staff-only notes, internal evidence, sensitive account details, private moderation discussion, or anything that would make the server less safe to run.',
-      'If a page ever appears to show something it should not, please report it so it can be fixed quickly.',
+      'When you sign in with Steam, the portal stores a session cookie so you can stay signed in and use account features such as dashboard settings, follows, likes, messages, applications, and staff tools where authorized.',
+      'The server or hosting provider may also process normal technical logs such as IP address, browser information, requested URLs, timestamps, errors, and security events. These logs are used for reliability, abuse prevention, troubleshooting, and security.',
     ],
   },
   {
-    title: 'Cookies and sessions',
+    title: 'Steam, Discord, and third-party services',
     body: [
-      'When you sign in with Steam, the site stores a session cookie so you do not have to reconnect on every page. This cookie is used for account features such as likes, profile settings, and dashboard access.',
-      'Clearing browser cookies or using certain privacy tools may sign you out.',
+      'Steam handles the login confirmation through Steam OpenID. If a Steam Web API key is configured, the portal may request public Steam profile information such as display name and avatar. Steam does not give Northline RP your Steam password through this process.',
+      'Northline RP may link to or integrate with Discord for community support, announcements, account linking, staff notifications, admin audit webhooks, and bot/relay features. Discord, Steam, s&box, and any hosting/CDN providers operate under their own terms and privacy policies.',
     ],
   },
   {
-    title: 'Steam and third-party services',
+    title: 'How we use information',
     body: [
-      'Steam handles the login confirmation. If configured, the site may request public Steam profile information such as display name and avatar. Discord links are provided for community support, but Discord is its own service with its own account and privacy settings.',
+      'We use portal and server information to provide login, player profiles, dashboards, server status, public activity, Tweeter/forum features, messages, leaderboards, applications, support workflows, bans/cases, staff tools, security checks, abuse prevention, and community moderation.',
+      'We may also use aggregate or operational data to understand uptime, population, feature usage, staff activity, server health, and whether a system is being abused or needs adjustment.',
     ],
   },
   {
-    title: 'Data changes and removal',
+    title: 'What may be public',
     body: [
-      'You can change your profile visibility from the dashboard. If you need help with account/profile data that cannot be changed there, contact the server team through support or Discord.',
-      'Some records may be kept when they are needed for moderation, safety, server integrity, or basic community transparency.',
+      'Depending on feature settings and your profile choices, public pages may show Steam display name/avatar, citizen name, public bio, selected profile sections, public Tweeter posts, forum posts, follows/likes where visible, leaderboard entries, server activity summaries, and moderation records that are intentionally published for transparency.',
+      'Private profiles are hidden from the public player directory. Some server-published or moderation-related information may still appear where it is required for safety, transparency, or rule enforcement.',
+    ],
+  },
+  {
+    title: 'What is restricted from public view',
+    body: [
+      'The portal should not publicly expose private messages, exact private inventories, sensitive economy details, internal staff notes, moderation evidence, staff audit data, private Discord relay material, server secrets, webhook URLs, Steam API keys, or information that would make the server easier to exploit.',
+      'Staff-only pages may show more information than public pages. Staff access is permission-based and may be audited, restricted, or removed.',
+    ],
+  },
+  {
+    title: 'Moderation, staff review, and safety records',
+    body: [
+      'Staff may review user content, private reports, applications, messages, connection history, ban records, cases, server actions, and audit logs when needed to investigate abuse, enforce rules, protect players, secure the site, or comply with a legitimate request.',
+      'Administrative actions may be logged with the acting staff member, affected SteamID/account, action type, timestamp, and relevant notes so the team can detect misuse and maintain accountability.',
+    ],
+  },
+  {
+    title: 'Retention and deletion',
+    body: [
+      'You can update profile visibility and editable profile content from the dashboard where those controls are available. You can also contact the team for help with account/profile data that cannot be changed directly.',
+      'Some information may be kept for longer when needed for moderation history, ban enforcement, appeal review, audit integrity, server security, backups, legal compliance, or abuse prevention. Backups and logs may take additional time to rotate out.',
+    ],
+  },
+  {
+    title: 'Security',
+    body: [
+      'Northline RP uses server-side permission checks for staff and admin functionality. Secrets such as Steam API keys, webhook URLs, bridge tokens, and command credentials should remain server-side and should not be committed to public code.',
+      'No community website can guarantee perfect security. Please report suspected data leaks, account issues, or unsafe pages through Discord support or the contact email below.',
+    ],
+  },
+  {
+    title: 'Access, questions, and changes',
+    body: [
+      'You may ask what account/profile information is associated with your SteamID64, request correction of inaccurate website-owned profile data, or ask for deletion where deletion is practical and not blocked by moderation, security, or operational needs.',
+      'We may update this policy as the portal adds or changes features. The Last updated date shows when this page was last materially revised.',
     ],
   },
 ];
@@ -82,11 +118,11 @@ export default async function PrivacyPage() {
     <main className="page-shell policy-page policy-page-v2">
       <section className="policy-hero-v2">
         <div>
-          <span className="eyebrow">Privacy</span>
-          <h1>Plain, practical privacy for Northline.</h1>
+          <span className="eyebrow">Privacy Policy</span>
+          <h1>Plain, practical privacy for Northline RP.</h1>
           <p>
-            This website is here to make the server easier to use, not to surprise people with hidden data grabs.
-            Here is what the portal reads, what you control, and where to ask for help.
+            This portal connects Steam, website features, and Northbound RP server data. This policy explains what
+            information is collected or read, what may become public, what remains restricted, and how to contact the team.
           </p>
           <div className="policy-hero-actions-v2">
             <Link className="button button-primary" href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Manage profile settings</Link>
@@ -96,7 +132,7 @@ export default async function PrivacyPage() {
         <aside className="policy-note-v2">
           <span>Last updated</span>
           <strong>{config.legal.lastModified}</strong>
-          <p>Questions can be sent to <a href={`mailto:${config.legal.contactEmail}`}>{config.legal.contactEmail}</a>.</p>
+          <p>Privacy questions can be sent to <a href={`mailto:${config.legal.contactEmail}`}>{config.legal.contactEmail}</a>.</p>
         </aside>
       </section>
 

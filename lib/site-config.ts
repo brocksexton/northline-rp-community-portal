@@ -123,9 +123,9 @@ const fallbackConfig: SiteConfig = {
     processNames: ['sbox.exe', 'sbox-server.exe', 'sbox-dev.exe', 'sbox_server.exe', 'sbox-game.exe', 'sbox', 'sbox-server', 'sbox_server', 's&box'],
   },
   legal: {
-    lastModified: '2026-05-03',
+    lastModified: '2026-05-08',
     privacyTitle: 'Privacy Policy',
-    termsTitle: 'Terms of Conditions',
+    termsTitle: 'Terms and Conditions',
     contactEmail: 'admin@northline.lol',
     privacySections: [],
     termsSections: [],
