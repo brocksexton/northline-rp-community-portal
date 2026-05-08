@@ -27608,3 +27608,44 @@ body.guide-modal-open {
     grid-template-columns: 1fr;
   }
 }
+
+.staff-status-reset-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.staff-status-reset-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.staff-status-reset-actions p {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--site-muted);
+}
+
+.status-command-chart-point {
+  cursor: help;
+  transition: r .16s ease, filter .16s ease;
+}
+
+.status-command-chart-point:hover {
+  r: 7px;
+  filter: drop-shadow(0 0 10px rgba(14, 165, 233, .45));
+}
+
+.staff-metric-chart circle {
+  fill: var(--site-surface);
+  stroke: var(--main-blue, #0ea5e9);
+  stroke-width: 3;
+  cursor: help;
+  transition: r .16s ease, filter .16s ease;
+}
+
+.staff-metric-chart circle:hover {
+  r: 8px;
+  filter: drop-shadow(0 0 10px rgba(14, 165, 233, .45));
+}

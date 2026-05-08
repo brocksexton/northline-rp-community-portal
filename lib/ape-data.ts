@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from 'fs/promises';
+import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
 import { createSocket } from 'node:dgram';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -82,6 +82,13 @@ export type PopulationSummary = {
   totalSessionSeconds: number;
   latestEventAt: string | null;
   recentEvents: ConnectionEvent[];
+};
+
+export type StatusRuntimeReset = {
+  resetAt: string;
+  actorSteamId?: string;
+  actorName?: string;
+  reason?: string;
 };
 
 export type ServerRuntimeState = 'online' | 'quiet' | 'offline' | 'unknown' | 'data_missing';
@@ -218,6 +225,38 @@ async function readJson<T>(fileName: string, fallback: T): Promise<T> {
   } catch {
     return fallback;
   }
+}
+
+async function writeJson(fileName: string, value: unknown): Promise<void> {
+  const base = getDataPath();
+  if (!base) throw new Error('data_path_not_configured');
+  const target = path.join(base, fileName);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+export async function getStatusRuntimeReset(): Promise<StatusRuntimeReset | null> {
+  const reset = await readJson<StatusRuntimeReset | null>('status_runtime_reset.json', null);
+  if (!reset?.resetAt || !Number.isFinite(Date.parse(reset.resetAt))) return null;
+  return reset;
+}
+
+export async function resetStatusRuntimeData(input: { actorSteamId?: string; actorName?: string; reason?: string } = {}): Promise<StatusRuntimeReset> {
+  const reset: StatusRuntimeReset = {
+    resetAt: new Date().toISOString(),
+    actorSteamId: input.actorSteamId,
+    actorName: input.actorName,
+    reason: input.reason?.trim() || 'Manual staff reset of public status/player snapshot.',
+  };
+  await writeJson('status_runtime_reset.json', reset);
+  return reset;
+}
+
+async function filterEventsAfterStatusReset(events: ConnectionEvent[]): Promise<ConnectionEvent[]> {
+  const reset = await getStatusRuntimeReset();
+  if (!reset) return events;
+  const resetMs = Date.parse(reset.resetAt);
+  return events.filter((event) => Date.parse(event.Timestamp) > resetMs);
 }
 
 async function getJsonFiles(folderName: string): Promise<string[]> {
@@ -669,6 +708,8 @@ export async function getServerRuntimeStatus(options?: {
   const queryDiag = queryDiagnostics(queryBundle);
   if (queryBundle.selected.online) return statusFromServerQuery(queryBundle.selected, staleAfterSeconds, { query: queryDiag });
 
+  const reset = await getStatusRuntimeReset();
+  const resetMs = reset ? Date.parse(reset.resetAt) : null;
   const statusFile = await readJson<unknown>('server_status.json', null);
   if (isPlainRecord(statusFile)) {
     const statusText = firstRecordValue(statusFile, ['Status', 'status', 'State', 'state', 'ServerState', 'serverState']);
@@ -682,8 +723,9 @@ export async function getServerRuntimeStatus(options?: {
     const lastSignalAt = normalizedIsoTimestamp(firstRecordValue(statusFile, [
       'Timestamp', 'timestamp', 'UpdatedAt', 'updatedAt', 'LastUpdatedUtc', 'lastUpdatedUtc', 'HeartbeatUtc', 'heartbeatUtc', 'LastHeartbeatUtc', 'lastHeartbeatUtc', 'LastSeenUtc', 'lastSeenUtc', 'GeneratedAt', 'generatedAt',
     ]));
-    const age = signalAgeSeconds(lastSignalAt);
-    const isFresh = age === null || age <= staleAfterSeconds;
+    const statusFileResetStale = resetMs !== null && (!lastSignalAt || Date.parse(lastSignalAt) <= resetMs);
+    const age = statusFileResetStale ? null : signalAgeSeconds(lastSignalAt);
+    const isFresh = !statusFileResetStale && (age === null || age <= staleAfterSeconds);
 
     let state: ServerRuntimeState = 'unknown';
     if (isFresh) {
@@ -1006,7 +1048,7 @@ function compactTrendLabel(date: Date, includeDay: boolean) {
 }
 
 export async function getPopulationTrends(): Promise<PopulationTrendSummary> {
-  const events = (await getConnectionEvents())
+  const events = (await filterEventsAfterStatusReset(await getConnectionEvents()))
     .filter((event) => Number.isFinite(Date.parse(event.Timestamp)))
     .sort((a, b) => Date.parse(a.Timestamp) - Date.parse(b.Timestamp));
 
@@ -1076,7 +1118,7 @@ export async function getPopulationTrends(): Promise<PopulationTrendSummary> {
 }
 
 export async function getPopulationSummary(): Promise<PopulationSummary> {
-  const events = await getConnectionEvents();
+  const events = await filterEventsAfterStatusReset(await getConnectionEvents());
   const latestByPlayer = new Map<string, ConnectionEvent>();
   const sessions = events.filter((event) => event.IsConnection === false && typeof event.SessionDurationSeconds === 'number');
   for (const event of events) latestByPlayer.set(String(event.SteamId), event);

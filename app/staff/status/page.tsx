@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus } from '@/lib/ape-data';
+import { getDataHealth, getPopulationSummary, getServerConfig, getServerRuntimeStatus, getStatusRuntimeReset } from '@/lib/ape-data';
 import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getOperationalMetrics } from '@/lib/host-metrics';
 import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
 import { StaffMetricsHistoryPanel } from '@/components/StaffMetricsHistoryPanel';
 import { StatusUpdatesAdminPanel } from '@/components/StatusUpdatesAdminPanel';
+import { StatusRuntimeResetPanel } from '@/components/StatusRuntimeResetPanel';
 import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage } from '@/lib/staff-auth';
 import { getSiteConfig } from '@/lib/site-config';
 import { isSiteFeatureEnabled } from '@/lib/site-features-data';
@@ -63,7 +64,7 @@ export default async function StaffStatusPage() {
     );
   }
 
-  const [config, health, population, serverConfig, metrics, updates, publicStatusVisible] = await Promise.all([
+  const [config, health, population, serverConfig, metrics, updates, publicStatusVisible, statusReset] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     getPopulationSummary(),
@@ -71,6 +72,7 @@ export default async function StaffStatusPage() {
     getOperationalMetrics(),
     getStatusUpdates(20),
     isSiteFeatureEnabled('status'),
+    getStatusRuntimeReset(),
   ]);
 
   const runtime = await getServerRuntimeStatus({
@@ -117,6 +119,9 @@ export default async function StaffStatusPage() {
         <article><span>RAM</span><strong>{metrics.ram.percent}%</strong><p>{mbToGbLabel(metrics.ram.usedMb)} used by the host.</p></article>
       </section>
 
+      <section className="staff-command-grid">
+        <StatusRuntimeResetPanel resetAt={statusReset?.resetAt ?? null} onlineCount={population.onlineCount} runtimeLabel={runtime.label} />
+      </section>
 
       <StatusUpdatesAdminPanel initialUpdates={updates} />
 

@@ -10,7 +10,7 @@ import {
   type ServerRuntimeStatus,
 } from '@/lib/ape-data';
 import { getMetricSamples, getStatusUpdates } from '@/lib/community-data';
-import { duration, relativeFromDate } from '@/lib/format';
+import { duration, fullDate, relativeFromDate } from '@/lib/format';
 import { getSiteConfig } from '@/lib/site-config';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 import { getOperationalMetrics } from '@/lib/host-metrics';
@@ -152,7 +152,11 @@ function TrendChart({ points, label }: { points: PopulationTrendPoint[]; label: 
         })}
         <path className="status-command-chart-area" d={areaData} />
         <path className="status-command-chart-line" d={pathData} />
-        {coords.map((point, index) => <circle key={`${point.at}-${index}`} cx={point.x} cy={point.y} r="4" />)}
+        {coords.map((point, index) => (
+          <circle className="status-command-chart-point" key={`${point.at}-${index}`} cx={point.x} cy={point.y} r="4">
+            <title>{`${point.count} player${point.count === 1 ? '' : 's'} · ${fullDate(point.at)} · ${index === coords.length - 1 ? 'latest visible sample' : 'trend sample'}`}</title>
+          </circle>
+        ))}
       </svg>
       <div className="status-command-chart-axis y-axis">
         {axisValues.map((value, index) => <span key={`${value}-${index}`}>{value}</span>)}

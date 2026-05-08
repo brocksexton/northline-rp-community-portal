@@ -36,16 +36,16 @@ function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function chartPoints(values: Array<{ value: number; capturedAt: string }>, max: number) {
-  if (!values.length) return '';
+function chartCoordinates(values: Array<{ value: number; capturedAt: string }>, max: number) {
   const width = 620;
   const height = 180;
   return values.map((point, index) => {
-    const x = values.length === 1 ? width : (index / (values.length - 1)) * width;
+    const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width;
     const y = height - Math.max(0, Math.min(1, point.value / max)) * height;
-    return `${Math.round(x * 10) / 10},${Math.round(y * 10) / 10}`;
-  }).join(' ');
+    return { ...point, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+  });
 }
+
 
 export function StaffMetricsHistoryPanel({ samples }: { samples: MetricSample[] }) {
   const [selected, setSelected] = useState<MetricKey>('ram');
@@ -56,7 +56,8 @@ export function StaffMetricsHistoryPanel({ samples }: { samples: MetricSample[] 
     .filter((sample): sample is { capturedAt: string; value: number } => typeof sample.value === 'number' && Number.isFinite(sample.value)), [samples, metric]);
 
   const max = metric.max ?? Math.max(1, Math.ceil(Math.max(...values.map((item) => item.value), 1) * 1.15));
-  const points = chartPoints(values, max);
+  const coords = chartCoordinates(values, max);
+  const points = coords.map((point) => `${point.x},${point.y}`).join(' ');
   const latest = values.at(-1)?.value ?? null;
   const avg = average(values.map((item) => item.value));
   const peak = values.length ? Math.max(...values.map((item) => item.value)) : null;
@@ -93,6 +94,11 @@ export function StaffMetricsHistoryPanel({ samples }: { samples: MetricSample[] 
             <line x1="0" y1="90" x2="620" y2="90" />
             <line x1="0" y1="180" x2="620" y2="180" />
             <polyline points={points} />
+            {coords.map((point, index) => (
+              <circle key={`${point.capturedAt}-${index}`} cx={point.x} cy={point.y} r="5">
+                <title>{`${metric.label}: ${fmt(point.value, metric.unit)} · ${new Date(point.capturedAt).toLocaleString()}`}</title>
+              </circle>
+            ))}
           </svg>
         ) : (
           <div className="staff-metric-empty">

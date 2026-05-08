@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildModerationCommand, getServerAdminSnapshot, runManagedServiceAction, runServerPowerAction, sendServerCommand } from '@/lib/server-admin';
+import { resetStatusRuntimeData } from '@/lib/ape-data';
 import { canRunModerationActions, canRunServerPowerActions, requireServerAdministrationRequest } from '@/lib/staff-auth';
 import { jsonWithSession, noStoreHeaders } from '@/lib/session';
 import { notifyAdminAudit, notifyLiveFeedServerControl, notifyWebServerAction } from '@/lib/discord-webhooks';
@@ -95,6 +96,18 @@ export async function POST(request: NextRequest) {
       severity: action === 'kill' || action === 'restart' ? 'danger' : action === 'update' ? 'warning' : 'success',
       url: '/staff/server',
     });
+    if (action === 'kill' || action === 'restart' || action === 'start') {
+      try {
+        await resetStatusRuntimeData({
+          actorSteamId: staff.identity.steamId,
+          actorName: staff.identity.displayName,
+          reason: `Automatic public status reset after server ${action} action.`,
+        });
+      } catch {
+        // Server power actions should not fail just because the status reset marker could not be written.
+      }
+    }
+
     if (action === 'kill' || action === 'restart') {
       await notifyLiveFeedServerControl({
         action,
