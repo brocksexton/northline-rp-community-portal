@@ -21,14 +21,14 @@ function durationValue(value: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const staff = await requireServerAdministrationRequest(request);
+  const staff = await requireServerAdministrationRequest(request, 'server');
   if ('response' in staff) return staff.response;
   const snapshot = await getServerAdminSnapshot();
   return jsonWithSession(snapshot, { headers: noStoreHeaders() }, staff.identity.steamId, request);
 }
 
 export async function POST(request: NextRequest) {
-  const staff = await requireServerAdministrationRequest(request);
+  const staff = await requireServerAdministrationRequest(request, 'server');
   if ('response' in staff) return staff.response;
 
   const body = await request.json().catch(() => ({} as Body));

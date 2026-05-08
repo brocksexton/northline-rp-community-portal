@@ -5,7 +5,7 @@ import { getOperationalMetrics } from '@/lib/host-metrics';
 import { captureMetricSample, getMetricSamples, getStatusUpdates } from '@/lib/community-data';
 import { StaffMetricsHistoryPanel } from '@/components/StaffMetricsHistoryPanel';
 import { StatusUpdatesAdminPanel } from '@/components/StatusUpdatesAdminPanel';
-import { getCurrentStaffIdentity, canAccessServerAdministration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage } from '@/lib/staff-auth';
 import { getSiteConfig } from '@/lib/site-config';
 import { isSiteFeatureEnabled } from '@/lib/site-features-data';
 
@@ -48,7 +48,7 @@ function DiagnosticRow({ label, value, detail }: { label: string; value: string;
 
 export default async function StaffStatusPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'status') : false;
 
   if (!identity || !allowed) {
     return (

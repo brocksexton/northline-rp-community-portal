@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { MaintenanceSettingsPanel } from '@/components/MaintenanceSettingsPanel';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Maintenance Studio' };
 
 export default async function StaffMaintenancePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'maintenance') : false;
 
   if (!identity || !allowed) {
     return (

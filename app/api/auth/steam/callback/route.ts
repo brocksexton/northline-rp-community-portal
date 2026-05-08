@@ -4,6 +4,7 @@ import { authReturnToCookieName, setSessionCookie, withNoStoreHeaders } from '@/
 import { claimCommunityProfile, getCommunityProfile } from '@/lib/community-data';
 import { getPlayer } from '@/lib/ape-data';
 import { notifyNewWebRegistration } from '@/lib/discord-webhooks';
+import { recordStaffWebsiteSignIn } from '@/lib/staff-audit-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const existingProfile = await getCommunityProfile(steamId);
     await claimCommunityProfile(steamId);
+    await recordStaffWebsiteSignIn(steamId);
     if (!existingProfile) {
       const [player, steamProfile] = await Promise.all([getPlayer(steamId), getSteamProfile(steamId)]);
       await notifyNewWebRegistration({

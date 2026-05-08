@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { TweeterAdminPanel } from '@/components/TweeterAdminPanel';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageTweeterConfiguration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageTweeterConfiguration } from '@/lib/staff-auth';
 import { listTweeterAccountModeration } from '@/lib/tweeter-moderation-data';
 import { listTweeterContentFilterRules } from '@/lib/tweeter-content-filter-data';
 
@@ -9,7 +9,7 @@ export const metadata = { title: 'Tweeter Administration' };
 
 export default async function StaffTweeterPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'tweeter') : false;
 
   if (!identity || !allowed) {
     return (

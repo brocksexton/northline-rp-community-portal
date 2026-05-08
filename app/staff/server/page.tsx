@@ -10,7 +10,7 @@ export const fetchCache = 'force-no-store';
 export const metadata = { title: 'Server Administration' };
 
 export default async function StaffServerPage() {
-  const identity = await requireServerAdministrationPage();
+  const identity = await requireServerAdministrationPage('server');
   if (!identity) notFound();
   const snapshot = await getServerAdminSnapshot();
 

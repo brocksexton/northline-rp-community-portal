@@ -3,14 +3,14 @@ import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
 import { ApeStaffAdminPanel } from '@/components/ApeStaffAdminPanel';
 import { getApeStaffState } from '@/lib/ape-staff-data';
 import { getSiteFeatureSettings } from '@/lib/site-features-data';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Site Settings' };
 
 export default async function StaffSitePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'site') : false;
 
   if (!identity || !allowed) {
     return (

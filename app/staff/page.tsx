@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getCityOverview, getDataHealth, getHostMetrics, getPopulationSummary } from '@/lib/ape-data';
 import { duration } from '@/lib/format';
 import { getMaintenanceSettings } from '@/lib/maintenance-data';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration, canAccessStaffPage, canManageStaffAudit } from '@/lib/staff-auth';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
 import { getJobsAdminState } from '@/lib/jobs-data';
@@ -92,6 +92,19 @@ export default async function StaffPage() {
   ]);
 
   const canManageSiteFeatures = canManageSiteConfiguration(identity);
+  const [canOpenJobs, canOpenCases, canOpenServer, canOpenMaintenance, canOpenTweeter, canOpenDiscord, canOpenSite, canOpenStatus, canOpenActivity, canOpenAudit] = await Promise.all([
+    canAccessStaffPage(identity, 'jobs'),
+    canAccessStaffPage(identity, 'cases'),
+    canAccessStaffPage(identity, 'server'),
+    canAccessStaffPage(identity, 'maintenance'),
+    canAccessStaffPage(identity, 'tweeter'),
+    canAccessStaffPage(identity, 'discord'),
+    canAccessStaffPage(identity, 'site'),
+    canAccessStaffPage(identity, 'status'),
+    canAccessStaffPage(identity, 'activity'),
+    canAccessStaffPage(identity, 'audit'),
+  ]);
+  const canUseAudit = canManageStaffAudit(identity) && canOpenAudit;
   const enabledFeatures = enabledFeatureIds(featureSettings);
   const siteMode = maintenanceSettings.enabled ? 'Maintenance' : 'Open';
   const tweeterMode = maintenanceSettings.tweeterMaintenanceEnabled ? 'Paused' : enabledFeatures.has('tweeter') ? 'Visible' : 'Hidden';
@@ -104,9 +117,10 @@ export default async function StaffPage() {
           <h1>One calm launchpad for every staff tool.</h1>
           <p>Use this page for situational awareness and routing. Configuration, logs, moderation, server controls, applications, cases, and site settings now live in dedicated workspaces.</p>
           <div className="staff-hero-actions">
-            <Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Server control</Link>
-            <Link className="button button-soft" href="/staff/activity"><i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Activity center</Link>
-            {canManageSiteFeatures ? <Link className="button button-soft" href="/staff/site"><i className="fa-solid fa-sliders" aria-hidden="true" /> Site settings</Link> : null}
+            {canOpenServer ? <Link className="button button-primary" href="/staff/server"><i className="fa-solid fa-terminal" aria-hidden="true" /> Server control</Link> : null}
+            {canOpenActivity ? <Link className="button button-soft" href="/staff/activity"><i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Activity center</Link> : null}
+            {canManageSiteFeatures && canOpenSite ? <Link className="button button-soft" href="/staff/site"><i className="fa-solid fa-sliders" aria-hidden="true" /> Site settings</Link> : null}
+            {canUseAudit ? <Link className="button button-soft" href="/staff/audit"><i className="fa-solid fa-shield-halved" aria-hidden="true" /> Staff audit</Link> : null}
           </div>
         </div>
 
@@ -145,7 +159,7 @@ export default async function StaffPage() {
       </section>
 
       <section className="staff-launch-grid" aria-label="Staff workspaces">
-        <WorkspaceCard
+        {canOpenJobs ? <WorkspaceCard
           eyebrow="Hiring"
           title="Applications"
           description="Review applicants, edit postings, publish hidden drafts, and leave applicant-visible notes."
@@ -159,8 +173,8 @@ export default async function StaffPage() {
             { label: 'Open', value: jobsAdminState.stats.openApplications },
             { label: 'Postings', value: jobsAdminState.stats.visiblePostings },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenCases ? <WorkspaceCard
           eyebrow="Daily Drops"
           title="Cases"
           description="Tune cases, reward pools, cadence, presentation, and future shop-ready case testing."
@@ -174,8 +188,8 @@ export default async function StaffPage() {
             { label: 'Active', value: dailyDropsState.activeCount },
             { label: 'Claims', value: dailyDropsState.claimedCount },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenServer ? <WorkspaceCard
           eyebrow="Server"
           title="Control room"
           description="Run server actions, watch connected players, manage power controls, and use audited moderation commands."
@@ -187,8 +201,8 @@ export default async function StaffPage() {
             { label: 'Uptime', value: duration(metrics.uptimeSeconds) },
             { label: 'RAM', value: bytesToGb(metrics.systemMemory.usedBytes) },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenMaintenance ? <WorkspaceCard
           eyebrow="Maintenance"
           title="Maintenance studio"
           description="Pause the site or Tweeter, choose downtime copy, and control visitor-facing maintenance presentation."
@@ -200,8 +214,8 @@ export default async function StaffPage() {
             { label: 'Tweeter', value: tweeterMode },
             { label: 'Theme', value: maintenanceSettings.theme },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenTweeter ? <WorkspaceCard
           eyebrow="Social"
           title="Tweeter admin"
           description="Manage Tweeter restrictions, filtered words, hidden profiles, soft bans, and social moderation controls."
@@ -214,9 +228,9 @@ export default async function StaffPage() {
             { label: 'Public', value: enabledFeatures.has('tweeter') ? 'Yes' : 'No' },
             { label: 'Mode', value: tweeterMode },
           ]}
-        />
+        /> : null}
 
-        <WorkspaceCard
+        {canOpenDiscord ? <WorkspaceCard
           eyebrow="Discord"
           title="Bot manager"
           description="Send guided embed panels, preview Discord messages, inspect server data, and manage simple role/user actions from the website."
@@ -228,8 +242,8 @@ export default async function StaffPage() {
             { label: 'Roles', value: 'Manage' },
             { label: 'Bot', value: 'Live' },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenSite ? <WorkspaceCard
           eyebrow="Site"
           title="Site settings"
           description="Feature visibility, public modules, and Ape Tavern badge/display configuration live here."
@@ -240,8 +254,8 @@ export default async function StaffPage() {
             { label: 'Features', value: featureSettings.features.length },
             { label: 'Enabled', value: featureSettings.features.filter((feature) => feature.enabled).length },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenStatus ? <WorkspaceCard
           eyebrow="Signals"
           title="Diagnostics"
           description="Check data health, heartbeat freshness, query results, process status, and public status diagnostics."
@@ -254,8 +268,8 @@ export default async function StaffPage() {
             { label: 'Data', value: health.exists ? 'OK' : 'Missing' },
             { label: 'Warnings', value: health.warnings.length },
           ]}
-        />
-        <WorkspaceCard
+        /> : null}
+        {canOpenActivity ? <WorkspaceCard
           eyebrow="Logs"
           title="Activity center"
           description="Browse recent admin actions, chat messages, and damage events away from the staff homepage."
@@ -266,7 +280,19 @@ export default async function StaffPage() {
             { label: 'Warnings', value: overview.warnings },
             { label: 'Mutes', value: overview.mutes },
           ]}
-        />
+        /> : null}
+        {canUseAudit ? <WorkspaceCard
+          eyebrow="Audit"
+          title="Staff audit"
+          description="Review staff sign-ins, inactivity severity, action volume, and disable sensitive staff pages per person."
+          icon="fa-solid fa-shield-halved"
+          href="/staff/audit"
+          tone="rose"
+          stats={[
+            { label: 'Scope', value: 'Admin' },
+            { label: 'Controls', value: 'Access' },
+          ]}
+        /> : null}
       </section>
     </main>
   );

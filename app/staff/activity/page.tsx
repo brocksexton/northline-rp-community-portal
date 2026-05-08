@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { getRecentAdminLogs, getRecentChatLogs, getRecentDamageLogs } from '@/lib/ape-data';
 import { fullDate } from '@/lib/format';
-import { getCurrentStaffIdentity, canAccessServerAdministration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Staff Activity' };
 
 export default async function StaffActivityPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'activity') : false;
 
   if (!identity || !allowed) {
     return (

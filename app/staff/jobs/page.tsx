@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { StaffJobsAdminPanel } from '@/components/StaffJobsAdminPanel';
 import { getJobsAdminState } from '@/lib/jobs-data';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageJobPostings, canReviewJobApplications } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageJobPostings, canReviewJobApplications } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Staff Applications Workspace' };
 
 export default async function StaffJobsWorkspacePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'jobs') : false;
 
   if (!identity || !allowed) {
     return (

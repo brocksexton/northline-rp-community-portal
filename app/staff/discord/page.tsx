@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { DiscordBotManagerPanel } from '@/components/DiscordBotManagerPanel';
 import { getDiscordGuildSummary } from '@/lib/discord-manager';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration, canRunModerationActions } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration, canRunModerationActions } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Discord Bot Manager' };
 
 export default async function StaffDiscordPage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'discord') : false;
 
   if (!identity || !allowed) {
     return (

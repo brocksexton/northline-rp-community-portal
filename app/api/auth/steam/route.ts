@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSteamLoginUrl, getExternalOrigin, normalizeReturnTo } from '@/lib/steam-openid';
 import { setAuthReturnToCookie, setSessionCookie, withNoStoreHeaders } from '@/lib/session';
+import { recordStaffWebsiteSignIn } from '@/lib/staff-audit-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
   if (url.searchParams.get('dev') === '1' && process.env.ENABLE_DEV_STEAM_LOGIN === 'true') {
     const steamId = process.env.DEV_STEAM_ID || '76561198000000000';
+    await recordStaffWebsiteSignIn(steamId).catch(() => {});
     const response = withNoStoreHeaders(NextResponse.redirect(new URL(returnTo, origin)));
     return setSessionCookie(response, steamId, request);
   }

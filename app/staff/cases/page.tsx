@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { DailyDropsAdminPanel } from '@/components/DailyDropsAdminPanel';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
-import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration } from '@/lib/staff-auth';
+import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Daily Drop Workspace' };
 
 export default async function StaffCasesWorkspacePage() {
   const identity = await getCurrentStaffIdentity();
-  const allowed = identity ? canAccessServerAdministration(identity) : false;
+  const allowed = identity ? await canAccessStaffPage(identity, 'cases') : false;
 
   if (!identity || !allowed) {
     return (

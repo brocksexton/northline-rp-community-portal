@@ -118,6 +118,10 @@ function seenGameActionsPath() {
   return path.join(dataDir(), 'server-game-action-monitor.json');
 }
 
+function populationResetPath() {
+  return path.join(dataDir(), 'server-population-reset.json');
+}
+
 function defaultStartScript() {
   return process.env.NORTHLINE_START_SERVER_SCRIPT?.trim() || 'C:\\Servers\\Scripts\\Run-NorthboundRP.bat';
 }
@@ -277,9 +281,27 @@ export async function readConsoleOutput(limit = 260): Promise<{ source: string |
   }
 }
 
+async function readPopulationResetAt(): Promise<string | null> {
+  try {
+    const parsed = JSON.parse(await readFile(populationResetPath(), 'utf8')) as { resetAt?: string };
+    return parsed.resetAt && Number.isFinite(Date.parse(parsed.resetAt)) ? parsed.resetAt : null;
+  } catch {
+    return null;
+  }
+}
+
+async function markPopulationReset(reason: string) {
+  await ensureDataDir();
+  await writeFile(populationResetPath(), JSON.stringify({ resetAt: new Date().toISOString(), reason }, null, 2), 'utf8');
+}
+
 export async function getConnectedServerPlayers(): Promise<ConnectedServerPlayer[]> {
-  const [population, playersBySteam] = await Promise.all([getPopulationSummary(), getPlayersBySteamId()]);
-  return population.onlinePlayers.map((online) => {
+  const [population, playersBySteam, resetAt] = await Promise.all([getPopulationSummary(), getPlayersBySteamId(), readPopulationResetAt()]);
+  const resetTime = resetAt ? Date.parse(resetAt) : 0;
+  const onlinePlayers = resetTime > 0
+    ? population.onlinePlayers.filter((online) => Date.parse(online.since) > resetTime)
+    : population.onlinePlayers;
+  return onlinePlayers.map((online) => {
     const save = playersBySteam.get(online.steamId);
     return {
       steamId: online.steamId,
@@ -788,6 +810,10 @@ export async function runServerPowerAction(action: 'start' | 'kill' | 'restart' 
   } catch (error) {
     status = 'failed';
     result = error instanceof Error ? error.message : 'Server power action failed.';
+  }
+
+  if (status === 'sent' && (action === 'start' || action === 'kill' || action === 'restart')) {
+    await markPopulationReset(action).catch(() => {});
   }
 
   const record: QueuedServerCommand = {
