@@ -270,13 +270,10 @@ export function ForumThreadClient({ thread: initialThread, initialPosts, signedI
           {post.author.steamId ? <small className="forum-author-detail">Steam {post.author.steamId.slice(-8)}</small> : post.author.discordUserId ? <small className="forum-author-detail">Discord {post.author.discordUserId.slice(-6)}</small> : null}
         </aside>
         <div className="forum-post-content-panel">
-          <header>
-            <div>
+          <header className="forum-post-clean-header">
+            <div className="forum-post-titleline">
               <span className="forum-post-index">{isStarter ? 'Opening post' : `Reply #${index}`}</span>
-              <div className="forum-post-heading-name">
-                <strong>{post.author.displayName}</strong>
-                <TweeterVerifiedBadge kind={post.author.badgeKind} className="forum-user-badge" />
-              </div>
+              <small>{post.source === 'discord' ? 'Synced from Discord' : 'Posted from the website'}</small>
             </div>
             <div className="forum-post-header-meta">
               <time dateTime={post.createdAt}>{relative(post.createdAt)} · {format(post.createdAt)}</time>
