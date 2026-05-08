@@ -96,6 +96,15 @@ const termsSections = [
       'We may update these terms when features, rules, integrations, or operational needs change. The Last updated date shows when this page was last materially revised.',
     ],
   },
+
+  {
+    title: 'Data exports, deletion requests, and backups',
+    body: [
+      'You may use Profile Studio to request an export of account-linked website data and available game/server records, or to submit a deletion request for staff review.',
+      'Deletion is not a simple undo button. If a deletion request is approved and processed, your Northline RP in-game progress may be reset or removed with no recovery option. Limited moderation, security, audit, or abuse-prevention records may be retained where needed to protect the server and community.',
+      'Server/provider backups may exist for up to 14 days. If a backup must be restored, Northline RP will communicate the restore through Discord and the website status page.',
+    ],
+  },
   {
     title: 'Third-party services and non-affiliation',
     body: [

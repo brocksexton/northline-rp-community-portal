@@ -24419,3 +24419,41 @@ body:has(.tweeter-mode[data-color-mode='blue']) {
     display: none !important;
   }
 }
+
+/* Data & Privacy workspace */
+.privacy-studio-page { --privacy-blue: #0ea5e9; --privacy-ink: #0f172a; }
+.privacy-studio-hero { overflow: hidden; }
+.privacy-studio-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .82fr); gap: 1.25rem; align-items: start; margin-top: 1.5rem; }
+.privacy-studio-card { border: 1px solid rgba(148, 163, 184, .28); border-radius: 2rem; background: rgba(255,255,255,.92); box-shadow: 0 24px 70px rgba(15,23,42,.08); padding: clamp(1.25rem, 2vw, 1.75rem); color: var(--privacy-ink); }
+.privacy-studio-card h2 { margin: .35rem 0 .65rem; font-size: clamp(1.45rem, 2vw, 2rem); line-height: 1.05; letter-spacing: -.04em; }
+.privacy-studio-card p { color: #475569; line-height: 1.65; }
+.privacy-export-card { background: linear-gradient(135deg, rgba(14,165,233,.12), rgba(255,255,255,.96)); }
+.privacy-delete-card { border-color: rgba(244,63,94,.35); background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(255,241,242,.9)); }
+.privacy-backup-card { background: linear-gradient(135deg, rgba(251,191,36,.14), rgba(255,255,255,.96)); }
+.privacy-explainer-list { display: grid; gap: .65rem; margin: 1rem 0 1.25rem; }
+.privacy-explainer-list span { display: flex; gap: .65rem; align-items: center; padding: .75rem .9rem; border-radius: 1rem; background: rgba(255,255,255,.72); border: 1px solid rgba(148,163,184,.22); font-weight: 800; color: #334155; }
+.privacy-explainer-list i { color: var(--privacy-blue); }
+.privacy-warning-box { border: 1px solid rgba(244,63,94,.28); background: rgba(255,228,230,.75); border-radius: 1.25rem; padding: 1rem; margin: 1rem 0; }
+.privacy-warning-box strong { color: #9f1239; }
+.privacy-warning-box p { margin: .35rem 0 0; color: #7f1d1d; }
+.privacy-checklist { display: grid; gap: .7rem; margin: 1rem 0; }
+.privacy-checklist label { display: grid; grid-template-columns: auto 1fr; gap: .75rem; align-items: start; padding: .85rem; border: 1px solid rgba(148,163,184,.25); border-radius: 1rem; background: rgba(255,255,255,.78); color: #334155; font-weight: 750; }
+.privacy-checklist input { margin-top: .2rem; width: 1rem; height: 1rem; accent-color: #e11d48; }
+.privacy-confirm-field strong { color: #e11d48; }
+.privacy-form-message { margin-top: 1rem; font-weight: 800; color: #0f766e !important; }
+.privacy-request-list { display: grid; gap: .75rem; margin-top: 1rem; }
+.privacy-request-list div { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; padding: .9rem; border: 1px solid rgba(148,163,184,.25); border-radius: 1rem; background: rgba(248,250,252,.9); }
+.privacy-request-list small { grid-column: 1 / -1; color: #64748b; }
+.privacy-request-list span { text-transform: capitalize; font-weight: 900; color: #0369a1; }
+.button-danger { background: linear-gradient(135deg, #e11d48, #be123c); color: #fff; border-color: transparent; box-shadow: 0 16px 35px rgba(225,29,72,.24); }
+.button-danger:disabled { opacity: .52; cursor: not-allowed; filter: grayscale(.3); }
+.staff-privacy-panel { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+.privacy-staff-note { border: 1px solid rgba(251,191,36,.35); border-radius: 1.5rem; padding: 1.25rem; background: rgba(255,251,235,.9); color: #713f12; }
+.privacy-staff-note p { margin: .25rem 0 0; }
+.staff-privacy-list { display: grid; gap: 1rem; }
+.staff-privacy-request { display: grid; grid-template-columns: minmax(220px,.8fr) minmax(140px,.35fr) minmax(260px,1fr); gap: 1rem; align-items: start; border: 1px solid rgba(148,163,184,.25); border-radius: 1.5rem; padding: 1rem; background: rgba(255,255,255,.92); }
+.staff-privacy-request h3 { margin: .2rem 0; font-size: 1.3rem; }
+.staff-privacy-request p, .staff-privacy-request small { color: #64748b; }
+.staff-privacy-status strong { display: inline-flex; padding: .35rem .7rem; border-radius: 999px; background: rgba(14,165,233,.12); color: #0369a1; text-transform: capitalize; }
+.staff-privacy-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .6rem; }
+@media (max-width: 900px) { .privacy-studio-grid, .staff-privacy-request { grid-template-columns: 1fr; } }

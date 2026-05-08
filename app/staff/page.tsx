@@ -5,6 +5,7 @@ import { getMaintenanceSettings } from '@/lib/maintenance-data';
 import { getCurrentStaffIdentity, canAccessServerAdministration, canManageSiteConfiguration, canAccessStaffPage, canManageStaffAudit } from '@/lib/staff-auth';
 import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-data';
 import { getDailyDropsAdminState } from '@/lib/cases-data';
+import { getPrivacyAdminState } from '@/lib/privacy-data';
 import { getJobsAdminState } from '@/lib/jobs-data';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +81,7 @@ export default async function StaffPage() {
     );
   }
 
-  const [health, population, metrics, overview, maintenanceSettings, featureSettings, dailyDropsState, jobsAdminState] = await Promise.all([
+  const [health, population, metrics, overview, maintenanceSettings, featureSettings, dailyDropsState, jobsAdminState, privacyState] = await Promise.all([
     getDataHealth(),
     getPopulationSummary(),
     Promise.resolve(getHostMetrics()),
@@ -89,6 +90,7 @@ export default async function StaffPage() {
     getSiteFeatureSettings(),
     getDailyDropsAdminState(),
     getJobsAdminState(),
+    getPrivacyAdminState(),
   ]);
 
   const canManageSiteFeatures = canManageSiteConfiguration(identity);
@@ -279,6 +281,18 @@ export default async function StaffPage() {
           stats={[
             { label: 'Warnings', value: overview.warnings },
             { label: 'Mutes', value: overview.mutes },
+          ]}
+        /> : null}
+        {canUseAudit ? <WorkspaceCard
+          eyebrow="Privacy"
+          title="Privacy requests"
+          description="Review player data exports, deletion requests, backup notices, and processing notes."
+          icon="fa-solid fa-file-shield"
+          href="/staff/privacy"
+          tone="violet"
+          stats={[
+            { label: 'Pending', value: privacyState.stats.pending },
+            { label: 'Deletion', value: privacyState.stats.deletion },
           ]}
         /> : null}
         {canUseAudit ? <WorkspaceCard

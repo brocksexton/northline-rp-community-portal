@@ -98,7 +98,9 @@ const privacySections = [
     title: 'Retention and deletion',
     body: [
       'You can update profile visibility and editable profile content from the dashboard where those controls are available. You can also contact the team for help with account/profile data that cannot be changed directly.',
-      'Some information may be kept for longer when needed for moderation history, ban enforcement, appeal review, audit integrity, server security, backups, legal compliance, or abuse prevention. Backups and logs may take additional time to rotate out.',
+      'You can use Profile Studio > Data & Privacy to request a downloadable archive of your account-linked website data and available game/server data, or to submit a deletion request for staff review.',
+      'Deletion requests can affect live game data. If processed, your character progress, money, inventory, rewards, and other in-game progress may be reset or removed with no recovery option. Some limited moderation, security, audit, or abuse-prevention records may be retained where operationally necessary.',
+      'Northline RP keeps limited server/provider backups for up to 14 days. Deleted live data may remain inside backup snapshots until those backups expire. If a backup must be restored, we will communicate it through Discord and the website status page, and will make a reasonable effort to re-apply completed deletion requests where technically possible.',
     ],
   },
   {
@@ -133,7 +135,7 @@ export default async function PrivacyPage() {
             information is collected or read, what may become public, what remains restricted, and how to contact the team.
           </p>
           <div className="policy-hero-actions-v2">
-            <Link className="button button-primary" href="/dashboard"><i className="fa-solid fa-sliders" aria-hidden="true" /> Manage profile settings</Link>
+            <Link className="button button-primary" href="/dashboard/profile/data"><i className="fa-solid fa-file-shield" aria-hidden="true" /> Manage Data & Privacy</Link>
             {supportVisible ? <Link className="button button-soft" href="/support"><i className="fa-solid fa-life-ring" aria-hidden="true" /> Ask for help</Link> : null}
           </div>
         </div>
