@@ -4,7 +4,7 @@ import { getDiscordGuildSummary } from '@/lib/discord-manager';
 import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration, canRunModerationActions } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Discord Bot Manager' };
+export const metadata = { title: 'Discord Operations' };
 
 export default async function StaffDiscordPage() {
   const identity = await getCurrentStaffIdentity();
@@ -31,9 +31,9 @@ export default async function StaffDiscordPage() {
     <main className="page-shell staff-page staff-command-page staff-discord-manager-page">
       <section className="staff-command-hero staff-dedicated-hero discord-manager-hero">
         <div className="staff-command-copy">
-          <span className="ops-kicker"><i /> Discord bot manager</span>
-          <h1>Discord tools and bot controls.</h1>
-          <p>Build panels, preview embeds, inspect bot data, and handle basic member actions without memorizing slash commands.</p>
+          <span className="ops-kicker"><i /> Discord operations</span>
+          <h1>Discord command center.</h1>
+          <p>Send polished embeds, launch guide cards, review bot commands, inspect Discord data, and handle careful member actions from one staff page.</p>
           <div className="staff-hero-actions">
             <Link className="button button-primary" href="/staff"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to command center</Link>
             <Link className="button button-soft" href="/forum"><i className="fa-solid fa-comments" aria-hidden="true" /> Website forum</Link>
@@ -41,9 +41,9 @@ export default async function StaffDiscordPage() {
         </div>
         <aside className="staff-identity-card">
           <span>Bot connection</span>
-          <strong>{summary.configured ? 'Configured' : 'Needs setup'}</strong>
+          <strong>{summary.configured ? 'Connected' : 'Needs setup'}</strong>
           <p>{summary.guild?.name ?? 'Set Discord environment variables'}</p>
-          <small>{canSendPanels ? 'Panel sender enabled' : 'Read-only / limited access'}</small>
+          <small>{canSendPanels ? 'Embeds and guide cards enabled' : 'Read-only / limited access'}</small>
         </aside>
       </section>
 

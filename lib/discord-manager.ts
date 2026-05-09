@@ -70,6 +70,18 @@ function parseColor(value: unknown) {
   return 0x1d9bf0;
 }
 
+function publicSiteUrl() {
+  return (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://northline.lol').trim().replace(/\/$/, '');
+}
+
+function cleanUrl(value: unknown, max = 500) {
+  const raw = cleanText(value, max);
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('/')) return `${publicSiteUrl()}${raw}`;
+  return raw;
+}
+
 function botHeaders() {
   const botToken = token();
   if (!botToken) throw new Error('DISCORD_BOT_TOKEN is not configured.');
@@ -193,15 +205,15 @@ export async function sendDiscordPanel(input: DiscordEmbedDraft) {
     timestamp: new Date().toISOString(),
     footer: { text: cleanText(input.footer, 180) || 'Northline RP' },
   };
-  const imageUrl = cleanText(input.imageUrl, 500);
-  const thumbnailUrl = cleanText(input.thumbnailUrl, 500);
+  const imageUrl = cleanUrl(input.imageUrl, 500);
+  const thumbnailUrl = cleanUrl(input.thumbnailUrl, 500);
   const authorName = cleanText(input.authorName, 180);
   if (imageUrl) embed.image = { url: imageUrl };
   if (thumbnailUrl) embed.thumbnail = { url: thumbnailUrl };
   if (authorName) embed.author = { name: authorName };
 
   const buttonLabel = cleanText(input.buttonLabel, 80);
-  const buttonUrl = cleanText(input.buttonUrl, 500);
+  const buttonUrl = cleanUrl(input.buttonUrl, 500);
   const components = buttonLabel && /^https?:\/\//i.test(buttonUrl)
     ? [{ type: 1, components: [{ type: 2, style: 5, label: buttonLabel, url: buttonUrl }] }]
     : [];

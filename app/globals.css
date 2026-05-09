@@ -28668,3 +28668,710 @@ body.guide-modal-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* v2.9.116 Discord operations expansion */
+.discord-manager-expanded .discord-manager-tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.discord-overview-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+}
+
+.discord-bot-health-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(88, 101, 242, 0.10), transparent 18rem),
+    radial-gradient(circle at 100% 15%, rgba(14, 165, 233, 0.12), transparent 18rem),
+    rgba(255, 255, 255, 0.95);
+}
+
+.discord-checklist-card,
+.discord-channel-card,
+.discord-guides-intro,
+.discord-command-helper-card {
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.discord-check-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.discord-check-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--site-muted, #64748b);
+  font-weight: 850;
+}
+
+.discord-check-list li i {
+  color: #94a3b8;
+}
+
+.discord-check-list li.done {
+  color: #14532d;
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(220, 252, 231, 0.58);
+}
+
+.discord-check-list li.done i {
+  color: #22c55e;
+}
+
+.discord-chip-list,
+.discord-role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.discord-chip-list span,
+.discord-role-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.discord-role-list i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.discord-guides-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.discord-guide-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.discord-guide-card {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 54px rgba(15, 23, 42, 0.07);
+}
+
+.discord-guide-card > img {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.16), rgba(14, 165, 233, 0.12));
+}
+
+.discord-guide-card > div {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-top: 4px solid var(--guide-color, #1d9bf0);
+}
+
+.discord-guide-card span {
+  color: var(--guide-color, #1d9bf0);
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.discord-guide-card h3 {
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.035em;
+}
+
+.discord-guide-card p,
+.discord-guide-card li {
+  color: var(--site-muted, #64748b);
+  line-height: 1.45;
+}
+
+.discord-guide-card p {
+  margin: 0;
+}
+
+.discord-guide-card ul {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+}
+
+.discord-action-row.compact {
+  margin-top: 0.4rem;
+}
+
+.discord-asset-picker {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  border: 1px dashed rgba(14, 165, 233, 0.24);
+  border-radius: 22px;
+  padding: 1rem;
+  background: rgba(224, 242, 254, 0.32);
+}
+
+.discord-asset-picker h3 {
+  margin: 0.2rem 0 0;
+}
+
+.discord-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.discord-asset-grid button {
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+  padding: 0.55rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.discord-asset-grid button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.34);
+  box-shadow: 0 18px 42px rgba(14, 165, 233, 0.12);
+}
+
+.discord-asset-grid img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #e2e8f0;
+}
+
+.discord-asset-grid span {
+  color: var(--site-muted, #64748b);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.discord-command-search {
+  display: grid;
+  gap: 0.4rem;
+  margin: 1rem 0;
+  color: var(--site-muted, #64748b);
+  font-weight: 850;
+}
+
+.discord-command-search input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  padding: 0.85rem 0.95rem;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+.discord-command-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.discord-command-sections section {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.discord-command-sections h3 {
+  margin: 0 0 0.25rem;
+}
+
+.discord-command-sections p {
+  margin: 0 0 0.75rem;
+}
+
+.discord-command-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.discord-command-chip-grid button {
+  border: 1px solid rgba(88, 101, 242, 0.18);
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  background: rgba(88, 101, 242, 0.08);
+  color: #3730a3;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.discord-command-helper-card pre {
+  overflow: auto;
+  border-radius: 16px;
+  padding: 0.9rem;
+  background: #0f172a;
+  color: #e0f2fe;
+  font-size: 0.9rem;
+}
+
+.discord-preview-thumb + .discord-preview-author,
+.discord-preview-thumb + .discord-preview-author + h3,
+.discord-preview-thumb + .discord-preview-author + h3 + p {
+  padding-right: 4.7rem;
+}
+
+@media (max-width: 1180px) {
+  .discord-manager-expanded .discord-manager-tabs,
+  .discord-guide-card-grid,
+  .discord-asset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .discord-manager-expanded .discord-manager-tabs,
+  .discord-overview-grid,
+  .discord-guide-card-grid,
+  .discord-asset-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Northbound Bank first pass */
+.northbound-bank-page {
+  --bank-ink: #071629;
+  --bank-muted: #52657d;
+  --bank-line: rgba(8, 47, 73, 0.12);
+  --bank-blue: #0ea5e9;
+  --bank-navy: #082f49;
+  --bank-mint: #22c55e;
+  --bank-paper: rgba(255, 255, 255, 0.88);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bank-auth-card,
+.bank-hero,
+.bank-panel,
+.bank-notice-card,
+.bank-balance-card {
+  border: 1px solid var(--bank-line);
+  background: var(--bank-paper);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+}
+
+.bank-auth-card {
+  max-width: 780px;
+  margin: 4rem auto;
+  padding: clamp(1.4rem, 4vw, 2.5rem);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 0 0, rgba(14, 165, 233, 0.12), transparent 22rem),
+    radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.10), transparent 22rem),
+    rgba(255, 255, 255, 0.92);
+}
+
+.bank-auth-card h1,
+.bank-hero h1,
+.bank-panel-heading h2 {
+  color: var(--bank-ink);
+  letter-spacing: -0.055em;
+}
+
+.bank-auth-card h1,
+.bank-hero h1 {
+  margin: 0.7rem 0 0.75rem;
+  font-size: clamp(2.4rem, 7vw, 5.6rem);
+  line-height: 0.92;
+}
+
+.bank-auth-card p,
+.bank-hero p,
+.bank-panel-heading p,
+.bank-ledger-roadmap p,
+.bank-notice-card p {
+  color: var(--bank-muted);
+  line-height: 1.65;
+}
+
+.bank-chip,
+.bank-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  color: #0369a1;
+  background: rgba(224, 242, 254, 0.78);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.bank-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.6fr);
+  gap: 1.2rem;
+  align-items: stretch;
+  padding: clamp(1.2rem, 4vw, 2rem);
+  border-radius: 2rem;
+  background:
+    linear-gradient(135deg, rgba(240, 249, 255, 0.96), rgba(255, 255, 255, 0.9)),
+    radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.18), transparent 18rem);
+}
+
+.bank-hero-actions,
+.bank-panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.bank-panel-heading {
+  align-items: flex-start;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.bank-panel-heading h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+}
+
+.bank-card-preview {
+  position: relative;
+  min-height: 250px;
+  display: grid;
+  align-content: space-between;
+  gap: 0.8rem;
+  padding: 1.2rem;
+  overflow: hidden;
+  border-radius: 1.6rem;
+  color: white;
+  background:
+    linear-gradient(135deg, rgba(8, 47, 73, 0.98), rgba(14, 116, 144, 0.9)),
+    radial-gradient(circle at 85% 15%, rgba(125, 211, 252, 0.7), transparent 12rem);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16), 0 22px 60px rgba(8, 47, 73, 0.22);
+}
+
+.bank-card-preview::after {
+  content: '';
+  position: absolute;
+  width: 13rem;
+  height: 13rem;
+  right: -4rem;
+  top: -4rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+}
+
+.bank-card-preview span,
+.bank-card-preview small,
+.bank-card-preview em {
+  color: rgba(255,255,255,0.72);
+  font-style: normal;
+}
+
+.bank-card-preview strong {
+  font-size: 1.2rem;
+}
+
+.bank-card-preview b {
+  display: block;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  letter-spacing: -0.06em;
+}
+
+.bank-notice-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 1.35rem;
+  background: rgba(255, 251, 235, 0.92);
+}
+
+.bank-notice-card i {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: white;
+}
+
+.bank-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bank-balance-card {
+  display: grid;
+  gap: 0.45rem;
+  min-height: 160px;
+  padding: 1rem;
+  border-radius: 1.4rem;
+}
+
+.bank-balance-card.primary {
+  background: linear-gradient(135deg, #082f49, #0369a1);
+  color: white;
+}
+
+.bank-balance-card.primary span,
+.bank-balance-card.primary small {
+  color: rgba(255,255,255,0.72);
+}
+
+.bank-balance-card span,
+.bank-balance-card small {
+  color: var(--bank-muted);
+}
+
+.bank-balance-card strong {
+  color: inherit;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: -0.065em;
+}
+
+.bank-balance-card.muted {
+  background: rgba(248, 250, 252, 0.84);
+}
+
+.bank-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.bank-layout-grid.reverse {
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.bank-panel {
+  padding: 1rem;
+  border-radius: 1.45rem;
+}
+
+.bank-statement-list,
+.bank-storage-list,
+.bank-insight-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bank-statement-row,
+.bank-storage-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.bank-statement-row > i {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.85rem;
+  color: #0369a1;
+  background: rgba(224, 242, 254, 0.92);
+}
+
+.bank-statement-row.tone-income > i { color: #15803d; background: rgba(220, 252, 231, 0.95); }
+.bank-statement-row.tone-risk > i { color: #b45309; background: rgba(254, 243, 199, 0.95); }
+.bank-statement-row.tone-notice > i { color: #475569; background: rgba(226, 232, 240, 0.95); }
+
+.bank-statement-row span,
+.bank-storage-row div,
+.bank-holding-card {
+  min-width: 0;
+}
+
+.bank-statement-row strong,
+.bank-storage-row strong,
+.bank-holding-card strong,
+.bank-notice-card strong {
+  color: var(--bank-ink);
+}
+
+.bank-statement-row small,
+.bank-storage-row span,
+.bank-holding-card span,
+.bank-holding-card small {
+  display: block;
+  color: var(--bank-muted);
+  line-height: 1.45;
+}
+
+.bank-statement-row b {
+  color: var(--bank-ink);
+  white-space: nowrap;
+}
+
+.bank-insight-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.bank-insight-list li {
+  padding: 0.85rem;
+  border-radius: 1rem;
+  color: #1e3a8a;
+  background: rgba(219, 234, 254, 0.68);
+}
+
+.bank-mini-metrics,
+.bank-big-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.bank-mini-metrics div,
+.bank-big-pair div,
+.bank-stat-chip-grid div {
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: rgba(248, 250, 252, 0.78);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bank-mini-metrics dt,
+.bank-big-pair dt,
+.bank-stat-chip-grid span {
+  color: var(--bank-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bank-mini-metrics dd,
+.bank-big-pair dd,
+.bank-stat-chip-grid strong {
+  margin: 0.25rem 0 0;
+  color: var(--bank-ink);
+  font-size: 1.5rem;
+  font-weight: 950;
+}
+
+.bank-storage-meter {
+  min-width: 130px;
+  height: 0.65rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.10);
+}
+
+.bank-storage-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+}
+
+.bank-storage-row b {
+  color: #0369a1;
+  white-space: nowrap;
+}
+
+.bank-holdings-grid,
+.bank-stat-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.bank-holding-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: rgba(248, 250, 252, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bank-holding-card b {
+  color: #0369a1;
+}
+
+.bank-empty-state {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  border-radius: 1rem;
+  color: var(--bank-muted);
+  background: rgba(248, 250, 252, 0.82);
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+}
+
+.bank-empty-state strong,
+.bank-empty-state span {
+  display: block;
+}
+
+.bank-ledger-roadmap {
+  background:
+    radial-gradient(circle at 100% 0, rgba(34, 197, 94, 0.12), transparent 16rem),
+    rgba(255,255,255,0.88);
+}
+
+@media (max-width: 980px) {
+  .bank-hero,
+  .bank-balance-grid,
+  .bank-layout-grid,
+  .bank-layout-grid.reverse,
+  .bank-holdings-grid,
+  .bank-stat-chip-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-statement-row,
+  .bank-storage-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .bank-statement-row b,
+  .bank-storage-row b,
+  .bank-storage-meter {
+    grid-column: 2;
+  }
+}

@@ -89,6 +89,7 @@ export async function Header() {
   const profileHref = steamId ? `/tweeter/profile/${steamId}` : '/dashboard';
   const accountLinks = [
     { href: '/dashboard', label: 'Profile studio', icon: 'fa-solid fa-sliders' },
+    { href: '/bank', label: 'Northbound Bank', icon: 'fa-solid fa-building-columns' },
     ...(tweeterVisible ? [{ href: profileHref, label: 'My profile', icon: 'fa-brands fa-twitter' }] : []),
     ...(dailyDropsVisible ? [{ href: '/cases', label: 'Daily Drops', icon: 'fa-solid fa-gift' }] : []),
     ...(leaderboardsVisible ? [{ href: '/leaderboards', label: 'Leaderboards', icon: 'fa-solid fa-ranking-star' }] : []),

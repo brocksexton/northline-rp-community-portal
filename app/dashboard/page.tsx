@@ -42,6 +42,7 @@ export default async function DashboardPage() {
   const cards: StudioCard[] = [
     { href: '/dashboard/profile', icon: 'fa-solid fa-sliders', kicker: profile?.privacy === 'public' ? 'Public profile' : 'Private profile', title: 'Profile appearance', body: 'Edit your bio, cover, avatar, accent color, Tweeter look, and what game details appear publicly.', metric: `${publicModules} visible sections`, cta: 'Open profile studio' },
     { href: '/dashboard/connections', icon: 'fa-brands fa-discord', kicker: discordLink ? 'Discord linked' : 'Discord not linked', title: 'Connections', body: 'Link your Discord account for forum identity, synced conversations, and future community integrations.', metric: discordLink ? discordLink.discordUsername : 'Generate a key', cta: 'Manage connections', tone: 'discord' },
+    { href: '/bank', icon: 'fa-solid fa-building-columns', kicker: 'Private banking', title: 'Northbound Bank', body: 'Review your current wallet, bank balance, storage snapshot, item holdings, and economy context from your character save.', metric: player ? `$${Math.round(Number(player.CashBalance ?? 0) + Number(player.BankBalance ?? 0)).toLocaleString()}` : 'No save yet', cta: 'Open bank', tone: 'bank' },
     { href: '/dashboard/properties', icon: 'fa-solid fa-building', kicker: 'Character data', title: 'Properties and private summaries', body: 'Review saved layouts, phone summary, and safe owner-only character snapshots without crowding the editor.', metric: `${layouts.length} saved layouts`, cta: 'View character data' },
     { href: '/dashboard/activity', icon: 'fa-solid fa-clock-rotate-left', kicker: 'Personal history', title: 'Activity center', body: 'Check recent chat, admin/moderation records involving your account, and recent damage incidents.', metric: 'Owner only', cta: 'Open activity' },
   ];
@@ -90,6 +91,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/profile"><i className="fa-solid fa-palette" /> Customize public profile</Link>
             <Link href="/dashboard/connections"><i className="fa-brands fa-discord" /> Link Discord</Link>
             <Link href="/dashboard/properties"><i className="fa-solid fa-box-archive" /> Review private data</Link>
+            <Link href="/bank"><i className="fa-solid fa-building-columns" /> Open Northbound Bank</Link>
             <Link href="/dashboard/activity"><i className="fa-solid fa-shield-halved" /> Account activity</Link>
           </div>
           <dl className="metric-grid compact">
