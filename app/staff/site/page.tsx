@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { SiteFeaturesAdminPanel } from '@/components/SiteFeaturesAdminPanel';
 import { ApeStaffAdminPanel } from '@/components/ApeStaffAdminPanel';
+import { HomeHeroAdminPanel } from '@/components/HomeHeroAdminPanel';
 import { getApeStaffState } from '@/lib/ape-staff-data';
 import { getSiteFeatureSettings } from '@/lib/site-features-data';
+import { getHomeHeroSettings } from '@/lib/home-hero-data';
 import { getCurrentStaffIdentity, canAccessServerAdministration, canAccessStaffPage, canManageSiteConfiguration } from '@/lib/staff-auth';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +27,7 @@ export default async function StaffSitePage() {
     );
   }
 
-  const [featureSettings, apeStaffState] = await Promise.all([getSiteFeatureSettings(), getApeStaffState()]);
+  const [featureSettings, apeStaffState, homeHeroSettings] = await Promise.all([getSiteFeatureSettings(), getApeStaffState(), getHomeHeroSettings()]);
   const canManage = canManageSiteConfiguration(identity);
 
   return (
@@ -50,6 +52,7 @@ export default async function StaffSitePage() {
 
       <section className="staff-site-settings-grid">
         <SiteFeaturesAdminPanel initialSettings={featureSettings} canManage={canManage} />
+        <HomeHeroAdminPanel initialSettings={homeHeroSettings} canManage={canManage} />
         <ApeStaffAdminPanel initialState={apeStaffState} canManage={canManage} />
       </section>
     </main>

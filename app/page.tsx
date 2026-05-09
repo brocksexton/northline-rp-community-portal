@@ -25,6 +25,7 @@ import { enabledFeatureIds, getSiteFeatureSettings } from '@/lib/site-features-d
 import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 import { getPublicJobsState } from '@/lib/jobs-data';
+import { getHomeHeroSettings, renderSignedHeroTitle, selectHomeHeroMessage } from '@/lib/home-hero-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,115 +61,6 @@ function compactPercent(value: number) {
 }
 
 
-type HomeMoment = {
-  className: string;
-  greeting: string;
-  guestTitle: string;
-  signedTitle: (name: string) => string;
-  body: string;
-  icon: string;
-  label: string;
-  scene: string;
-};
-
-function getHomeMoment(now: Date): HomeMoment {
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
-  const hour = now.getHours();
-  const isDecemberHoliday = month === 12 && day >= 15;
-  const isHalloween = month === 10 && day >= 20;
-  const isNewYear = (month === 12 && day >= 30) || (month === 1 && day <= 2);
-
-  if (isNewYear) {
-    return {
-      className: 'home-moment-new-year',
-      greeting: 'Happy new year',
-      guestTitle: 'New year, same city energy.',
-      signedTitle: (name) => `Happy new year, ${name}.`,
-      body: 'The board is open, the streets are waiting, and everyone gets a fresh excuse to make a story tonight.',
-      icon: 'fa-solid fa-champagne-glasses',
-      label: 'New year in Northline',
-      scene: 'Lanterns are still up and the city feels a little louder than usual.',
-    };
-  }
-
-  if (isDecemberHoliday) {
-    return {
-      className: 'home-moment-winter',
-      greeting: 'Happy holidays',
-      guestTitle: 'Come in from the cold.',
-      signedTitle: (name) => `Welcome home, ${name}.`,
-      body: 'Check the server, catch up with the city, and see who is around before you head back into Northline.',
-      icon: 'fa-solid fa-snowflake',
-      label: 'Holiday season',
-      scene: 'The lights are on, the streets are frosty, and the tavern is pretending it has heat.',
-    };
-  }
-
-  if (isHalloween) {
-    return {
-      className: 'home-moment-halloween',
-      greeting: 'Good evening',
-      guestTitle: 'The city is up to something.',
-      signedTitle: (name) => `Good evening, ${name}.`,
-      body: 'Drop in, check the chatter, and keep an eye on the weird stuff happening around town.',
-      icon: 'fa-solid fa-ghost',
-      label: 'Spooky season',
-      scene: 'Something is rattling in the alley. It is probably fine. Probably.',
-    };
-  }
-
-  if (hour < 5) {
-    return {
-      className: 'home-moment-late-night',
-      greeting: 'Late night check-in',
-      guestTitle: 'Northline after dark.',
-      signedTitle: (name) => `Still awake, ${name}?`,
-      body: 'See who is around, skim the latest posts, and decide whether tonight needs one more story.',
-      icon: 'fa-solid fa-moon',
-      label: 'Late night',
-      scene: 'Neon signs, quiet roads, and the kind of decisions that happen after midnight.',
-    };
-  }
-
-  if (hour < 12) {
-    return {
-      className: 'home-moment-morning',
-      greeting: 'Good morning',
-      guestTitle: 'Morning in Northline.',
-      signedTitle: (name) => `Good morning, ${name}.`,
-      body: 'Check the pulse of the city, see what changed overnight, and get ready for the day.',
-      icon: 'fa-solid fa-mug-hot',
-      label: 'Morning board',
-      scene: 'Coffee is on, the city is waking up, and someone already posted something questionable.',
-    };
-  }
-
-  if (hour < 18) {
-    return {
-      className: 'home-moment-day',
-      greeting: 'Good afternoon',
-      guestTitle: 'Northline is open.',
-      signedTitle: (name) => `Good afternoon, ${name}.`,
-      body: 'Check server status, browse the boards, catch up with Tweeter, and jump in when you are ready.',
-      icon: 'fa-solid fa-sun',
-      label: 'Afternoon around town',
-      scene: 'The city is bright, the boards are moving, and there is always something to do.',
-    };
-  }
-
-  return {
-    className: 'home-moment-evening',
-    greeting: 'Good evening',
-    guestTitle: 'Settle in for the night.',
-    signedTitle: (name) => `Good evening, ${name}.`,
-    body: 'See who is online, catch the latest chatter, and decide where tonight starts.',
-    icon: 'fa-solid fa-city',
-    label: 'Evening in Northline',
-    scene: 'The streetlights are on, the city is louder, and the night shift is clocking in.',
-  };
-}
-
 function hasUnreadJobApplicationUpdate(application: { applicantViewedAt?: string | null; updatedAt: string; status: string; notes: Array<{ createdAt: string }> }) {
   if (!application.applicantViewedAt) return application.notes.length > 0 || application.status !== 'submitted';
   const viewed = new Date(application.applicantViewedAt).getTime();
@@ -199,7 +91,7 @@ function signedInFacts({
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: Promise<PageSearchParams> }) {
-  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs, featureSettings] = await Promise.all([
+  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs, featureSettings, homeHeroSettings] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     searchParams ?? Promise.resolve({} as PageSearchParams),
@@ -213,6 +105,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
     getDeathSummary(),
     getAllDamageLogs(),
     getSiteFeatureSettings(),
+    getHomeHeroSettings(),
   ]);
 
   const [player, communityProfile, steamProfile, rawRole, guideProgress] = steamId
@@ -274,7 +167,8 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const unreadJobApplications = applicantApplications.filter(hasUnreadJobApplicationUpdate);
   const unreadJobApplication = unreadJobApplications[0] ?? null;
   const openApplicantApplication = applicantApplications.find((application) => ['submitted', 'under_review', 'approved'].includes(application.status));
-  const homeMoment = getHomeMoment(new Date());
+  const now = new Date();
+  const homeMoment = selectHomeHeroMessage(homeHeroSettings, now);
 
   return (
     <main className={`community-home homey-home ${homeMoment.className} ${hasSignedIn ? 'community-home-signed-in' : 'community-home-guest'}`}>
@@ -282,7 +176,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
         <div className="community-hero-copy">
           <div className="homey-ambient" aria-hidden="true"><span /><span /><span /></div>
           <span className="community-pill homey-pill"><i className={homeMoment.icon} aria-hidden="true" /> {homeMoment.label}</span>
-          <h1>{hasSignedIn ? homeMoment.signedTitle(displayName) : homeMoment.guestTitle}</h1>
+          <h1>{hasSignedIn ? renderSignedHeroTitle(homeMoment.signedTitle, displayName) : homeMoment.guestTitle}</h1>
           <p>
             {hasSignedIn
               ? `${homeMoment.body} Your ${role} profile is connected and ready when you are.`
@@ -295,12 +189,14 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
                 <Link className="button button-primary community-main-button" href="/dashboard"><i className="fa-solid fa-id-card" aria-hidden="true" /> Open your dashboard</Link>
                 {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Browse Tweeter</Link> : null}
                 {tweeterVisible ? <Link className="button button-ghost" href={`/tweeter/profile/${steamId}`}>Public profile</Link> : null}
+                <Link className="button button-ghost homey-shuffle-link" href={`/?shuffle=${Date.now()}`}><i className="fa-solid fa-shuffle" aria-hidden="true" /> New vibe</Link>
               </>
             ) : (
               <>
                 <a className="button button-primary community-main-button" href="/api/auth/steam?returnTo=/dashboard"><i className="fa-brands fa-steam" aria-hidden="true" /> Sign in with Steam</a>
                 {tweeterVisible ? <Link className="button button-soft" href="/tweeter"><i className="fa-brands fa-twitter" aria-hidden="true" /> Peek at Tweeter</Link> : null}
                 <a className="button button-ghost" href={config.server.discordUrl}>Join Northline Discord</a>
+                <Link className="button button-ghost homey-shuffle-link" href={`/?shuffle=${Date.now()}`}><i className="fa-solid fa-shuffle" aria-hidden="true" /> New vibe</Link>
               </>
             )}
           </div>

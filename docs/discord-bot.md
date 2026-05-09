@@ -14,7 +14,7 @@ The dedicated Discord bot works alongside the website and game-server admin pane
 - `/northline status` — current game-server status, online count, fatality rate, and website link.
 - `/northline players` — currently connected players from the website/server data.
 - `/northline deaths` — fatality/death summary from damage logs.
-- `/northline links` / `forum` / `jobs` / `cases` / `leaderboards` — quick embeds linking to the matching website areas.
+- `/northline links` / `guides` / `forum` / `jobs` / `cases` / `leaderboards` — quick embeds linking to the matching website areas.
 - `/northline fun` — a lightweight city status/vibe check.
 - `/northline roll dice:` — roll dice such as `d20`, `2d6`, or `3d10`.
 - `/northline coinflip` — flip a coin.
@@ -24,6 +24,20 @@ The dedicated Discord bot works alongside the website and game-server admin pane
 - `/northline kick steamid: reason:` — queues or sends a kick command for a SteamID64.
 - `/northline ban steamid: reason: duration_minutes:` — queues or sends a ban command for a SteamID64.
 - `/northline server action:` — start, kill, restart, or update the game server using the same server-control methods as `/staff/server`.
+
+
+### Guide lookup commands
+
+- `/job police` — Police Officer and Chief of Police guide.
+- `/job chief` — alternate shortcut for the police leadership guide.
+- `/job mayor` — elections, candidacy, voting, and mayor policy guide.
+- `/job courier` — parcel delivery guide.
+- `/job medic` — medic job guide.
+- `/job business` — store owner and business guide.
+- `/job citizen` — starter Citizen guide.
+- `/guide topic:` — direct lookup for broader guides like cash, bank, inventory, property, storage, police, mayor, courier, medic, business, or citizen.
+
+Guide embeds use screenshots from the website guide assets where possible and include a direct button to open the guide on the website.
 
 ### Announcement command
 
@@ -57,6 +71,15 @@ NORTHLINE_BOT_API_BASE_URL=https://northline.lol
 ```
 
 `NORTHLINE_BOT_API_SECRET` must be the same value for the website and the bot process. Use a long random string. The bot sends it to `/api/bot/*` routes in a server-to-server header.
+
+## Embed visuals
+
+The bot now chooses images per embed instead of applying one global banner image everywhere. Guide embeds use existing website assets like police station, post office, mayor computer, inventory, ATM, and property screenshots.
+
+```env
+NORTHLINE_BOT_ICON_URL=https://northline.lol/apetavern-logo.png
+# NORTHLINE_BOT_BANNER_URL is no longer applied globally to every embed.
+```
 
 ## Optional role gates
 

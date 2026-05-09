@@ -27729,3 +27729,942 @@ body.guide-modal-open {
 .tweeter-profile-banner::after {
   z-index: 1;
 }
+
+
+/* v2.9.113 mobile-only site polish
+   Everything in this block is scoped to phone-sized viewports so desktop layouts remain unchanged. */
+@media (max-width: 768px) {
+  html {
+    scroll-padding-top: 4.75rem;
+  }
+
+  body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  #main-content {
+    min-width: 0;
+  }
+
+  .site-header-v3,
+  .site-header {
+    top: 0;
+    background: rgba(248, 250, 252, 0.92) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.28) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  body[data-site-style='ops']:not(:has(.tweeter-mode)) .site-header-v3,
+  body[data-site-style='glass']:not(:has(.tweeter-mode)) .site-header-v3 {
+    background: rgba(248, 250, 252, 0.92) !important;
+  }
+
+  .header-inner,
+  .header-inner-v3 {
+    width: 100%;
+    padding: 0.58rem max(0.8rem, env(safe-area-inset-left)) 0.58rem max(0.8rem, env(safe-area-inset-right)) !important;
+    gap: 0.6rem !important;
+    min-height: 3.6rem;
+  }
+
+  .brand-lockup-v3,
+  .brand-lockup {
+    min-width: 0;
+  }
+
+  .northline-wordmark-text {
+    font-size: clamp(1.05rem, 6vw, 1.45rem) !important;
+  }
+
+  .northline-wordmark-rp {
+    font-size: 0.8rem !important;
+    padding: 0.18rem 0.26rem !important;
+  }
+
+  .header-actions,
+  .header-actions-v3 {
+    margin-left: auto;
+    gap: 0.35rem !important;
+  }
+
+  .desktop-nav,
+  .desktop-nav-v3,
+  .city-status-pill,
+  .account-menu,
+  .nav-steam-signin {
+    display: none !important;
+  }
+
+  .mobile-menu-v3 {
+    display: block !important;
+  }
+
+  .mobile-menu-v3 > summary {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border-radius: 0.95rem !important;
+    background: rgba(14, 148, 240, 0.12) !important;
+    color: #0369a1 !important;
+    border: 1px solid rgba(14, 148, 240, 0.18) !important;
+  }
+
+  .mobile-menu-panel-v3 {
+    position: fixed !important;
+    inset: calc(3.75rem + env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) auto max(0.75rem, env(safe-area-inset-left)) !important;
+    max-height: calc(100dvh - 4.6rem - env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    min-width: 0 !important;
+    overflow: auto !important;
+    overscroll-behavior: contain;
+    padding: 0.75rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .mobile-menu-panel-v3 nav {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.4rem !important;
+  }
+
+  .mobile-menu-panel-v3 nav a,
+  .mobile-account-actions a,
+  .mobile-account-actions button {
+    min-height: 3rem;
+    border-radius: 1rem !important;
+    padding: 0.75rem 0.85rem !important;
+  }
+
+  .mobile-menu-status {
+    border-radius: 1rem !important;
+    padding: 0.72rem 0.85rem !important;
+  }
+
+  .page-shell,
+  .home-page,
+  .tweeter-shell {
+    width: min(100% - 1rem, 1220px) !important;
+    padding-top: 0.9rem !important;
+  }
+
+  .site-footer {
+    width: min(100% - 1rem, 1220px) !important;
+    margin-top: 2rem !important;
+    padding: 1.4rem 0.35rem calc(1.6rem + env(safe-area-inset-bottom)) !important;
+    display: grid !important;
+    gap: 1rem !important;
+  }
+
+  .site-footer nav {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem !important;
+  }
+
+  .site-footer nav a {
+    padding: 0.7rem 0.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.56);
+  }
+
+  .button,
+  button,
+  summary,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .button,
+  .button-primary,
+  .button-soft,
+  .button-ghost,
+  form button[type='submit'] {
+    min-height: 2.8rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .card,
+  .glass-card,
+  .auth-panel,
+  .community-card,
+  .staff-panel,
+  .guides-card,
+  .rules-section-block,
+  .support-panel-v2,
+  .policy-section-card,
+  .ban-detail-panel,
+  .dev-blog-card,
+  .shop-placeholder-card {
+    border-radius: 1.15rem !important;
+    padding: 1rem !important;
+  }
+
+  .hero,
+  .home-hero,
+  .split-hero,
+  .dashboard-hero,
+  .profile-hero,
+  .community-hero,
+  .players-directory-hero,
+  .guides-hero,
+  .rules-hero-card,
+  .support-hero-v2,
+  .staff-command-hero,
+  .jobs-hero-card,
+  .policy-hero-v2,
+  .ban-detail-hero,
+  .dev-blog-hero,
+  .status-command-page > section:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.9rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .hero-copy,
+  .split-hero > div:first-child,
+  .community-hero-copy,
+  .players-directory-copy,
+  .guides-hero-copy,
+  .rules-hero-copy,
+  .staff-command-copy,
+  .policy-hero-v2,
+  .support-hero-v2,
+  .jobs-hero-card {
+    padding: 1.1rem !important;
+  }
+
+  h1,
+  .home-hero h1,
+  .hero h1,
+  .community-hero h1,
+  .players-directory-copy h1,
+  .guides-hero h1,
+  .rules-hero-card h1,
+  .support-hero-v2 h1,
+  .staff-command-copy h1,
+  .status-command-hero-copy h1,
+  .jobs-hero-card h1,
+  .policy-hero-v2 h1,
+  .ban-detail-hero h1,
+  .dev-blog-hero h1 {
+    font-size: clamp(2rem, 12vw, 3.25rem) !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.07em !important;
+    overflow-wrap: anywhere;
+  }
+
+  h2,
+  .guides-section-heading h2,
+  .rules-section-block h2,
+  .status-command-section-head h2,
+  .support-panel-v2 h2 {
+    font-size: clamp(1.35rem, 8vw, 2.15rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  p,
+  li,
+  dd,
+  dt {
+    overflow-wrap: anywhere;
+  }
+
+  .community-hero-actions,
+  .players-hero-actions,
+  .guides-hero-actions,
+  .rules-hero-actions,
+  .support-action-row-v2,
+  .staff-hero-actions,
+  .jobs-hero-actions,
+  .policy-hero-actions-v2,
+  .status-command-actions,
+  .rules-report-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+  }
+
+  .community-feature-grid,
+  .community-lower-grid,
+  .personal-fact-grid,
+  .metric-grid,
+  .account-workspace-grid,
+  .account-overview-grid,
+  .status-command-overview-grid,
+  .status-command-info-grid,
+  .status-command-trend-layout,
+  .status-command-peak-grid,
+  .status-command-metric-grid,
+  .status-command-lower-grid,
+  .players-directory-grid,
+  .guide-path-grid,
+  .phone-app-grid,
+  .guides-layout,
+  .guides-quickbar,
+  .guide-job-card-grid,
+  .rules-sign-grid,
+  .rules-job-grid,
+  .rules-phone-grid,
+  .scenario-grid,
+  .scenario-answer-grid,
+  .rules-two-column-section,
+  .support-card-grid-v2,
+  .support-layout-v2,
+  .support-community-links-v2,
+  .staff-signal-grid,
+  .staff-launch-grid,
+  .staff-command-grid,
+  .staff-workspace-grid,
+  .staff-context-grid,
+  .staff-site-settings-grid,
+  .staff-activity-grid,
+  .leaderboards-grid,
+  .leaderboard-grid,
+  .cases-grid,
+  .dev-blog-grid,
+  .ban-detail-grid,
+  .policy-highlight-grid-v2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .community-feature-card,
+  .public-citizen-card,
+  .guide-path-card,
+  .guide-job-card,
+  .rules-sign-card,
+  .scenario-card,
+  .support-path-card-v2,
+  .staff-launch-card,
+  .staff-workspace-card,
+  .dev-blog-card,
+  .policy-mini-card-v2 {
+    min-width: 0;
+  }
+
+  .players-directory-toolbar,
+  .dev-blog-toolbar,
+  .leaderboards-toolbar,
+  .forum-toolbar,
+  .filter-toolbar,
+  .staff-toolbar,
+  .daily-drop-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.6rem !important;
+    position: static !important;
+  }
+
+  .players-search-field,
+  .players-select-field,
+  .forum-search-field,
+  .leaderboards-search-field,
+  .search-field,
+  .select-field {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .players-search-field input,
+  .players-select-field select,
+  .forum-search-field input,
+  .leaderboards-search-field input,
+  .search-field input,
+  .select-field select {
+    width: 100% !important;
+  }
+
+  .players-directory-scoreboard,
+  .guides-progress-card,
+  .rules-pass-card,
+  .status-command-live-card,
+  .staff-identity-card,
+  .jobs-hero-card aside {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 1rem !important;
+    border-radius: 1.15rem !important;
+  }
+
+  .guides-progress-card strong,
+  .status-command-live-value strong,
+  .rules-pass-stamp strong,
+  .scoreboard-main strong {
+    font-size: clamp(2.4rem, 18vw, 4.2rem) !important;
+  }
+
+  .status-command-chart {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.35rem;
+  }
+
+  .status-command-chart svg {
+    min-width: 620px;
+  }
+
+  .status-command-chart-axis.x-axis {
+    min-width: 620px;
+  }
+
+  .status-command-user-list,
+  .status-command-event-list,
+  .staff-diagnostic-list,
+  .staff-diagnostic-attempts,
+  .thread-ancestor-list,
+  .thread-replies {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .status-command-diagnostics,
+  .staff-diagnostic-panel,
+  .staff-diagnostic-pre,
+  pre,
+  code {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .forum-page,
+  .forum-board-page,
+  .forum-thread-page {
+    gap: 0.9rem !important;
+  }
+
+  .forum-board-layout,
+  .forum-thread-layout,
+  .forum-shell-grid,
+  .forum-category-grid,
+  .forum-thread-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .forum-thread-card,
+  .forum-post-card,
+  .forum-reply-form,
+  .forum-board-card {
+    border-radius: 1rem !important;
+    padding: 0.9rem !important;
+  }
+
+  .forum-thread-meta,
+  .forum-post-meta,
+  .public-citizen-meta,
+  .public-citizen-chip-list,
+  .tweeter-profile-meta,
+  .tweeter-profile-stats {
+    gap: 0.45rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  .tweeter-shell {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  body:has(.tweeter-mode) #main-content,
+  body[data-app-section='tweeter'] #main-content {
+    padding: 0 !important;
+  }
+
+  .tweeter-grid,
+  .tweeter-detail-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .tweeter-left-rail,
+  .tweeter-right-rail,
+  .tweeter-detail-rail {
+    display: none !important;
+  }
+
+  .tweeter-main-column {
+    width: 100% !important;
+    max-width: none !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+  }
+
+  .tweeter-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-left: max(0.85rem, env(safe-area-inset-left)) !important;
+    padding-right: max(0.85rem, env(safe-area-inset-right)) !important;
+  }
+
+  .tweeter-compose-card {
+    grid-template-columns: 1fr !important;
+    padding: 0.85rem !important;
+  }
+
+  .tweeter-compose-card > .avatar {
+    display: none !important;
+  }
+
+  .tweet-card-v2,
+  .tweet-detail-card,
+  .thread-mini-card {
+    grid-template-columns: 2.45rem minmax(0, 1fr) !important;
+    gap: 0.65rem !important;
+    padding: 0.85rem !important;
+  }
+
+  .tweet-card-header,
+  .tweet-card-authorline,
+  .tweet-detail-meta {
+    min-width: 0;
+  }
+
+  .tweet-card-text,
+  .tweet-detail-body {
+    font-size: 0.98rem !important;
+    line-height: 1.5 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .tweeter-profile-banner {
+    min-height: 148px !important;
+    height: 148px !important;
+  }
+
+  .tweeter-profile-main {
+    padding: 0 0.85rem 0.9rem !important;
+  }
+
+  .tweeter-profile-avatar {
+    width: 5.5rem !important;
+    height: 5.5rem !important;
+    margin-top: -2.75rem !important;
+  }
+
+  .tweeter-profile-copy {
+    padding: 0 0.85rem 1rem !important;
+  }
+
+  .tweeter-profile-copy h1 {
+    font-size: 1.8rem !important;
+  }
+
+  .tweeter-profile-tabs,
+  .tweeter-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tweeter-profile-tabs::-webkit-scrollbar,
+  .tweeter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tweeter-profile-tabs a,
+  .tweeter-profile-tabs button,
+  .tweeter-tabs button {
+    min-width: 7rem;
+    white-space: nowrap;
+  }
+
+  .tweeter-mobile-actions {
+    padding-bottom: max(0.55rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .guide-modal-backdrop,
+  .modal-backdrop,
+  .dialog-backdrop {
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left)) !important;
+  }
+
+  .guide-modal-window,
+  .modal-window,
+  .dialog-window {
+    width: 100% !important;
+    max-height: calc(100dvh - 1rem) !important;
+    border-radius: 1.05rem !important;
+  }
+
+  .guide-modal-header,
+  .guide-modal-footer {
+    padding: 0.8rem !important;
+  }
+
+  .guide-modal-slide {
+    grid-template-columns: 1fr !important;
+    padding: 0.85rem !important;
+    gap: 0.85rem !important;
+  }
+
+  .guide-modal-copy h3 {
+    font-size: clamp(1.65rem, 10vw, 2.35rem) !important;
+  }
+
+  .guide-modal-media,
+  .guide-modal-placeholder {
+    min-height: 210px !important;
+    max-height: none !important;
+  }
+
+  .guide-modal-media-grid,
+  .guide-modal-media-wide-top,
+  .guide-modal-media-stacked {
+    grid-template-columns: 1fr !important;
+  }
+
+  .guide-modal-footer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+  }
+
+  .guide-modal-dots {
+    order: -1;
+  }
+
+  table,
+  .table,
+  .data-table,
+  .staff-table,
+  .leaderboard-table,
+  .applications-table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  form,
+  fieldset,
+  .form-grid,
+  .settings-grid,
+  .profile-settings-grid,
+  .profile-studio-grid,
+  .maintenance-form-grid,
+  .staff-form-grid {
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+  }
+
+  .profile-preview-grid,
+  .profile-customization-grid,
+  .profile-showcase-grid,
+  .privacy-grid,
+  .data-privacy-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .profile-showcase-card,
+  .profile-data-privacy-panel,
+  .maintenance-panel,
+  .site-feature-card,
+  .daily-drop-panel,
+  .tweeter-admin-panel,
+  .discord-manager-panel,
+  .staff-audit-panel {
+    min-width: 0 !important;
+  }
+
+  .scoreboard-grid,
+  .staff-workspace-stats,
+  .tweeter-metric-strip,
+  .tweeter-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .tweeter-info-grid div:nth-child(2n),
+  .tweeter-metric-strip div:nth-child(2n) {
+    border-right: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-shell,
+  .home-page {
+    width: min(100% - 0.7rem, 1220px) !important;
+  }
+
+  .site-footer nav,
+  .scoreboard-grid,
+  .staff-workspace-stats,
+  .tweeter-metric-strip,
+  .tweeter-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .community-feature-card,
+  .public-citizen-card,
+  .guide-job-card,
+  .rules-sign-card,
+  .support-path-card-v2,
+  .staff-launch-card,
+  .staff-workspace-card {
+    padding: 0.9rem !important;
+  }
+
+  .tweet-card-v2,
+  .tweet-detail-card,
+  .thread-mini-card {
+    grid-template-columns: 2.15rem minmax(0, 1fr) !important;
+  }
+
+  .tweeter-profile-avatar {
+    width: 5rem !important;
+    height: 5rem !important;
+    margin-top: -2.5rem !important;
+  }
+
+  .guide-modal-progress strong,
+  .status-command-chart-axis.y-axis {
+    display: none !important;
+  }
+}
+
+/* v2.9.115 homepage hero message admin */
+.homey-shuffle-link {
+  gap: 0.45rem;
+}
+
+.home-hero-admin-panel {
+  grid-column: 1 / -1;
+}
+
+.home-hero-admin-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.home-hero-message-list {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.home-hero-message-list-scroll {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 680px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.home-hero-message-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-hero-message-row i {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.8rem;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+}
+
+.home-hero-message-row span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.home-hero-message-row strong,
+.home-hero-message-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-hero-message-row small {
+  color: #64748b;
+}
+
+.home-hero-message-row em {
+  border-radius: 999px;
+  padding: 0.25rem 0.48rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home-hero-message-row.disabled em {
+  background: rgba(148, 163, 184, 0.16);
+  color: #64748b;
+}
+
+.home-hero-message-row.active {
+  border-color: rgba(2, 132, 199, 0.42);
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.92), rgba(255, 255, 255, 0.92));
+  box-shadow: 0 14px 36px rgba(2, 132, 199, 0.12);
+}
+
+.home-hero-editor {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.home-hero-preview-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(14, 165, 233, 0.16);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.16), transparent 18rem),
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(240, 249, 255, 0.8));
+}
+
+.home-hero-preview-card > strong {
+  color: #071629;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.home-hero-preview-card > p {
+  max-width: 680px;
+  margin: 0;
+  color: #334155;
+}
+
+.homey-moment-note.compact {
+  margin: 0;
+  padding: 0.8rem;
+  border-radius: 1rem;
+}
+
+.homey-moment-note.compact span {
+  color: #334155;
+}
+
+.home-hero-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.home-hero-editor-grid .field.wide {
+  grid-column: 1 / -1;
+}
+
+.home-hero-editor-grid textarea {
+  min-height: 5.5rem;
+}
+
+.home-hero-time-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.home-hero-time-fieldset legend {
+  margin-bottom: 0.65rem;
+  color: #0f172a;
+  font-weight: 950;
+}
+
+.home-hero-time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.home-hero-time-grid label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  padding: 0.72rem;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.home-hero-time-grid label.selected {
+  border-color: rgba(2, 132, 199, 0.38);
+  background: rgba(224, 242, 254, 0.72);
+}
+
+.home-hero-time-grid input {
+  margin-top: 0.2rem;
+}
+
+.home-hero-time-grid span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.home-hero-time-grid strong {
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.home-hero-time-grid small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.staff-editor-actions.split {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-editor-actions.split > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.button.button-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}
+
+.home-hero-editor.empty {
+  min-height: 260px;
+  place-items: center;
+  text-align: center;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 1.25rem;
+  background: rgba(255,255,255,0.65);
+}
+
+@media (max-width: 980px) {
+  .home-hero-admin-layout,
+  .home-hero-editor-grid,
+  .home-hero-time-grid {
+    grid-template-columns: 1fr;
+  }
+}

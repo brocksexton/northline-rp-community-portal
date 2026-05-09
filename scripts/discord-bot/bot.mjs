@@ -5,6 +5,9 @@ import {
   Client,
   GatewayIntentBits,
   EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   PermissionFlagsBits,
   Partials,
   ActivityType,
@@ -15,7 +18,6 @@ const apiSecret = process.env.NORTHLINE_BOT_API_SECRET || process.env.DISCORD_BO
 const apiBase = (process.env.NORTHLINE_BOT_API_BASE_URL || process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
 const defaultColor = parseColor(process.env.NORTHLINE_BOT_EMBED_COLOR || '#1d9bf0');
 const publicUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || apiBase;
-const bannerUrl = process.env.NORTHLINE_BOT_BANNER_URL || '';
 const connectionNoticesEnabled = /^true$/i.test(process.env.NORTHLINE_BOT_CONNECTION_NOTICES || '');
 const connectionChannelId = (process.env.NORTHLINE_BOT_CONNECTION_CHANNEL_ID || '').trim();
 const connectionLogPath = (process.env.NORTHLINE_BOT_CONNECTION_LOG_PATH || process.env.NORTHLINE_SERVER_CONSOLE_LOG_PATH || 'C:\\Servers\\northline-data\\server-console.log').trim();
@@ -93,8 +95,25 @@ function sitePath(path) {
   return `${base}${suffix}`;
 }
 
-function linkEmbed(title, description, links = []) {
-  const embed = baseEmbed(title).setDescription(description);
+function assetPath(path) {
+  return sitePath(path);
+}
+
+function botIconUrl() {
+  return process.env.NORTHLINE_BOT_ICON_URL || assetPath('/apetavern-logo.png');
+}
+
+function linkButton(label, url, emoji = undefined) {
+  const button = new ButtonBuilder()
+    .setLabel(clean(label, 80))
+    .setURL(url)
+    .setStyle(ButtonStyle.Link);
+  if (emoji) button.setEmoji(emoji);
+  return new ActionRowBuilder().addComponents(button);
+}
+
+function linkEmbed(title, description, links = [], options = {}) {
+  const embed = baseEmbed(title, options).setDescription(description);
   if (links.length) {
     embed.addFields({
       name: 'Links',
@@ -113,6 +132,10 @@ const guideCatalog = {
     path: '/guides?guide=core-basics',
     summary: 'Learn how cash, bank money, inventory items, ATMs, property rentals, personal safes, and Town Hall storage work.',
     covers: ['Cash vs bank balance', 'Dropping cash or items', 'ATM deposits and withdrawals', 'Property rental basics', 'Personal safe and Town Hall storage', 'Illegal red-outlined inventory items'],
+    tip: 'Start here if someone is confused about wallet cash, bank balance, inventory slots, storage, or red illegal-item outlines.',
+    color: 0xf59e0b,
+    image: '/guides/basics/inventory-illegal.png',
+    thumbnail: '/guides/basics/atm.png',
     aliases: ['cash', 'bank', 'inventory', 'property', 'storage', 'safe', 'stash', 'atm'],
   },
   police: {
@@ -121,6 +144,10 @@ const guideCatalog = {
     path: '/guides?guide=police',
     summary: 'Apply through Job Finder, visit the Police Department, talk to Sergeant Harris, and learn how 911 reports, theft sensors, cuffs, tasers, and police scenes work.',
     covers: ['Applying for Police Officer or Chief of Police', 'Finding the station', '911 reports and break-in alerts', 'Common application blockers', 'Cuffs and cuff escape minigame', 'AFK job removal warning'],
+    tip: 'Good for players who want police RP but need to understand the application flow and what officers actually respond to.',
+    color: 0x1d9bf0,
+    image: '/guides/police/police-station-exterior.png',
+    thumbnail: '/guides/police/sergeant-harris.png',
     aliases: ['pd', 'cop', 'officer', 'chief', 'chief-of-police', 'police-officer'],
   },
   mayor: {
@@ -129,6 +156,10 @@ const guideCatalog = {
     path: '/guides?guide=mayor',
     summary: 'Start an election with Michael, register as a candidate, campaign through Tweeter, win votes, and manage city policy from the Mayor computer.',
     covers: ['Starting elections at the Police Department', 'Entering the race in the Elections app', 'Campaigning on Tweeter', 'Voting flow', 'Custom laws, contraband, and tax rate', 'Mayor survival and body armor'],
+    tip: 'Useful when someone starts an election but forgets they still need to open the Elections app and register as a candidate.',
+    color: 0x6d28d9,
+    image: '/guides/mayor/mayor-computer.png',
+    thumbnail: '/guides/mayor/michael-dialogue.png',
     aliases: ['election', 'elections', 'vote', 'voting', 'candidate', 'government'],
   },
   courier: {
@@ -137,6 +168,10 @@ const guideCatalog = {
     path: '/guides?guide=courier',
     summary: 'Become a Courier, pick up timed parcels at the post office, follow your compass, and deliver packages for pay.',
     covers: ['Courier application', '$0 salary explanation', 'Postman Patrick', 'Picking up parcels', 'Timed delivery HUD', 'Timeout and cancelled package behaviour'],
+    tip: 'Great first job guide: it explains why salary shows $0 and how timed parcel payouts actually work.',
+    color: 0xc0843a,
+    image: '/guides/courier/post-office-exterior.png',
+    thumbnail: '/guides/courier/postman-patrick.png',
     aliases: ['delivery', 'deliveries', 'post', 'postman', 'package', 'packages', 'parcel', 'parcels'],
   },
   medic: {
@@ -145,6 +180,10 @@ const guideCatalog = {
     path: '/guides?guide=medic',
     summary: 'Learn how to approach Medic as a public-facing RP job focused on helping injured players and keeping scenes moving.',
     covers: ['Finding the Medic role', 'Responding to medical scenes', 'Semi-serious patient interaction', 'AFK job removal warning'],
+    tip: 'Best for players who want a service job that creates scenes without needing to police or run a store.',
+    color: 0x22c55e,
+    image: '/guides/police/phone-home.png',
+    thumbnail: '/guides/police/job-finder.png',
     aliases: ['ems', 'doctor', 'medical'],
   },
   business: {
@@ -153,6 +192,10 @@ const guideCatalog = {
     path: '/guides?guide=business',
     summary: 'Run a Grocery Store, Gun Store, or Hardware Store role and use property, advertisements, and player interaction to make the shop matter.',
     covers: ['Business role basics', 'Advertisement app', 'Commercial property expectations', 'Creating reasons for players to visit', 'AFK job removal warning'],
+    tip: 'Use this when someone wants to rent commercial space, advertise a shop, or understand store-owner expectations.',
+    color: 0xf97316,
+    image: '/guides/basics/property-panel.png',
+    thumbnail: '/guides/basics/rent-sign.png',
     aliases: ['store', 'shop', 'grocery', 'gunstore', 'gun-store', 'hardware', 'business-owner'],
   },
   citizen: {
@@ -161,6 +204,10 @@ const guideCatalog = {
     path: '/guides?guide=citizen',
     summary: 'A starter guide for learning Northline without taking on a major public job immediately.',
     covers: ['Exploring the city', 'Using phone apps', 'Recycling garbage', 'Meeting players', 'Building toward a role naturally'],
+    tip: 'A calm first-day guide for players who want to learn the city before taking a limited public role.',
+    color: 0x38bdf8,
+    image: '/guides/police/controls.png',
+    thumbnail: '/guides/police/phone-home.png',
     aliases: ['starter', 'new', 'new-player', 'first-day'],
   },
 };
@@ -173,35 +220,57 @@ function normalizeGuideId(value) {
   return guideAliases.get(key) || null;
 }
 
+function guideUrl(guideId) {
+  const guide = guideCatalog[guideId];
+  return guide ? sitePath(guide.path) : sitePath('/guides');
+}
+
 function guideEmbed(guideId) {
   const guide = guideCatalog[guideId];
   if (!guide) return null;
-  const url = sitePath(guide.path);
-  return baseEmbed(guide.title)
-    .setURL(url)
+  const url = guideUrl(guideId);
+  const embed = baseEmbed(guide.title, {
+    color: guide.color,
+    url,
+    image: guide.image ? assetPath(guide.image) : undefined,
+    thumbnail: guide.thumbnail ? assetPath(guide.thumbnail) : undefined,
+    footer: 'Northline RP • Guidebook',
+  })
     .setDescription(clean(guide.summary, 2048))
     .addFields(
       { name: 'What it covers', value: guide.covers.map((item) => `• ${item}`).join('\n'), inline: false },
-      { name: 'Open the guide', value: `[Launch this guide](${url})`, inline: true },
+      { name: 'Good for', value: clean(guide.tip || 'Players who want a quick, direct walkthrough before jumping in-game.', 1024), inline: false },
       { name: 'Bot shortcut', value: `\`${guide.command}\``, inline: true },
+      { name: 'Website', value: `[Open guide](${url})`, inline: true },
     );
+  return embed;
+}
+
+function guideReply(guideId) {
+  const embed = guideEmbed(guideId);
+  if (!embed) return null;
+  return { embeds: [embed], components: [linkButton('Open guide', guideUrl(guideId), '📘')] };
 }
 
 function guideListEmbed() {
-  return baseEmbed('Northline guide hub')
-    .setURL(sitePath('/guides'))
-    .setDescription('Pick a guide below, or use one of the shortcut commands for a direct link.')
+  return baseEmbed('Northline guide hub', {
+    url: sitePath('/guides'),
+    image: assetPath('/guides/police/phone-home.png'),
+    thumbnail: assetPath('/apetavern-logo.png'),
+    footer: 'Northline RP • Guidebook',
+  })
+    .setDescription('Pick a guide below, or use a shortcut command for a direct guide link.')
     .addFields(
-      { name: 'Core systems', value: `• [Cash, Bank, Inventory & Property](${sitePath('/guides?guide=core-basics')}) — \`/guide topic:Cash, bank, inventory, and property\``, inline: false },
+      { name: 'Core systems', value: `💵 [Cash, Bank, Inventory & Property](${sitePath('/guides?guide=core-basics')}) — \`/guide topic:Cash, bank, inventory, and property\``, inline: false },
       { name: 'Jobs', value: [
-        `• [Police Officer / Chief of Police](${sitePath('/guides?guide=police')}) — \`/job police\``,
-        `• [Elections & Mayor](${sitePath('/guides?guide=mayor')}) — \`/job mayor\``,
-        `• [Courier](${sitePath('/guides?guide=courier')}) — \`/job courier\``,
-        `• [Medic](${sitePath('/guides?guide=medic')}) — \`/job medic\``,
-        `• [Store Owner / Business](${sitePath('/guides?guide=business')}) — \`/job business\``,
-        `• [Citizen](${sitePath('/guides?guide=citizen')}) — \`/job citizen\``,
+        `🚓 [Police Officer / Chief of Police](${sitePath('/guides?guide=police')}) — \`/job police\``,
+        `🏛️ [Elections & Mayor](${sitePath('/guides?guide=mayor')}) — \`/job mayor\``,
+        `📦 [Courier](${sitePath('/guides?guide=courier')}) — \`/job courier\``,
+        `🚑 [Medic](${sitePath('/guides?guide=medic')}) — \`/job medic\``,
+        `🏪 [Store Owner / Business](${sitePath('/guides?guide=business')}) — \`/job business\``,
+        `🏙️ [Citizen](${sitePath('/guides?guide=citizen')}) — \`/job citizen\``,
       ].join('\n'), inline: false },
-      { name: 'Website', value: `[Open all guides](${sitePath('/guides')})`, inline: false },
+      { name: 'Tip', value: 'Use `/guide topic:<topic>` when you are not sure which job shortcut matches what a player is asking for.', inline: false },
     );
 }
 
@@ -216,7 +285,7 @@ function rollDice(notation) {
 }
 
 function publicCommandHelpEmbed() {
-  return baseEmbed('Northline bot command menu')
+  return baseEmbed('Northline bot command menu', { image: assetPath('/guides/police/controls.png'), footer: 'Northline RP • Command menu' })
     .setDescription('Useful website, server, forum, and lightweight RP utility commands.')
     .addFields(
       { name: 'Website + city', value: '`/northline status` · `/northline players` · `/northline deaths` · `/northline links` · `/northline guides` · `/northline forum` · `/northline jobs` · `/northline cases` · `/northline leaderboards`', inline: false },
@@ -328,14 +397,17 @@ async function apiDelete(path, body) {
   return data;
 }
 
-function baseEmbed(title) {
+function baseEmbed(title, options = {}) {
   const embed = new EmbedBuilder()
-    .setColor(defaultColor)
+    .setColor(Number.isFinite(options.color) ? options.color : defaultColor)
     .setTitle(title)
-    .setURL(publicUrl)
-    .setFooter({ text: 'Northline RP Discord Bot' })
+    .setURL(options.url || publicUrl)
+    .setFooter({ text: options.footer || 'Northline RP • Discord Bot', iconURL: botIconUrl() })
     .setTimestamp(new Date());
-  if (bannerUrl) embed.setImage(bannerUrl);
+
+  const thumbnail = options.thumbnail === false ? null : (options.thumbnail || botIconUrl());
+  if (thumbnail) embed.setThumbnail(thumbnail);
+  if (options.image) embed.setImage(options.image);
   return embed;
 }
 
@@ -480,7 +552,7 @@ async function statusEmbed() {
   const deaths = data.deaths || {};
   const playerCount = runtime.playerCount ?? pop.onlineCount ?? 0;
   const maxPlayers = runtime.maxPlayers ?? data.server?.maxPlayers ?? '—';
-  return baseEmbed(`${statusEmoji(runtime.state)} ${data.server?.name || 'Northline RP'} status`)
+  return baseEmbed(`${statusEmoji(runtime.state)} ${data.server?.name || 'Northline RP'} status`, { url: sitePath('/status'), thumbnail: assetPath('/apetavern-logo.png'), footer: 'Northline RP • Live status' })
     .setDescription(clean(runtime.message || runtime.label || 'Status unavailable.', 2048))
     .addFields(
       { name: 'Status', value: clean(runtime.label || runtime.state || 'Unknown'), inline: true },
@@ -498,7 +570,7 @@ async function playersEmbed() {
   const description = players.length
     ? players.slice(0, 20).map((player, index) => `${index + 1}. **${clean(player.rpName || player.name || 'Unknown', 64)}** \`${player.steamId}\``).join('\n')
     : 'Nobody is connected right now.';
-  return baseEmbed(`Connected players (${players.length})`).setDescription(description);
+  return baseEmbed(`Connected players (${players.length})`, { url: sitePath('/players'), thumbnail: false, footer: 'Northline RP • Live population' }).setDescription(description);
 }
 
 async function deathsEmbed() {
@@ -506,7 +578,7 @@ async function deathsEmbed() {
   const deaths = data.deaths || {};
   const categories = Array.isArray(deaths.categories) ? deaths.categories.slice(0, 5) : [];
   const topVictims = Array.isArray(deaths.topVictims) ? deaths.topVictims.slice(0, 3) : [];
-  const embed = baseEmbed('Northline mortality report')
+  const embed = baseEmbed('Northline mortality report', { color: 0xff6b6b, url: sitePath('/status'), thumbnail: false, footer: 'Northline RP • Incident report' })
     .setDescription(`Current fatality rate: **${Math.round((deaths.fatalityRate || 0) * 1000) / 10}%** across **${deaths.damageEvents ?? 0}** damage events.`)
     .addFields(
       { name: 'Fatal events', value: String(deaths.total ?? 0), inline: true },
@@ -527,7 +599,7 @@ async function funEmbed() {
     players > 0 ? `${players} people are currently roleplaying, arguing, working, or discovering gravity.` : 'The streets are quiet. Too quiet. Someone should check the alleys.',
     data.runtime?.online ? 'Server heartbeat detected. The city is legally alive.' : 'Server heartbeat is not looking great. The city may be napping.',
   ];
-  return baseEmbed('Northline city vibe check').setDescription(lines[Math.floor(Math.random() * lines.length)]);
+  return baseEmbed('Northline city vibe check', { color: 0x38bdf8, thumbnail: assetPath('/apetavern-logo.png') }).setDescription(lines[Math.floor(Math.random() * lines.length)]);
 }
 
 async function sendNorthlineAction(interaction, body) {
@@ -602,7 +674,7 @@ async function handleNorthline(interaction) {
       { label: 'Daily Drops', path: '/cases' },
       { label: 'Profile Studio', path: '/dashboard' },
     ])] });
-    if (sub === 'guides') return interaction.editReply({ embeds: [guideListEmbed()] });
+    if (sub === 'guides') return interaction.editReply({ embeds: [guideListEmbed()], components: [linkButton('Open guide hub', sitePath('/guides'), '📘')] });
     if (sub === 'forum') return interaction.editReply({ embeds: [linkEmbed('Northline Forum', 'Read announcements, synced Discord discussions, and community threads.', [{ label: 'Open forum', path: '/forum' }, { label: 'Profile Studio', path: '/dashboard' }])] });
     if (sub === 'jobs') return interaction.editReply({ embeds: [linkEmbed('Staff applications', 'Browse open postings and track application status from the website mini-app.', [{ label: 'Applications hub', path: '/jobs' }, { label: 'Open postings', path: '/jobs/open' }, { label: 'My applications', path: '/jobs/applications' }])] });
     if (sub === 'cases') return interaction.editReply({ embeds: [linkEmbed('Daily Drops cases', 'Open your daily case, view inventory, and preview the case shop foundation.', [{ label: 'Open Daily Drops', path: '/cases' }])] });
@@ -656,18 +728,18 @@ async function handleNorthline(interaction) {
 async function handleJobGuide(interaction) {
   const sub = interaction.options.getSubcommand();
   const guideId = jobGuideMap[sub];
-  const embed = guideId ? guideEmbed(guideId) : null;
-  if (!embed) return interaction.reply({ content: 'I could not find that job guide.', ephemeral: true });
-  return interaction.reply({ embeds: [embed] });
+  const payload = guideId ? guideReply(guideId) : null;
+  if (!payload) return interaction.reply({ content: 'I could not find that job guide.', ephemeral: true });
+  return interaction.reply(payload);
 }
 
 async function handleGuide(interaction) {
   const topic = interaction.options.getString('topic', true);
-  if (topic === 'all') return interaction.reply({ embeds: [guideListEmbed()] });
+  if (topic === 'all') return interaction.reply({ embeds: [guideListEmbed()], components: [linkButton('Open guide hub', sitePath('/guides'), '📘')] });
   const guideId = normalizeGuideId(topic);
-  const embed = guideId ? guideEmbed(guideId) : null;
-  if (!embed) return interaction.reply({ content: 'I could not find that guide. Try `/guide topic:All guides`.', ephemeral: true });
-  return interaction.reply({ embeds: [embed] });
+  const payload = guideId ? guideReply(guideId) : null;
+  if (!payload) return interaction.reply({ content: 'I could not find that guide. Try `/guide topic:All guides`.', ephemeral: true });
+  return interaction.reply(payload);
 }
 
 async function handleAnnounce(interaction) {
@@ -820,7 +892,8 @@ async function connectionNoticeEmbed(event) {
       .setColor(0x57f287)
       .setTitle('🟢 Server started')
       .setDescription('The server has started and should appear in the server browser shortly.')
-      .setFooter({ text: 'Northline RP • Live city feed' })
+      .setThumbnail(botIconUrl())
+      .setFooter({ text: 'Northline RP • Live city feed', iconURL: botIconUrl() })
       .setTimestamp(new Date());
   }
 
@@ -831,7 +904,7 @@ async function connectionNoticeEmbed(event) {
     .setColor(joined ? 0x57f287 : 0xed4245)
     .setTitle(joined ? '🟢 Player joined' : '🔴 Player left')
     .setDescription(joined ? `**${displayName}** is heading into Northline.` : `**${displayName}** left the city.`)
-    .setFooter({ text: 'Northline RP • Live city feed' })
+    .setFooter({ text: 'Northline RP • Live city feed', iconURL: botIconUrl() })
     .setTimestamp(new Date());
 
   if (profile?.avatar) {
@@ -961,7 +1034,7 @@ async function deathNoticeEmbed(event) {
     .setColor(killerName ? 0xff6b6b : 0xfaa61a)
     .setTitle(killerName ? '💀 Fatal encounter' : '💀 Player death')
     .setDescription(killerName ? `**${victimName}** was killed by **${killerName}**.` : `**${victimName}** died.`)
-    .setFooter({ text: 'Northline RP • Incident feed' })
+    .setFooter({ text: 'Northline RP • Incident feed', iconURL: botIconUrl() })
     .setTimestamp(new Date());
 
   if (victimProfile?.avatar) {
