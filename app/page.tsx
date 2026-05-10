@@ -26,6 +26,8 @@ import { getSteamProfile, getSteamProfiles } from '@/lib/steam-openid';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 import { getPublicJobsState } from '@/lib/jobs-data';
 import { getHomeHeroSettings, renderSignedHeroTitle, selectHomeHeroMessage } from '@/lib/home-hero-data';
+import { listTweeterContentFilterRules } from '@/lib/tweeter-content-filter-data';
+import { DEFAULT_TEXT_FILTER_RULES, getTextFilterSummary, type TextFilterRule } from '@/lib/content-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +62,23 @@ function compactPercent(value: number) {
   return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
 }
 
+const HOMEPAGE_TWEETER_BLOCK_RULES = [
+  { id: 'homepage-slur-001', term: 'fags', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-002', term: 'faggots', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-003', term: 'niggers', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-004', term: 'niggas', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-005', term: 'retards', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-006', term: 'trannies', reason: 'slur', matchMode: 'word' },
+  { id: 'homepage-slur-007', term: 'dykes', reason: 'slur', matchMode: 'word' },
+] satisfies TextFilterRule[];
+
+function isSafeForHomepageTweeterPreview(tweet: { Body?: unknown; AuthorDisplayName?: unknown }, rules: TextFilterRule[]) {
+  const text = `${String(tweet.AuthorDisplayName ?? '')} ${String(tweet.Body ?? '')}`;
+  if (!text.trim()) return true;
+  const homepageRules = [...DEFAULT_TEXT_FILTER_RULES, ...HOMEPAGE_TWEETER_BLOCK_RULES, ...rules];
+  return !getTextFilterSummary(text, homepageRules).containsFilteredText;
+}
+
 
 function hasUnreadJobApplicationUpdate(application: { applicantViewedAt?: string | null; updatedAt: string; status: string; notes: Array<{ createdAt: string }> }) {
   if (!application.applicantViewedAt) return application.notes.length > 0 || application.status !== 'submitted';
@@ -91,7 +110,7 @@ function signedInFacts({
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: Promise<PageSearchParams> }) {
-  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs, featureSettings, homeHeroSettings] = await Promise.all([
+  const [config, health, params, steamId, population, tweets, playersBySteam, serverConfig, updates, overview, deathSummary, damageLogs, featureSettings, homeHeroSettings, tweeterFilterRules] = await Promise.all([
     getSiteConfig(),
     getDataHealth(),
     searchParams ?? Promise.resolve({} as PageSearchParams),
@@ -106,6 +125,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
     getAllDamageLogs(),
     getSiteFeatureSettings(),
     getHomeHeroSettings(),
+    listTweeterContentFilterRules(),
   ]);
 
   const [player, communityProfile, steamProfile, rawRole, guideProgress] = steamId
@@ -124,7 +144,10 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
   const supportVisible = enabledFeatures.has('support');
   const jobsVisible = enabledFeatures.has('jobs');
   const forumVisible = enabledFeatures.has('forum');
-  const latestTweets = tweeterVisible ? tweets.slice(0, 3) : [];
+  const homepageSafeTweets = tweeterVisible
+    ? tweets.filter((tweet) => isSafeForHomepageTweeterPreview(tweet, tweeterFilterRules))
+    : [];
+  const latestTweets = homepageSafeTweets.slice(0, 3);
   const tweetSteamIds = [...new Set(latestTweets.map((tweet) => String(tweet.AuthorSteamId)))];
   const steamProfiles = await getSteamProfiles(tweetSteamIds);
   const loginFailed = getSingleParam(params.login) === 'failed';

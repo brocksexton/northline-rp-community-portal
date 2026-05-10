@@ -235,7 +235,7 @@ export async function buildTweeterPayload(
         verifiedKind: await resolveVerifiedBadgeKind(
           steamId,
           role,
-          tweet.VerifiedKind ?? "None",
+          role !== "User" ? role : "None",
         ),
         likeCount: nativeLikeCount + webLikeCount,
         likedByMe:
