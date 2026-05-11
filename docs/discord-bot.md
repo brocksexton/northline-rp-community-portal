@@ -77,7 +77,7 @@ NORTHLINE_BOT_API_BASE_URL=https://northline.lol
 The bot now chooses images per embed instead of applying one global banner image everywhere. Guide embeds use existing website assets like police station, post office, mayor computer, inventory, ATM, and property screenshots.
 
 ```env
-NORTHLINE_BOT_ICON_URL=https://northline.lol/apetavern-logo.png
+NORTHLINE_BOT_ICON_URL=https://northline.lol/northline-bot-icon.png
 # NORTHLINE_BOT_BANNER_URL is no longer applied globally to every embed.
 ```
 

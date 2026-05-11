@@ -100,7 +100,9 @@ function assetPath(path) {
 }
 
 function botIconUrl() {
-  return process.env.NORTHLINE_BOT_ICON_URL || assetPath('/apetavern-logo.png');
+  const custom = String(process.env.NORTHLINE_BOT_ICON_URL || '').trim();
+  if (custom && !/apetavern-logo\.png$/i.test(custom)) return custom;
+  return assetPath('/northline-bot-icon.png');
 }
 
 function linkButton(label, url, emoji = undefined) {
@@ -256,7 +258,7 @@ function guideListEmbed() {
   return baseEmbed('Northline guide hub', {
     url: sitePath('/guides'),
     image: assetPath('/guides/police/phone-home.png'),
-    thumbnail: assetPath('/apetavern-logo.png'),
+    thumbnail: assetPath('/northline-bot-icon.png'),
     footer: 'Northline RP • Guidebook',
   })
     .setDescription('Pick a guide below, or use a shortcut command for a direct guide link.')
@@ -552,7 +554,7 @@ async function statusEmbed() {
   const deaths = data.deaths || {};
   const playerCount = runtime.playerCount ?? pop.onlineCount ?? 0;
   const maxPlayers = runtime.maxPlayers ?? data.server?.maxPlayers ?? '—';
-  return baseEmbed(`${statusEmoji(runtime.state)} ${data.server?.name || 'Northline RP'} status`, { url: sitePath('/status'), thumbnail: assetPath('/apetavern-logo.png'), footer: 'Northline RP • Live status' })
+  return baseEmbed(`${statusEmoji(runtime.state)} ${data.server?.name || 'Northline RP'} status`, { url: sitePath('/status'), thumbnail: assetPath('/northline-bot-icon.png'), footer: 'Northline RP • Live status' })
     .setDescription(clean(runtime.message || runtime.label || 'Status unavailable.', 2048))
     .addFields(
       { name: 'Status', value: clean(runtime.label || runtime.state || 'Unknown'), inline: true },
@@ -599,7 +601,7 @@ async function funEmbed() {
     players > 0 ? `${players} people are currently roleplaying, arguing, working, or discovering gravity.` : 'The streets are quiet. Too quiet. Someone should check the alleys.',
     data.runtime?.online ? 'Server heartbeat detected. The city is legally alive.' : 'Server heartbeat is not looking great. The city may be napping.',
   ];
-  return baseEmbed('Northline city vibe check', { color: 0x38bdf8, thumbnail: assetPath('/apetavern-logo.png') }).setDescription(lines[Math.floor(Math.random() * lines.length)]);
+  return baseEmbed('Northline city vibe check', { color: 0x38bdf8, thumbnail: assetPath('/northline-bot-icon.png') }).setDescription(lines[Math.floor(Math.random() * lines.length)]);
 }
 
 async function sendNorthlineAction(interaction, body) {
