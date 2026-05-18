@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buildPageMetadata } from '@/lib/embed-metadata';
 import { notFound } from 'next/navigation';
 import { enabledFeatureIds, getSiteFeatureSettings, isSiteFeatureEnabled } from '@/lib/site-features-data';
+import inGameRules from '@/config/server-rules.json';
 
 export async function generateMetadata() {
   return buildPageMetadata({
@@ -14,7 +15,7 @@ export async function generateMetadata() {
 const quickStart = [
   { label: 'Play the scene', body: 'Northline is semi-serious RP. Have fun, be a little messy, but give people a real scene to respond to.' },
   { label: 'Use character knowledge', body: 'Discord, streams, website pages, screenshots, and OOC chat are not things your character magically knows.' },
-  { label: 'Escalate with a reason', body: 'Arguments, threats, arrests, robberies, and violence should come from something that actually happened in-character.' },
+  { label: 'Escalate with a reason', body: 'Arguments, threats, arrests, warrants, robberies, ATM theft, and violence should come from something that actually happened in-character.' },
   { label: 'Keep it community-friendly', body: 'No harassment, slurs, targeted toxicity, exploit abuse, or turning every loss into an OOC fight.' },
 ];
 
@@ -45,7 +46,7 @@ const rulebook = [
     points: [
       'Available jobs currently include Medic, Police Officer, Chief of Police, Mayor, and Courier.',
       'Available citizen jobs currently include Citizen, Grocery Store Owner, Gun Store Owner, and Hardware Store Owner.',
-      'Police, Chief of Police, Mayor, and Medic roles should be played with extra care because other players rely on them for scenes.',
+      'Police, Chief of Police, Mayor, Medic, Courier, and store-owner roles should stay active. The game may remove AFK or inactive job holders.',
       'If a salary shows as $0 in the phone Job Finder, that does not always mean the job is useless. Some jobs make money through tasks, sales, or RP opportunities.',
     ],
   },
@@ -54,9 +55,20 @@ const rulebook = [
     mood: 'Public systems should create scenes, not shut them down.',
     points: [
       'Police should investigate, talk, warn, arrest, and use force in ways that fit the situation. The goal is good RP, not farming charges.',
-      'Criminals should give police something to work with when possible. Running is fine; refusing every interaction is boring for everyone.',
+      'Police need an active warrant to raid a property unless server mechanics clearly allow otherwise. Door breaches should not be used to bypass warrant rules.',
+      'Criminals should give police something to work with when possible. Running, hiding, ATM robbery, and lockpicking are fine when they create a playable scene.',
       'Use the 911 Report app for real in-character reports like robberies, assaults, suspicious activity, property damage, or other urgent issues.',
       'Do not spam 911, make fake reports just to annoy people, or use emergency systems as an OOC complaint box.',
+    ],
+  },
+  {
+    title: 'Mayor, laws, and city policy',
+    mood: 'Public office should make the city more interesting, not unplayable.',
+    points: [
+      'The Mayor may set custom laws, tax rate, contraband, and illegal buildables within server limits.',
+      'Players are expected to check the Government app for active laws, taxes, and illegal items instead of guessing.',
+      'Mayor rules should be playable. Using office to grief the server, protect only friends, or make every normal action illegal may be handled by staff.',
+      'If the Mayor dies, the title and active policies can reset. Treat political conflict as RP, but do not use it as an excuse for random violence.',
     ],
   },
   {
@@ -66,6 +78,7 @@ const rulebook = [
       'Business owners should use advertisements, signs, Tweeter, and actual interaction to bring players in.',
       'Gun Store, Grocery Store, and Hardware Store owners are expected to treat their shop like a roleplay space, not just a menu.',
       'Property layouts should support scenes. Do not intentionally build spaces meant to trap, lag, exploit, or block normal play.',
+      'Illegal items, illegal buildables, and contraband can lead to police action. Red inventory outlines and mayor-marked illegal buildables are your risk.',
       'Use the phone Properties app to manage property and saved layouts. Save carefully before making major changes.',
     ],
   },
@@ -75,7 +88,7 @@ const rulebook = [
     points: [
       'Picking up garbage and bringing it to recycling containers earns cash and helps clean up the map.',
       'Throwing trash into litter bins does not pay, but it still helps the city look better. Sometimes that is enough.',
-      'Do not duplicate items, abuse loopholes, automate rewards, exploit jobs, or hide economy bugs from staff.',
+      'Do not duplicate items, abuse loopholes, automate rewards, exploit jobs, ATM robbery payouts, shop systems, crates, or buildable mechanics.',
       'Report serious bugs privately. If a bug gives you money, items, or power, stop using it immediately.',
     ],
   },
@@ -125,7 +138,7 @@ const scenarios = [
 ];
 
 const phoneExpectations = [
-  { app: 'Government', body: 'Use it to check taxes, laws, and illegal items. Do not claim you did not know after ignoring the app.' },
+  { app: 'Government', body: 'Use it to check taxes, laws, illegal items, and illegal buildables. Do not claim you did not know after ignoring the app.' },
   { app: '911 Report', body: 'Use it for in-character emergencies. Include details so police/medics have something useful.' },
   { app: 'Advertisement', body: 'Good for real business posts and events. Do not spam the city with junk ads.' },
   { app: 'Tweeter', body: 'Rumors, jokes, business posts, beef, apologies, and events are welcome. Keep OOC fights off it.' },
@@ -203,6 +216,22 @@ export default async function RulesPage() {
         </div>
       </section>
 
+      <section className="rules-section-block" id="in-game-rules">
+        <div className="section-heading">
+          <span className="kicker">In-game rule list</span>
+          <h2>These are the same rules shown in-game.</h2>
+          <p>The pause-menu rule list and spawn rule display should match this short version. The sections below explain the same expectations in more detail.</p>
+        </div>
+        <div className="rules-ingame-list">
+          {inGameRules.map((rule, index) => (
+            <article key={rule.Id}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <p>{rule.Text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="rules-section-block">
         <div className="section-heading">
           <span className="kicker">Rulebook</span>
@@ -235,12 +264,12 @@ export default async function RulesPage() {
           <article>
             <span>Jobs</span>
             <h3>Public-service and task jobs</h3>
-            <p>Medic, Police Officer, Chief of Police, Mayor, and Courier.</p>
+            <p>Medic, Police Officer, Chief of Police, Mayor, and Courier. Stay active while holding these jobs.</p>
           </article>
           <article>
             <span>Citizen jobs</span>
             <h3>Everyday and business roles</h3>
-            <p>Citizen, Grocery Store Owner, Gun Store Owner, and Hardware Store Owner.</p>
+            <p>Citizen, Grocery Store Owner, Gun Store Owner, and Hardware Store Owner. Shops should create scenes, not just menus.</p>
           </article>
           <article>
             <span>Cleanup</span>

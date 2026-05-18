@@ -1,0 +1,70 @@
+[
+  {
+    "Id": "nl-rule-01-roleplay-first",
+    "Text": "Northline is semi-serious RP. Play characters, build scenes, and give other players room to respond."
+  },
+  {
+    "Id": "nl-rule-02-no-rdm",
+    "Text": "No RDM or random violence. Conflict must have clear in-character buildup, reason, and room for the other person to respond."
+  },
+  {
+    "Id": "nl-rule-03-no-metagaming",
+    "Text": "Stay in character during active scenes. Do not use OOC, Discord, streams, website info, or screenshots as character knowledge."
+  },
+  {
+    "Id": "nl-rule-04-community-conduct",
+    "Text": "No slurs, hate speech, harassment, creepy behavior, threats, doxxing, or targeted personal attacks."
+  },
+  {
+    "Id": "nl-rule-05-no-exploits",
+    "Text": "No exploiting, duping, bug abuse, reward farming, or hiding economy/server-breaking bugs from staff."
+  },
+  {
+    "Id": "nl-rule-06-no-combat-logging",
+    "Text": "Do not combat log, disconnect to avoid arrest/death/robbery, or return instantly for revenge after a scene goes badly."
+  },
+  {
+    "Id": "nl-rule-07-value-life",
+    "Text": "Value your life and play consequences. Surrender, fear, negotiation, and losing can all be part of good RP."
+  },
+  {
+    "Id": "nl-rule-08-police-crime-scenes",
+    "Text": "Police and criminals should create scenes, not farm mechanics. Arrests, raids, robberies, ATM theft, and fights need believable context."
+  },
+  {
+    "Id": "nl-rule-09-warrants",
+    "Text": "Police need an active warrant to raid a property unless server mechanics allow otherwise. Door breaches should not be used to bypass warrant rules."
+  },
+  {
+    "Id": "nl-rule-10-emergency-systems",
+    "Text": "911 reports are for real in-character emergencies. Include useful details and do not spam fake reports."
+  },
+  {
+    "Id": "nl-rule-11-properties-builds",
+    "Text": "Businesses and properties must be playable spaces. Do not build traps, lag machines, exploit layouts, or intentionally block normal access."
+  },
+  {
+    "Id": "nl-rule-12-store-owners",
+    "Text": "Store owners must roleplay their business. Set prices fairly, use ads/Tweeter when useful, and do not abuse shop systems or crates."
+  },
+  {
+    "Id": "nl-rule-13-mayor-government",
+    "Text": "Mayor laws, taxes, and illegal-item/buildable settings must keep the city playable. Abuse of public office may be handled by staff."
+  },
+  {
+    "Id": "nl-rule-14-contraband",
+    "Text": "Illegal items, illegal buildables, and contraband can lead to police action. Red inventory outlines and mayor-marked illegal buildables are your risk."
+  },
+  {
+    "Id": "nl-rule-15-jobs-active",
+    "Text": "Jobs are RP hooks first. Police, Mayor, Medic, Courier, and store roles should stay active; AFK or inactive job holders may be removed by the game."
+  },
+  {
+    "Id": "nl-rule-16-reports-staff",
+    "Text": "Use staff reports calmly. Provide names, time, what happened, and evidence if available. Do not turn reports into public OOC fights."
+  },
+  {
+    "Id": "nl-rule-17-staff-discretion",
+    "Text": "Staff may step in, end scenes, remove props, jail/kick/ban, or issue warnings when behavior hurts the server."
+  }
+]
