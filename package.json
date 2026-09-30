@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
+    "demo": "node demo/seed.mjs && node --env-file=demo/.env.demo ./node_modules/next/dist/bin/next dev -H 127.0.0.1 -p 3000",
+    "demo:seed": "node demo/seed.mjs",
     "build": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build",
     "start": "next start -H 127.0.0.1 -p 3000",
     "start:lan": "next start -H 0.0.0.0 -p 3000",
