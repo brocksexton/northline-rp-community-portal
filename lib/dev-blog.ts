@@ -45,8 +45,14 @@ function parseFrontmatter(value: string): FrontmatterResult {
   return { data, body: match[2] };
 }
 
+// URL-safe slug: "release_notes_v2.9.35" -> "release-notes-v2-9-35". Both file names and requested
+// slugs go through this, so posts whose file names contain dots or underscores can be opened.
+function normalizeSlug(value: string) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 function slugFromFilename(fileName: string) {
-  return fileName.replace(/\.md$/i, '').toLowerCase();
+  return normalizeSlug(fileName.replace(/\.md$/i, ''));
 }
 
 function versionFromSlug(slug: string) {
@@ -220,7 +226,9 @@ export async function getDevBlogPosts(): Promise<DevBlogPost[]> {
 }
 
 export async function getDevBlogPost(slug: string) {
-  const cleaned = String(slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  let decoded = String(slug || '');
+  try { decoded = decodeURIComponent(decoded); } catch { /* keep as-is */ }
+  const cleaned = normalizeSlug(decoded);
   const posts = await getDevBlogPosts();
   return posts.find((post) => post.slug === cleaned) ?? null;
 }
