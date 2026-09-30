@@ -15,7 +15,15 @@ function getSecret(): string {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET must be set to a long random value in production.');
   }
-  return 'dev-secret-change-me';
+  // Development fallback: a random key per server process instead of a fixed string that
+  // anyone reading the source could use to forge cookies. Stored on globalThis so every
+  // route bundle in the dev server signs with the same key. Restarting logs everyone out.
+  const store = globalThis as typeof globalThis & { __northlineDevSessionSecret?: string };
+  if (!store.__northlineDevSessionSecret) {
+    store.__northlineDevSessionSecret = crypto.randomBytes(32).toString('base64url');
+    console.warn('[session] SESSION_SECRET is not set; using a temporary development key. Sessions reset when the server restarts.');
+  }
+  return store.__northlineDevSessionSecret;
 }
 
 function sign(value: string): string {
