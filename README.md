@@ -19,6 +19,10 @@ to work on it, so I'm publishing it as a reference project. Every saved build is
 [Version history](#version-history)), and `npm run demo` starts the whole site with a made-up city, no
 game server needed.
 
+**[Open the live demo](https://brocksexton.github.io/northline-rp-community-portal/)**. It's a static copy of the
+demo city hosted on GitHub Pages. Use the switch in the bottom-left corner to browse as a guest or as a
+signed-in Developer who can open the staff pages.
+
 ![Signed-in homepage](docs/screenshots/home-signed-in.webp)
 
 ## Contents
@@ -95,6 +99,16 @@ Every name, post, and number below is made up. It all comes from [`demo/seed.mjs
 
 ## Try the demo
 
+### Online
+
+The [live demo](https://brocksexton.github.io/northline-rp-community-portal/) is a snapshot of `npm run demo`,
+published to GitHub Pages. Every page and the sample data are there, menus and tabs work, and you can
+switch between a guest and a signed-in Developer (Marcus Vale) in the bottom-left corner. Because GitHub
+Pages only serves files, nothing you do is saved (likes, posts, and staff buttons show a notice), and the
+clock is pinned to the moment the snapshot was taken, so "online now" and "5 minutes ago" stay put.
+
+### On your computer
+
 You need Node.js 20.11 or newer. Nothing else is required: no game server, Steam API key, or Discord bot.
 
 ```bash
@@ -132,6 +146,20 @@ How the demo works:
 
 > [!WARNING]
 > `demo/.env.demo` turns on the dev login and uses a signing key that is public. Never use it for a real deployment.
+
+### Rebuilding the online demo
+
+```bash
+npm run demo:static                # writes static-demo-out/
+npm run demo:static -- --publish   # also commits it to the gh-pages branch and pushes
+```
+
+[`scripts/static-demo/build.mjs`](scripts/static-demo/build.mjs) makes a production build for each view (guest
+and signed-in), serves it with the demo data, crawls every page, and saves the HTML, the Next.js router
+payloads, and the `/api` responses the pages ask for. [`scripts/static-demo/shim.js`](scripts/static-demo/shim.js)
+is added to every page. It answers those requests from the saved files, keeps links inside the
+`/northline-rp-community-portal/` sub-path, pins the clock, and draws the view switcher. The build needs
+Google Chrome or Microsoft Edge installed. It takes about ten minutes.
 
 ## Running it for real
 
@@ -375,10 +403,12 @@ git checkout v2.6.0            # run any earlier build
 | v2.9.92 – v2.9.112 | Security hardening (same-origin checks, rate limits, expiring session tokens, `SESSION_SECRET` required in production), Tweeter stability, illustrated job guides |
 | v2.9.115 – v2.9.122 | Homepage hero messages, Northbound Bank, rules sync, Next.js security update |
 
-A few commits after `v2.9.122` get the repo ready to publish: this README, the demo, the screenshots, the
-MIT license, and three small fixes. In development, the session signing key is now random instead of a
-fixed string. `.env.example` no longer lists two Discord variables twice. The Discord server and
-forum-channel IDs are no longer code defaults, so a fresh install can't point at the old Discord server.
+A few commits after `v2.9.122` get the repo ready to publish: this README, the demo and the online demo,
+the screenshots, the MIT license, and four small fixes. In development, the session signing key is now random
+instead of a fixed string. `.env.example` no longer lists two Discord variables twice. The Discord server and
+forum-channel IDs are no longer code defaults, so a fresh install can't point at the old Discord server. And
+the 17 dev blog posts whose file names contain dots (v2.9.32 to v2.9.49) can be opened now; before, their
+links led to a 404.
 
 **Changes made for publishing.** The history is the original builds with three exceptions:
 
