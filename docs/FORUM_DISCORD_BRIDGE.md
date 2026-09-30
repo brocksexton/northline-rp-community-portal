@@ -13,8 +13,8 @@ v2.9.69 includes the website forum, account-linking flow, and bot-side Discord F
 ```env
 DISCORD_BOT_TOKEN=your_bot_token
 NORTHLINE_BOT_API_SECRET=long_shared_secret_for_bot_to_site_calls
-NORTHLINE_DISCORD_GUILD_ID=1317692038229131376
-NORTHLINE_DISCORD_FORUM_CHANNEL_ID=1501987950492258414
+NORTHLINE_DISCORD_GUILD_ID=your_server_id
+NORTHLINE_DISCORD_FORUM_CHANNEL_ID=your_forum_channel_id
 NORTHLINE_DISCORD_LINKED_ROLE_ID=role_to_grant_after_link
 NORTHLINE_BOT_FORUM_SYNC_ENABLED=true
 NORTHLINE_BOT_FORUM_IMPORT_UNLINKED=false
@@ -114,7 +114,7 @@ The `/link` command is defined in `scripts/discord-bot/commands.mjs` and handled
 If Discord replies do not appear on the website:
 
 1. Confirm the bot process is running after deploying this build.
-2. Confirm `NORTHLINE_DISCORD_FORUM_CHANNEL_ID=1501987950492258414` is set in the bot environment.
+2. Confirm `NORTHLINE_DISCORD_FORUM_CHANNEL_ID=your_forum_channel_id` is set in the bot environment.
 3. Confirm `NORTHLINE_BOT_API_BASE_URL` points to the live website, for example `https://northline.lol`.
 4. Confirm `NORTHLINE_BOT_API_SECRET` exactly matches the website `.env.local` value.
 5. Enable Message Content Intent in the Discord Developer Portal, then restart the bot.
@@ -146,7 +146,7 @@ For this to work, keep these enabled for the bot:
 NORTHLINE_BOT_FORUM_SYNC_ENABLED=true
 NORTHLINE_BOT_API_BASE_URL=https://northline.lol
 NORTHLINE_BOT_API_SECRET=the_same_secret_used_by_the_website
-NORTHLINE_DISCORD_FORUM_CHANNEL_ID=1501987950492258414
+NORTHLINE_DISCORD_FORUM_CHANNEL_ID=your_forum_channel_id
 ```
 
 The bot needs permission to manage/delete messages and threads in the configured Discord forum channel for website moderation actions to remove Discord content.

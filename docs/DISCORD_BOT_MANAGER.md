@@ -19,7 +19,7 @@ The page is designed for staff who do not want to memorize Discord slash command
 
 ```env
 DISCORD_BOT_TOKEN=
-NORTHLINE_DISCORD_GUILD_ID=1317692038229131376
+NORTHLINE_DISCORD_GUILD_ID=your_server_id
 ```
 
 The website uses the bot token server-side only. It is never sent to the browser.

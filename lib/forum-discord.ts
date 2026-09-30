@@ -10,12 +10,13 @@ function botToken() {
   return configured(process.env.DISCORD_BOT_TOKEN);
 }
 
+// No built-in fallbacks: forum mirroring and linked roles stay off until these are configured.
 export function discordGuildId() {
-  return configured(process.env.NORTHLINE_DISCORD_GUILD_ID) ?? '1317692038229131376';
+  return configured(process.env.NORTHLINE_DISCORD_GUILD_ID) ?? configured(process.env.DISCORD_GUILD_ID);
 }
 
 export function discordForumChannelId() {
-  return configured(process.env.NORTHLINE_DISCORD_FORUM_CHANNEL_ID) ?? '1501987950492258414';
+  return configured(process.env.NORTHLINE_DISCORD_FORUM_CHANNEL_ID);
 }
 
 function linkedRoleId() {
@@ -83,6 +84,7 @@ function forumEmbed(thread: ForumThread, post: ForumPost, mode: 'thread' | 'repl
 export async function mirrorWebsiteThreadToDiscord(thread: ForumThread, starter: ForumPost): Promise<void> {
   if (thread.source === 'discord' || thread.discordThreadId) return;
   const channelId = discordForumChannelId();
+  if (!channelId) return;
   const body = {
     name: thread.title.slice(0, 100),
     message: {
@@ -126,7 +128,7 @@ export async function deleteDiscordForumThread(threadId: string | null | undefin
 export async function assignLinkedForumRole(discordUserId: string): Promise<boolean> {
   const guildId = discordGuildId();
   const roleId = linkedRoleId();
-  if (!roleId) return false;
+  if (!guildId || !roleId) return false;
   const result = await discordRequest(`/guilds/${guildId}/members/${discordUserId}/roles/${roleId}`, { method: 'PUT', body: '' });
   return result !== null;
 }
