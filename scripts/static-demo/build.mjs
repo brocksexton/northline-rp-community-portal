@@ -403,7 +403,7 @@ function publish() {
   git(['add', '-A'], worktree);
   const clean = spawnSync('git', ['-C', worktree, 'diff', '--cached', '--quiet']).status === 0;
   if (clean) { log('gh-pages is already up to date.'); return; }
-  git(['commit', '-q', '-m', `Update static demo (${new Date().toISOString().slice(0, 10)})`], worktree);
+  git(['commit', '-q', '-m', `Update static demo (${new Date().toISOString().slice(0, 10)})`, '-m', 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'], worktree);
   git(['push', 'origin', 'gh-pages'], worktree);
   log(`Published. It can take a minute to appear at ${PAGES_ORIGIN}${BASE}/`);
 }
